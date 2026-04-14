@@ -1,0 +1,192 @@
+﻿@model Pets_friends.Data.ViewModels.LoginVM
+
+@{
+    Layout = null;
+}
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #f5f1eb 0%, #e6d5c3 40%, #d2b89c 100%);
+    }
+
+    .main-wrapper {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .main-container {
+        width: 90%;
+        max-width: 1100px;
+        height: 85vh;
+        display: flex;
+        border-radius: 25px;
+        overflow: hidden;
+        box-shadow: 0 25px 60px rgba(91, 62, 43, 0.25);
+        background: rgba(255, 250, 245, 0.9);
+        backdrop-filter: blur(10px);
+    }
+
+    .left-panel {
+        flex: 1;
+    }
+
+    .left-panel img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .right-panel {
+        flex: 1;
+        background: #f5ede6;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 30px;
+    }
+
+    .form-box {
+        width: 100%;
+        max-width: 350px;
+    }
+
+    .toggle {
+        display: flex;
+        background: #e0d3c2;
+        border-radius: 999px;
+        padding: 4px;
+        margin-bottom: 20px;
+    }
+
+    .toggle a {
+        flex: 1;
+        text-align: center;
+        padding: 8px 0;
+        border-radius: 999px;
+        text-decoration: none;
+        font-size: 14px;
+        color: #7b4f2c;
+        transition: 0.3s;
+    }
+
+    .toggle .active {
+        background: #7b4f2c;
+        color: white;
+        font-weight: bold;
+    }
+
+    .form-box h2 {
+        margin-bottom: 20px;
+        color: #5a3e2b;
+        text-align: center;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 14px;
+        border: 1px solid #d6c5b4;
+        border-radius: 10px;
+        background: #fff;
+    }
+    input:focus {
+        outline: none;
+        border-color: #7b4f2c;
+        box-shadow: 0 0 0 2px rgba(123,79,44,0.15);
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        background: #7b4f2c;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: 0.3s;
+        font-weight: bold;
+    }
+
+    button:hover {
+        background: #5a3e2b;
+    }
+
+    .forgot-link {
+        text-align: left;
+        margin-top: -8px;
+        margin-bottom: 10px;
+    }
+
+    .forgot-link a {
+        font-size: 13px;
+        color: #7b4f2c;
+        font-weight: bold;
+    }
+
+    .forgot-link a:hover {
+        text-decoration: underline;
+    }
+
+    .text-danger {
+        color: red;
+        font-size: 13px;
+        margin-top: 10px;
+        text-align: center;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    a:hover {
+        color: inherit;
+    }
+</style>
+
+<div class="main-wrapper">
+    <div class="main-container">
+
+        <div class="left-panel">
+            <img src="~/images/Pets.png" asp-append-version="true" />
+        </div>
+
+        <div class="right-panel">
+            <div class="form-box">
+
+                <div class="toggle">
+                    <a asp-controller="Account" asp-action="Register">Sign Up</a>
+                    <a class="active">Log In</a>
+                </div>
+
+                <h2>Welcome Back</h2>
+
+                <form asp-action="Login" method="post">
+
+                    <input asp-for="EmailAddress" placeholder="Email" />
+                    <input asp-for="Password" type="password" placeholder="Password" />
+
+                    <div class="forgot-link">
+                        <a asp-action="ForgotPassword">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit">Login</button>
+
+                    <div class="text-danger" asp-validation-summary="ModelOnly"></div>
+
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
