@@ -1,6 +1,5 @@
 wwwroot\css\site.css
-wwwroot\Images\dog.png
-wwwroot\Images\f9b13d_38e08e6f3ec1418a89ebb035691ec36f~mv2.avif
+wwwroot\Images\Pets.png
 wwwroot\js\site.js
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map
