@@ -1,0 +1,338 @@
+﻿@model Pets_friends.Data.ViewModels.VetProfileFormVM
+
+@{
+    ViewData["Title"] = "Edit Profile";
+    Layout = "~/Views/Shared/_VetLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --text-dark: #5C3D1E;
+            --text-muted: #8C7560;
+            --bg-card: #FAF6F1;
+            --tan-accent: #C8A882;
+            --brown-button: #5C3D1E;
+            --border-light: #EBE0D5;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+            background-color: #fdfcfb;
+        }
+
+        /* --- 1. PROFESSIONAL PFP UPLOAD ZONE --- */
+        .pfp-upload-container {
+            background-color: var(--bg-card);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .pfp-preview-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 6px solid #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            margin: 0 auto 20px;
+            overflow: hidden;
+            background-color: var(--tan-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .pfp-preview-circle img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .upload-drop-zone {
+            border: 2px dashed var(--tan-accent);
+            border-radius: 16px;
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+            .upload-drop-zone:hover, .upload-drop-zone.dragover {
+                background-color: #fff;
+                border-color: var(--brown-button);
+            }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--tan-accent);
+            margin-bottom: 10px;
+        }
+
+        .btn-browse {
+            background-color: var(--tan-accent);
+            color: white;
+            border: none;
+            padding: 8px 25px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: 0.2s;
+        }
+
+            .btn-browse:hover {
+                background-color: var(--brown-button);
+            }
+
+        /* File Name Pill */
+        .file-status-pill {
+            display: inline-flex;
+            align-items: center;
+            background: #EAE0D5;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* --- 2. FORM CARDS & TOGGLES --- */
+        .glass-card {
+            background-color: var(--bg-card);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid var(--border-light);
+            height: 100%;
+        }
+
+        .form-switch .form-check-input:checked {
+            background-color: #8E6F54 !important;
+            border-color: #8E6F54 !important;
+        }
+
+        .form-control {
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid #EBE0D5;
+            background: #fff;
+        }
+
+        .action-bar {
+            background-color: #F1EAE1;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-save {
+            background-color: var(--brown-button);
+            color: white;
+            flex: 2;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 12px;
+            border: none;
+        }
+
+        .btn-cancel {
+            background-color: #EAE0D5;
+            color: var(--text-dark);
+            flex: 1;
+            border-radius: 10px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            padding: 12px;
+        }
+
+        .btn-delete {
+            background: transparent;
+            border: 1px solid #d9534f;
+            color: #d9534f;
+            flex: 1;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+    </style>
+}
+
+<div class="container py-5" style="max-width: 1000px;">
+
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div class="pfp-upload-container">
+            <div class="pfp-preview-circle">
+                <img id="imgPreview" src="@(string.IsNullOrEmpty(Model.ExistingImageUrl) ? "https://placehold.co/160x160/C8A882/white?text=Vet" : Model.ExistingImageUrl)" alt="Profile">
+            </div>
+
+            <h3 style="font-family: 'Playfair Display'; font-weight: 700; margin-bottom: 20px;">Edit Profile Photo</h3>
+
+            <div class="upload-drop-zone" id="drop-zone" onclick="document.getElementById('fileInput').click()">
+                <i class="bi bi-camera-fill upload-icon"></i>
+                <p class="mb-0" style="color: var(--text-muted); font-weight: 500;">Drag new photo here, or click to upload.</p>
+                <button type="button" class="btn-browse">Browse Files</button>
+
+                <input asp-for="ImageFile" type="file" id="fileInput" hidden accept="image/*" onchange="handleFileSelect(this)" />
+            </div>
+
+            <div id="fileNameDisplay" class="file-status-pill d-none">
+                <i class="bi bi-file-earmark-image me-2"></i>
+                <span id="fileNameText">No file chosen</span>
+                <i class="bi bi-x-lg ms-2" style="cursor:pointer" onclick="resetFile(event)"></i>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="glass-card">
+                    <h4 class="mb-4" style="font-family: 'Playfair Display'; font-weight: 700;">Professional Details</h4>
+
+                    <div class="mb-3">
+                        <label asp-for="ClinicName" class="form-label fw-bold">Clinic Name</label>
+                        <input asp-for="ClinicName" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ClinicAddress" class="form-label fw-bold">Clinic Address</label>
+                        <input asp-for="ClinicAddress" class="form-control" />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label asp-for="Specialization" class="form-label fw-bold">Specialization</label>
+                            <input asp-for="Specialization" class="form-control" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="YearsOfExperience" class="form-label fw-bold">Years Exp.</label>
+                            <input asp-for="YearsOfExperience" type="number" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-bold">About Me</label>
+                        <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Services" class="form-label fw-bold">Services</label>
+                        <input asp-for="Services" class="form-control" placeholder="Vaccines, Dental, Surgery" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="glass-card">
+                    <h4 class="mb-4" style="font-family: 'Playfair Display'; font-weight: 700;">Working Hours</h4>
+
+                    @if (Model.Schedule != null)
+                    {
+                        for (int i = 0; i < Model.Schedule.Count; i++)
+                        {
+                            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom day-row">
+                                <input type="hidden" asp-for="Schedule[i].Id" />
+                                <input type="hidden" asp-for="Schedule[i].Day" />
+
+                                <div class="fw-bold" style="width: 80px; font-size: 0.9rem;">@Model.Schedule[i].Day</div>
+
+                                <div class="d-flex align-items-center gap-1">
+                                    <input asp-for="Schedule[i].OpenTime" type="time" class="form-control form-control-sm time-input" style="width:105px;" />
+                                    <span class="text-muted">-</span>
+                                    <input asp-for="Schedule[i].CloseTime" type="time" class="form-control form-control-sm time-input" style="width:105px;" />
+                                </div>
+
+                                <div class="form-check form-switch ms-2">
+                                    <input asp-for="Schedule[i].IsOff" class="form-check-input off-toggle" type="checkbox" onchange="checkOff(this)">
+                                    <label class="form-check-label text-muted" style="font-size: 0.75rem;">Off</label>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button type="submit" class="btn-save"><i class="bi bi-check-circle me-2"></i>Save Changes</button>
+            <a asp-action="Dashboard" class="btn-cancel">Cancel</a>
+            @if (Model.Id > 0)
+            {
+                <button type="submit" asp-action="Delete" class="btn-delete" onclick="return confirm('Delete profile permanently?');">Delete</button>
+            }
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('imgPreview');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const fileNameText = document.getElementById('fileNameText');
+
+        // 1. CLICK TO UPLOAD handled by inline onclick
+
+        // 2. DRAG & DROP LOGIC
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            handleFileSelect(fileInput);
+        });
+
+        // 3. SELECTION & PREVIEW LOGIC
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { preview.src = e.target.result; }
+                reader.readAsDataURL(input.files[0]);
+
+                fileNameText.innerText = input.files[0].name;
+                fileNameDisplay.classList.remove('d-none');
+            }
+        }
+
+        function resetFile(e) {
+            e.stopPropagation();
+            fileInput.value = "";
+            fileNameDisplay.classList.add('d-none');
+            preview.src = "@(string.IsNullOrEmpty(Model.ExistingImageUrl) ? "https://placehold.co/160x160/C8A882/white?text=Vet" : Model.ExistingImageUrl)";
+        }
+
+        // 4. SCHEDULE TOGGLES
+        function checkOff(checkbox) {
+            const row = checkbox.closest('.day-row');
+            const inputs = row.querySelectorAll('.time-input');
+            inputs.forEach(input => {
+                input.disabled = checkbox.checked;
+                input.style.opacity = checkbox.checked ? "0.3" : "1";
+                if(checkbox.checked) input.value = "";
+            });
+        }
+        document.querySelectorAll('.off-toggle').forEach(t => checkOff(t));
+    </script>
+}

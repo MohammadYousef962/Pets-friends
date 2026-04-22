@@ -2,19 +2,17 @@
 
 @{
     ViewData["Title"] = "Register";
-    Layout = null;
+    Layout = "~/Views/Shared/_AuthLayout.cshtml"; // Force the full-screen layout
 }
-
-<link rel="stylesheet" href="~/css/Signing.css" />
 
 <div class="main-wrapper">
     <div class="main-container">
 
         <div class="left-panel">
-            <img src="~/images/Pets.png" asp-append-version="true" />
+            <img src="~/images/Pets.png" alt="Happy Pets" asp-append-version="true" />
         </div>
-        <div class="right-panel">
 
+        <div class="right-panel">
             <div class="form-box">
 
                 <div class="logo">
@@ -23,7 +21,6 @@
                     <div class="logo-circle">🐾</div>
                 </div>
 
-
                 <div class="toggle">
                     <a class="active">Sign Up</a>
                     <a asp-controller="Account" asp-action="Login">Log In</a>
@@ -31,15 +28,37 @@
 
                 <h2>Create an account</h2>
 
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-size: 14px;">
+                        @TempData["SuccessMessage"]
+                    </div>
+                }
+
                 <form asp-action="Register" method="post">
-                    <input asp-for="FullName" placeholder="Full name" />
-                    <input asp-for="EmailAddress" placeholder="Email" />
-                    <input asp-for="Password" type="password" placeholder="Password" />
-                    <input asp-for="ConfirmPassword" type="password" placeholder="Confirm Password" />
+                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+                    <div class="input-group">
+                        <input asp-for="FullName" placeholder="Full name" />
+                        <span asp-validation-for="FullName" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="input-group">
+                        <input asp-for="EmailAddress" placeholder="Email" />
+                        <span asp-validation-for="EmailAddress" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="input-group">
+                        <input asp-for="Password" type="password" placeholder="Password" />
+                        <span asp-validation-for="Password" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="input-group">
+                        <input asp-for="ConfirmPassword" type="password" placeholder="Confirm Password" />
+                        <span asp-validation-for="ConfirmPassword" class="field-validation-error"></span>
+                    </div>
 
                     <button type="submit">Create account</button>
-
-                    <div class="text-danger" asp-validation-summary="ModelOnly"></div>
                 </form>
 
             </div>

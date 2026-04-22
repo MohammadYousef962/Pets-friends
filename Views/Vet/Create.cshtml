@@ -1,0 +1,234 @@
+﻿@model Pets_friends.Data.ViewModels.VetProfileFormVM
+
+@{
+    ViewData["Title"] = "Edit Profile";
+    Layout = "~/Views/Shared/_VetLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --text-dark: #5C3D1E;
+            --tan-accent: #C8A882;
+            --bg-card: #FAF6F1;
+            --brown-active: #8E6F54;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+        }
+
+        /* 1. TOP PROFILE HEADER */
+        .profile-header-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        .profile-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 6px solid #fff;
+            box-shadow: 0 10px 25px rgba(92, 61, 30, 0.15);
+            overflow: hidden;
+            background-color: var(--tan-accent);
+            margin-bottom: 15px;
+        }
+
+            .profile-circle img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        /* 2. FORM CARDS */
+        .glass-card {
+            background-color: var(--bg-card);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #EBE0D5;
+            height: 100%;
+        }
+
+        /* 3. BROWN TOGGLES */
+        .form-switch .form-check-input:checked {
+            background-color: var(--brown-active) !important;
+            border-color: var(--brown-active) !important;
+        }
+
+        .form-control {
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid #EBE0D5;
+        }
+
+        /* 4. ACTION BAR */
+        .action-bar {
+            background-color: #F1EAE1;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .btn-save {
+            background-color: var(--text-dark);
+            color: white;
+            flex: 2;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 12px;
+            border: none;
+        }
+
+        .btn-cancel {
+            background-color: #EAE0D5;
+            color: var(--text-dark);
+            flex: 1;
+            border-radius: 10px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            padding: 12px;
+        }
+
+        .btn-delete {
+            background: transparent;
+            border: 1px solid #d9534f;
+            color: #d9534f;
+            flex: 1;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+    </style>
+}
+
+<div class="container py-4" style="max-width: 1100px;">
+
+    <div class="profile-header-section">
+        <div class="profile-circle">
+            <img id="imgPreview" src="@(string.IsNullOrEmpty(Model.ExistingImageUrl) ? "https://placehold.co/160x160/C8A882/white?text=Vet" : Model.ExistingImageUrl)" alt="Profile">
+        </div>
+        <h2 style="font-family: 'Playfair Display'; font-weight: 700;">@Model.ClinicName</h2>
+    </div>
+
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="glass-card">
+                    <h4 class="mb-4" style="font-family: 'Playfair Display'; font-weight: 700;">Professional Details</h4>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Upload New Photo</label>
+                        <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" onchange="loadFile(event)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ClinicName" class="form-label fw-bold">Clinic Name</label>
+                        <input asp-for="ClinicName" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ClinicAddress" class="form-label fw-bold">Clinic Address</label>
+                        <input asp-for="ClinicAddress" class="form-control" />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label asp-for="Specialization" class="form-label fw-bold">Specialization</label>
+                            <input asp-for="Specialization" class="form-control" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="YearsOfExperience" class="form-label fw-bold">Years Exp.</label>
+                            <input asp-for="YearsOfExperience" type="number" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-bold">About Me</label>
+                        <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Services" class="form-label fw-bold">Services (Separated by commas)</label>
+                        <input asp-for="Services" class="form-control" placeholder="Vaccines, Dental, Surgery" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="glass-card">
+                    <h4 class="mb-4" style="font-family: 'Playfair Display'; font-weight: 700;">Working Hours</h4>
+
+                    @for (int i = 0; i < Model.Schedule.Count; i++)
+                    {
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom day-row">
+                            <input type="hidden" asp-for="Schedule[i].Id" />
+                            <input type="hidden" asp-for="Schedule[i].Day" />
+
+                            <div class="fw-bold" style="width: 80px;">@Model.Schedule[i].Day</div>
+
+                            <div class="d-flex align-items-center gap-1">
+                                <input asp-for="Schedule[i].OpenTime" type="time" class="form-control form-control-sm time-input" />
+                                <span>-</span>
+                                <input asp-for="Schedule[i].CloseTime" type="time" class="form-control form-control-sm time-input" />
+                            </div>
+
+                            <div class="form-check form-switch ms-2">
+                                <input asp-for="Schedule[i].IsOff" class="form-check-input off-toggle" type="checkbox" onchange="checkOff(this)">
+                                <label class="form-check-label text-muted" style="font-size: 0.75rem;">Off</label>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button type="submit" class="btn-save"><i class="bi bi-check-circle me-2"></i>Save Changes</button>
+            <a asp-action="Dashboard" class="btn-cancel">Cancel</a>
+            @if (Model.Id > 0)
+            {
+                <button type="submit" asp-action="Delete" class="btn-delete" onclick="return confirm('Delete profile forever?');"><i class="bi bi-trash3 me-1"></i>Delete</button>
+            }
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // Image Preview Logic
+        var loadFile = function(event) {
+            var output = document.getElementById('imgPreview');
+            output.src = URL.createObjectURL(event.target.files[0]);
+            output.onload = function() { URL.revokeObjectURL(output.src) }
+        };
+
+        // Schedule Toggle Logic
+        function checkOff(checkbox) {
+            var row = checkbox.closest('.day-row');
+            var inputs = row.querySelectorAll('.time-input');
+            inputs.forEach(input => {
+                if (checkbox.checked) {
+                    input.disabled = true;
+                    input.style.opacity = "0.3";
+                    input.value = "";
+                } else {
+                    input.disabled = false;
+                    input.style.opacity = "1";
+                }
+            });
+        }
+
+        document.querySelectorAll('.off-toggle').forEach(t => checkOff(t));
+    </script>
+}

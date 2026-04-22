@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "jr2fqI8z0yA=",
+  "dgSpecHash": "o21FbblWH2o=",
   "success": true,
-  "projectFilePath": "C:\\Users\\wazed\\source\\repos\\Pets friends\\Pets friends\\Pets friends.csproj",
+  "projectFilePath": "C:\\Users\\wazed\\source\\repos\\Pet friends\\Pets friends\\Pets friends.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wazed\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\wazed\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",

@@ -1,0 +1,207 @@
+﻿@model Pets_friends.Data.ViewModels.VetDashboardVM
+@{
+    ViewData["Title"] = "Vet Dashboard";
+    Layout = "~/Views/Shared/_VetLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .dashboard-list-item {
+            border-bottom: 1px solid #EDE0D0;
+            padding: 15px 0;
+        }
+
+            .dashboard-list-item:last-child {
+                border-bottom: none;
+            }
+
+        /* Interactive Action Buttons */
+        .btn-accept {
+            background: #e4f0e8;
+            color: #3a8a4f;
+            border: 1px solid #c3e6cb;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+            .btn-accept:hover {
+                background: #3a8a4f;
+                color: white;
+                transform: translateY(-1px);
+            }
+
+        .btn-decline {
+            background: #f8d7da;
+            color: #d9534f;
+            border: 1px solid #f5c6cb;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+            .btn-decline:hover {
+                background: #d9534f;
+                color: white;
+                transform: translateY(-1px);
+            }
+    </style>
+}
+
+<div class="admin-wrapper">
+    <div class="container">
+
+        <h1 class="admin-header">Dr. @Model.Profile.UserAccount?.FullName's Dashboard</h1>
+        <p class="admin-subtitle">Manage your clinic schedule, read patient feedback, and update your profile.</p>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success rounded-4" style="background: #d4edda; color: #155724; border:none;">
+                <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            </div>
+        }
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="bi bi-star-fill stat-icon"></i>
+                    <div class="stat-number">@Model.Profile.AverageRating.ToString("0.0")</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="bi bi-chat-quote-fill stat-icon"></i>
+                    <div class="stat-number">@Model.Profile.TotalReviews</div>
+                    <div class="stat-label">Patient Reviews</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="bi bi-calendar-heart-fill stat-icon" style="color: #d9534f;"></i>
+                    <div class="stat-number">@Model.PendingAppointments.Count()</div>
+                    <div class="stat-label">Pending Requests</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+
+            <div class="col-lg-7">
+                <div class="glass-panel h-100" style="padding: 30px;">
+                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; border-bottom: 2px solid #EDE0D0; padding-bottom: 10px;">
+                        <i class="bi bi-inbox-fill me-2" style="color: #C8A882;"></i> Appointment Requests
+                    </h3>
+
+                    @if (!Model.PendingAppointments.Any())
+                    {
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-cup-hot fs-1 d-block mb-2" style="color: #EDE0D0;"></i>
+                            You have no pending appointment requests.
+                        </div>
+                    }
+                    else
+                    {
+                        foreach (var apt in Model.PendingAppointments)
+                        {
+                            <div class="dashboard-list-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold" style="color: #5C3D1E; font-size: 1.05rem;">
+                                        @apt.Pet?.Name <span class="text-muted fw-normal" style="font-size: 0.9rem;">(Owner: @apt.ClientProfile?.UserAccount?.FullName)</span>
+                                    </div>
+                                    <div style="color: #8C7560; font-size: 0.9rem;">
+                                        <i class="bi bi-calendar-event me-1"></i> @apt.AppointmentDate.ToString("MMM dd, yyyy 'at' hh:mm tt")
+                                    </div>
+                                    <div style="color: #C8A882; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">
+                                        @apt.Service?.Name
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <form asp-action="UpdateAppointmentStatus" method="post" class="m-0">
+                                        <input type="hidden" name="appointmentId" value="@apt.Id" />
+                                        <input type="hidden" name="newStatus" value="Confirmed" />
+                                        <button type="submit" class="btn-accept" title="Accept"><i class="bi bi-check-lg"></i></button>
+                                    </form>
+
+                                    <form asp-action="UpdateAppointmentStatus" method="post" class="m-0" onsubmit="return confirm('Are you sure you want to decline this appointment?');">
+                                        <input type="hidden" name="appointmentId" value="@apt.Id" />
+                                        <input type="hidden" name="newStatus" value="Cancelled" />
+                                        <button type="submit" class="btn-decline" title="Decline"><i class="bi bi-x-lg"></i></button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="glass-panel h-100" style="padding: 30px;">
+                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; border-bottom: 2px solid #EDE0D0; padding-bottom: 10px;">
+                        <i class="bi bi-stars me-2" style="color: #C8A882;"></i> Recent Feedback
+                    </h3>
+
+                    @if (!Model.RecentReviews.Any())
+                    {
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-chat-square-heart fs-1 d-block mb-2" style="color: #EDE0D0;"></i>
+                            No reviews yet. Check back later!
+                        </div>
+                    }
+                    else
+                    {
+                        foreach (var review in Model.RecentReviews)
+                        {
+                            <div class="dashboard-list-item">
+                                <div class="d-flex justify-content-between">
+                                    <div class="fw-bold" style="color: #5C3D1E; font-size: 0.95rem;">@review.Reviewer?.FullName</div>
+                                    <div style="color: #E8A838; font-size: 0.85rem;">
+                                        @for (int i = 0; i < review.Rating; i++)
+                                        {
+                                            <i class="bi bi-star-fill"></i>
+                                        }
+                                    </div>
+                                </div>
+                                <p style="color: #8C7560; font-size: 0.9rem; margin-top: 5px; margin-bottom: 0; line-height: 1.4;">
+                                    "@review.Comment"
+                                </p>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="action-card">
+                    <div>
+                        <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Public Profile</h3>
+                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">View how clients see your page.</p>
+                    </div>
+                    <a asp-action="Profile" class="btn-admin" style="background-color: #EDE0D0; color: #5C3D1E;">
+                        View Page <i class="bi bi-box-arrow-up-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="action-card">
+                    <div>
+                        <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Edit Details</h3>
+                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">Update your clinic info, services, and photo.</p>
+                    </div>
+                    <a asp-action="Edit" class="btn-admin">
+                        Edit Profile <i class="bi bi-pencil-square ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

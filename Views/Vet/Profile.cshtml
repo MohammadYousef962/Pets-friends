@@ -1,301 +1,15 @@
-﻿@* Views/Vet/Profile.cshtml *@
-@* Graduation Project: Pets-friends *@
-@model Pets_friends.Models.VetProfile
+﻿@model Pets_friends.Models.VetProfile
 
 @{
-    ViewData["Title"] = Model.FullName + " | PetPals Vet";
+    // 1. Updated to pull FullName from the linked Identity Account
+    ViewData["Title"] = Model.UserAccount?.FullName + " | Pet Vet";
 }
 
 @* ── Page-specific styles ─────────────────────────────────────────────────── *@
 @section Styles {
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-    /* ── Tokens matching PetPals palette ── */
-    :root {
-        --cream:      #FAF6F1;
-        --beige:      #EDE0D0;
-        --tan:        #C8A882;
-        --tan-dark:   #A0805A;
-        --brown:      #5C3D1E;
-        --text-main:  #2D1F0E;
-        --text-muted: #8C7560;
-        --white:      #FFFFFF;
-        --radius:     16px;
-        --shadow:     0 4px 24px rgba(92,61,30,.10);
-        --shadow-sm:  0 2px 12px rgba(92,61,30,.07);
-    }
-
-    body { background: var(--cream); font-family: 'DM Sans', sans-serif; color: var(--text-main); }
-
-    /* ── Hero banner ── */
-    .vet-hero {
-        background: linear-gradient(135deg, var(--beige) 0%, #D9C4A8 100%);
-        padding: 3rem 0 0;
-        position: relative;
-        overflow: hidden;
-    }
-    .vet-hero::before {
-        content: "";
-        position: absolute; inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C8A882' fill-opacity='0.18'%3E%3Cellipse cx='10' cy='10' rx='4' ry='3'/%3E%3Cellipse cx='22' cy='7'  rx='3' ry='2.2'/%3E%3Cellipse cx='16' cy='19' rx='6' ry='5'/%3E%3Cellipse cx='46' cy='42' rx='4' ry='3'/%3E%3Cellipse cx='58' cy='39' rx='3' ry='2.2'/%3E%3Cellipse cx='52' cy='51' rx='6' ry='5'/%3E%3C/g%3E%3C/svg%3E");
-        background-size: 60px 60px;
-        pointer-events: none;
-    }
-    .vet-hero .container { position: relative; }
-
-    /* ── Profile photo ── */
-    .vet-photo-wrap {
-        position: relative;
-        display: inline-block;
-    }
-    .vet-photo-wrap img {
-        width: 160px; height: 160px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 5px solid var(--white);
-        box-shadow: var(--shadow);
-    }
-    .vet-badge {
-        position: absolute;
-        bottom: 6px; right: 6px;
-        background: var(--tan);
-        color: var(--white);
-        border-radius: 50%;
-        width: 36px; height: 36px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: .9rem;
-        border: 3px solid var(--white);
-    }
-
-    /* ── Name & meta ── */
-    .vet-name {
-        font-family: 'Playfair Display', serif;
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--brown);
-        margin-bottom: .25rem;
-    }
-    .vet-title-tag {
-        background: var(--tan);
-        color: var(--white);
-        padding: .25rem .85rem;
-        border-radius: 30px;
-        font-size: .78rem;
-        font-weight: 600;
-        letter-spacing: .04em;
-        text-transform: uppercase;
-        display: inline-block;
-        margin-bottom: .6rem;
-    }
-    .vet-spec { color: var(--text-muted); font-size: .95rem; }
-
-    /* ── Stat pills ── */
-    .stat-pill {
-        background: var(--white);
-        border-radius: var(--radius);
-        padding: .85rem 1.4rem;
-        text-align: center;
-        box-shadow: var(--shadow-sm);
-        flex: 1;
-        min-width: 120px;
-    }
-    .stat-pill .stat-num {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.7rem;
-        color: var(--brown);
-        font-weight: 700;
-        line-height: 1;
-    }
-    .stat-pill .stat-label {
-        font-size: .75rem;
-        color: var(--text-muted);
-        margin-top: .2rem;
-        font-weight: 500;
-    }
-
-    /* ── Action buttons ── */
-    .btn-book {
-        background: var(--tan);
-        color: var(--white);
-        border: none;
-        border-radius: 30px;
-        padding: .65rem 1.8rem;
-        font-weight: 600;
-        font-size: .9rem;
-        transition: background .2s, transform .15s;
-    }
-    .btn-book:hover { background: var(--tan-dark); color: var(--white); transform: translateY(-1px); }
-
-    .btn-outline-tan {
-        background: transparent;
-        color: var(--tan-dark);
-        border: 2px solid var(--tan);
-        border-radius: 30px;
-        padding: .6rem 1.6rem;
-        font-weight: 600;
-        font-size: .9rem;
-        transition: all .2s;
-    }
-    .btn-outline-tan:hover { background: var(--tan); color: var(--white); }
-
-    /* ── Section card ── */
-    .section-card {
-        background: var(--white);
-        border-radius: var(--radius);
-        padding: 1.8rem;
-        box-shadow: var(--shadow-sm);
-        margin-bottom: 1.5rem;
-    }
-    .section-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.25rem;
-        color: var(--brown);
-        font-weight: 700;
-        margin-bottom: 1.1rem;
-        padding-bottom: .5rem;
-        border-bottom: 2px solid var(--beige);
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-    }
-    .section-title i { color: var(--tan); }
-
-    /* ── Service tags ── */
-    .service-tag {
-        background: var(--beige);
-        color: var(--brown);
-        border-radius: 30px;
-        padding: .35rem .9rem;
-        font-size: .82rem;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: .35rem;
-        margin: .25rem;
-    }
-    .service-tag i { color: var(--tan); font-size: .75rem; }
-
-    /* ── Education timeline ── */
-    .edu-item { display: flex; gap: 1rem; margin-bottom: 1.1rem; }
-    .edu-dot {
-        width: 38px; height: 38px; flex-shrink: 0;
-        background: var(--beige);
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        color: var(--tan-dark);
-        font-weight: 700;
-        font-size: .78rem;
-        margin-top: 2px;
-    }
-    .edu-degree { font-weight: 600; font-size: .92rem; color: var(--text-main); }
-    .edu-inst   { font-size: .83rem; color: var(--text-muted); }
-
-    /* ── Working hours ── */
-    .hours-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: .5rem .6rem;
-        border-radius: 8px;
-        font-size: .88rem;
-        transition: background .15s;
-    }
-    .hours-row:hover { background: var(--beige); }
-    .hours-row .day  { font-weight: 600; color: var(--brown); }
-    .hours-row .time { color: var(--text-muted); }
-    .hours-row.today { background: var(--beige); }
-    .hours-row.today .day { color: var(--tan-dark); }
-    .badge-off {
-        background: #f5e9e0; color: #c0714b;
-        border-radius: 20px; padding: .15rem .6rem;
-        font-size: .75rem; font-weight: 600;
-    }
-    .badge-open {
-        background: #e4f0e8; color: #3a8a4f;
-        border-radius: 20px; padding: .15rem .6rem;
-        font-size: .75rem; font-weight: 600;
-    }
-
-    /* ── Stars ── */
-    .stars { color: #E8A838; font-size: .9rem; letter-spacing: .05em; }
-
-    /* ── Review card ── */
-    .review-card {
-        border: 1.5px solid var(--beige);
-        border-radius: var(--radius);
-        padding: 1.2rem;
-        margin-bottom: 1rem;
-        transition: border-color .2s, box-shadow .2s;
-    }
-    .review-card:hover { border-color: var(--tan); box-shadow: var(--shadow-sm); }
-    .review-avatar {
-        width: 42px; height: 42px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid var(--beige);
-    }
-    .review-author { font-weight: 600; font-size: .9rem; }
-    .review-pet    { font-size: .78rem; color: var(--text-muted); }
-    .review-date   { font-size: .78rem; color: var(--text-muted); }
-    .review-text   { font-size: .88rem; color: var(--text-main); line-height: 1.6; margin-top: .5rem; }
-
-    /* ── Rating summary bar ── */
-    .rating-hero {
-        background: linear-gradient(135deg, var(--beige), var(--cream));
-        border-radius: var(--radius);
-        padding: 1.4rem;
-        text-align: center;
-        margin-bottom: 1.2rem;
-    }
-    .rating-big {
-        font-family: 'Playfair Display', serif;
-        font-size: 3.5rem;
-        color: var(--brown);
-        line-height: 1;
-        font-weight: 700;
-    }
-    .progress-star { height: 8px; border-radius: 10px; background: var(--beige); }
-    .progress-star .bar { height: 100%; background: var(--tan); border-radius: 10px; }
-
-    /* ── Cert badge ── */
-    .cert-item {
-        display: flex; gap: .7rem; align-items: flex-start;
-        padding: .6rem 0;
-        border-bottom: 1px solid var(--beige);
-    }
-    .cert-item:last-child { border-bottom: none; }
-    .cert-icon {
-        width: 30px; height: 30px; flex-shrink: 0;
-        background: var(--beige);
-        border-radius: 8px;
-        display: flex; align-items: center; justify-content: center;
-        color: var(--tan-dark);
-    }
-    .cert-text { font-size: .87rem; font-weight: 500; padding-top: 4px; }
-
-    /* ── Contact info ── */
-    .contact-item {
-        display: flex; align-items: center; gap: .75rem;
-        padding: .7rem 0;
-        border-bottom: 1px solid var(--beige);
-        font-size: .9rem;
-    }
-    .contact-item:last-child { border-bottom: none; }
-    .contact-icon {
-        width: 34px; height: 34px; flex-shrink: 0;
-        background: var(--beige);
-        border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        color: var(--tan-dark);
-    }
-
-    /* ── Responsive tweaks ── */
-    @@media (max-width: 767px) {
-        .vet-name { font-size: 1.5rem; }
-        .stat-pill { min-width: 90px; padding: .7rem .9rem; }
-        .stat-pill .stat-num { font-size: 1.35rem; }
-    }
-</style>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    @* Link to the new external CSS file! *@
+    <link rel="stylesheet" href="~/css/Profile.css" asp-append-version="true" />
 }
 
 @* ══════════════════════════════════════════════════════════════════════════════
@@ -308,12 +22,12 @@
             @* Photo + core info *@
             <div class="col-md-7 d-flex align-items-center gap-4">
                 <div class="vet-photo-wrap flex-shrink-0">
-                    <img src="@Model.PhotoUrl" alt="Photo of @Model.FullName">
+                    <img src="@Model.ImageUrl" alt="Photo of @Model.UserAccount?.FullName">
                     <div class="vet-badge"><i class="bi bi-patch-check-fill"></i></div>
                 </div>
                 <div>
-                    <span class="vet-title-tag">@Model.Title</span>
-                    <h1 class="vet-name mb-1">@Model.FullName</h1>
+                    <span class="vet-title-tag">Doctor of Veterinary Medicine</span>
+                    <h1 class="vet-name mb-1">@Model.UserAccount?.FullName</h1>
                     <p class="vet-spec mb-1">
                         <i class="bi bi-award me-1" style="color:var(--tan)"></i>@Model.Specialization
                     </p>
@@ -327,7 +41,7 @@
                             <i class="bi @(i <= Math.Floor(Model.AverageRating) ? "bi-star-fill" : (i - Model.AverageRating < 1 ? "bi-star-half" : "bi-star"))"
                                style="color:#E8A838; font-size:.95rem;"></i>
                         }
-                        <span style="font-weight:600; color:var(--brown); margin-left:.35rem;">@Model.AverageRating</span>
+                        <span style="font-weight:600; color:var(--brown); margin-left:.35rem;">@Model.AverageRating.ToString("0.0")</span>
                         <span style="color:var(--text-muted); font-size:.85rem;">(@Model.TotalReviews reviews)</span>
                     </div>
                     <div class="d-flex gap-2 flex-wrap">
@@ -349,7 +63,7 @@
                         <div class="stat-label">Years Exp.</div>
                     </div>
                     <div class="stat-pill">
-                        <div class="stat-num">@(Model.HappyPatients >= 1000 ? (Model.HappyPatients/1000) + "K+" : Model.HappyPatients.ToString())</div>
+                        <div class="stat-num">500<span style="font-size:1rem">+</span></div>
                         <div class="stat-label">Happy Pets</div>
                     </div>
                     <div class="stat-pill">
@@ -357,7 +71,7 @@
                         <div class="stat-label">Reviews</div>
                     </div>
                     <div class="stat-pill">
-                        <div class="stat-num">@Model.AverageRating</div>
+                        <div class="stat-num">@Model.AverageRating.ToString("0.0")</div>
                         <div class="stat-label">Avg Rating</div>
                     </div>
                 </div>
@@ -368,7 +82,7 @@
         @* Wavy bottom edge *@
         <div style="margin-top:2rem; margin-bottom:-2px;">
             <svg viewBox="0 0 1440 50" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width:100%; display:block;">
-                <path d="M0,30 C240,60 480,0 720,30 C960,60 1200,0 1440,30 L1440,50 L0,50 Z" fill="#FAF6F1"/>
+                <path d="M0,30 C240,60 480,0 720,30 C960,60 1200,0 1440,30 L1440,50 L0,50 Z" fill="#FAF6F1" />
             </svg>
         </div>
     </div>
@@ -385,36 +99,40 @@
 
             @* About *@
             <div class="section-card">
-                <h2 class="section-title"><i class="bi bi-person-lines-fill"></i> About Dr. @Model.FullName.Split(' ').Last()</h2>
-                <p style="color:var(--text-main); line-height:1.75; font-size:.95rem;">@Model.Bio</p>
+                <h2 class="section-title"><i class="bi bi-person-lines-fill"></i> About @Model.UserAccount?.FullName</h2>
+                <p style="color:var(--text-main); line-height:1.75; font-size:.95rem;">@Model.Description</p>
             </div>
 
-            @* Services *@
+            @* Services (Assuming stored as comma-separated string based on previous DB setup) *@
             <div class="section-card">
                 <h2 class="section-title"><i class="bi bi-heart-pulse-fill"></i> Services Offered</h2>
                 <div>
-                    @foreach (var svc in Model.Services)
+                    @if (!string.IsNullOrEmpty(Model.Services))
                     {
-                        <span class="service-tag">
-                            <i class="bi bi-check-circle-fill"></i>@svc
-                        </span>
+                        foreach (var svc in Model.Services.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            <span class="service-tag">
+                                <i class="bi bi-check-circle-fill"></i>@svc.Trim()
+                            </span>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No specific services listed yet.</p>
                     }
                 </div>
             </div>
 
-            @* Education *@
+            @* Education Placeholder (Static because it was removed from DB models) *@
             <div class="section-card">
                 <h2 class="section-title"><i class="bi bi-mortarboard-fill"></i> Education</h2>
-                @foreach (var edu in Model.Education)
-                {
-                    <div class="edu-item">
-                        <div class="edu-dot">@edu.Year</div>
-                        <div>
-                            <div class="edu-degree">@edu.Degree</div>
-                            <div class="edu-inst">@edu.Institution</div>
-                        </div>
+                <div class="edu-item">
+                    <div class="edu-dot">✔</div>
+                    <div>
+                        <div class="edu-degree">Doctor of Veterinary Medicine (DVM)</div>
+                        <div class="edu-inst">Licensed Professional</div>
                     </div>
-                }
+                </div>
             </div>
 
             @* Reviews *@
@@ -423,7 +141,7 @@
 
                 @* Rating summary *@
                 <div class="rating-hero">
-                    <div class="rating-big">@Model.AverageRating</div>
+                    <div class="rating-big">@Model.AverageRating.ToString("0.0")</div>
                     <div class="stars my-1">
                         @for (int i = 1; i <= 5; i++)
                         {
@@ -433,35 +151,42 @@
                     <div style="color:var(--text-muted); font-size:.85rem;">Based on @Model.TotalReviews reviews</div>
                 </div>
 
-                @* Individual reviews *@
-                @foreach (var review in Model.Reviews)
+                @* Individual reviews from DB *@
+                @if (Model.Reviews != null && Model.Reviews.Any())
                 {
-                    <div class="review-card">
-                        <div class="d-flex align-items-center justify-content-between mb-1">
-                            <div class="d-flex align-items-center gap-2">
-                                <img src="@review.AvatarUrl" alt="@review.AuthorName" class="review-avatar">
-                                <div>
-                                    <div class="review-author">@review.AuthorName</div>
-                                    <div class="review-pet">
-                                        <i class="bi bi-heart-fill me-1" style="color:var(--tan); font-size:.7rem;"></i>@review.PetType owner
+                    foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedAt))
+                    {
+                        <div class="review-card">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="https://placehold.co/42x42/C8A882/white?text=@(review.Reviewer?.FullName?.FirstOrDefault() ?? 'U')" alt="User Avatar" class="review-avatar">
+                                    <div>
+                                        <div class="review-author">@review.Reviewer?.FullName</div>
+                                        <div class="review-pet">
+                                            <i class="bi bi-heart-fill me-1" style="color:var(--tan); font-size:.7rem;"></i>Verified Patient
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="stars">
-                                    @for (int i = 1; i <= 5; i++)
-                                    {
-                                        <i class="bi @(i <= review.Rating ? "bi-star-fill" : "bi-star")"></i>
-                                    }
+                                <div class="text-end">
+                                    <div class="stars">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="bi @(i <= review.Rating ? "bi-star-fill" : "bi-star")"></i>
+                                        }
+                                    </div>
+                                    <div class="review-date">@review.CreatedAt.ToString("MMM d, yyyy")</div>
                                 </div>
-                                <div class="review-date">@review.Date.ToString("MMM d, yyyy")</div>
                             </div>
+                            <p class="review-text">@review.Comment</p>
                         </div>
-                        <p class="review-text">@review.Comment</p>
-                    </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted text-center py-3">No reviews yet. Be the first to leave one!</p>
                 }
 
-                @* Placeholder CTA for adding a review later *@
+                @* CTA for adding a review *@
                 <div class="text-center mt-2">
                     <button class="btn btn-outline-tan btn-sm">
                         <i class="bi bi-pencil-square me-1"></i>Write a Review
@@ -474,42 +199,54 @@
         @* ── RIGHT SIDEBAR ───────────────────────────────────────────────── *@
         <div class="col-lg-4">
 
-            @* Working Hours *@
+            @* Working Hours (Pulled dynamically from DB Schedule) *@
             <div class="section-card">
                 <h2 class="section-title"><i class="bi bi-clock-fill"></i> Working Hours</h2>
                 @{
                     var todayName = DateTime.Now.DayOfWeek.ToString();
                 }
-                @foreach (var wh in Model.WorkingHours)
+
+                @if (Model.Schedule != null && Model.Schedule.Any())
                 {
-                    var isToday = wh.Day.Equals(todayName, StringComparison.OrdinalIgnoreCase);
-                    <div class="hours-row @(isToday ? "today" : "")">
-                        <span class="day">
-                            @wh.Day
-                            @if (isToday) { <span style="font-size:.72rem; color:var(--tan-dark); margin-left:.3rem;">(Today)</span> }
-                        </span>
-                        @if (wh.IsOff)
-                        {
-                            <span class="badge-off">Closed</span>
-                        }
-                        else
-                        {
-                            <span class="time">@wh.Hours</span>
-                        }
-                    </div>
+                    foreach (var wh in Model.Schedule.OrderBy(s => s.Day))
+                    {
+                        var isToday = wh.Day.ToString().Equals(todayName, StringComparison.OrdinalIgnoreCase);
+                        <div class="hours-row @(isToday ? "today" : "")">
+                            <span class="day">
+                                @wh.Day
+                                @if (isToday)
+                                {
+                                    <span style="font-size:.72rem; color:var(--tan-dark); margin-left:.3rem;">(Today)</span>
+                                }
+                            </span>
+
+                            @if (wh.IsOff || wh.OpenTime == null || wh.CloseTime == null)
+                            {
+                                <span class="badge-off">Closed</span>
+                            }
+                            else
+                            {
+                                // Formatting the TimeSpans nicely (e.g. 9:00 AM)
+                                var openStr = DateTime.Today.Add(wh.OpenTime.Value).ToString("h:mm tt");
+                                var closeStr = DateTime.Today.Add(wh.CloseTime.Value).ToString("h:mm tt");
+                                <span class="time">@openStr - @closeStr</span>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Schedule not set.</p>
                 }
             </div>
 
-            @* Certifications *@
+            @* Certifications Placeholder (Static because it was removed from DB models) *@
             <div class="section-card">
                 <h2 class="section-title"><i class="bi bi-patch-check-fill"></i> Certifications</h2>
-                @foreach (var cert in Model.Certifications)
-                {
-                    <div class="cert-item">
-                        <div class="cert-icon"><i class="bi bi-shield-check"></i></div>
-                        <div class="cert-text">@cert</div>
-                    </div>
-                }
+                <div class="cert-item">
+                    <div class="cert-icon"><i class="bi bi-shield-check"></i></div>
+                    <div class="cert-text">Licensed Veterinary Practitioner</div>
+                </div>
             </div>
 
             @* Contact *@
@@ -519,14 +256,14 @@
                     <div class="contact-icon"><i class="bi bi-envelope-fill"></i></div>
                     <div>
                         <div style="font-size:.75rem; color:var(--text-muted); font-weight:500;">Email</div>
-                        <a href="mailto:@Model.Email" style="color:var(--tan-dark); font-size:.9rem; font-weight:500; text-decoration:none;">@Model.Email</a>
+                        <a href="mailto:@Model.UserAccount?.Email" style="color:var(--tan-dark); font-size:.9rem; font-weight:500; text-decoration:none;">@Model.UserAccount?.Email</a>
                     </div>
                 </div>
                 <div class="contact-item">
                     <div class="contact-icon"><i class="bi bi-telephone-fill"></i></div>
                     <div>
                         <div style="font-size:.75rem; color:var(--text-muted); font-weight:500;">Phone</div>
-                        <a href="tel:@Model.Phone" style="color:var(--tan-dark); font-size:.9rem; font-weight:500; text-decoration:none;">@Model.Phone</a>
+                        <a href="tel:@Model.UserAccount?.PhoneNumber" style="color:var(--tan-dark); font-size:.9rem; font-weight:500; text-decoration:none;">@Model.UserAccount?.PhoneNumber</a>
                     </div>
                 </div>
                 <div class="contact-item">
@@ -538,7 +275,7 @@
                 </div>
 
                 <div class="mt-3">
-                    <a href="tel:@Model.Phone" class="btn btn-book w-100">
+                    <a href="tel:@Model.UserAccount?.PhoneNumber" class="btn btn-book w-100">
                         <i class="bi bi-telephone me-1"></i>Call Now
                     </a>
                 </div>

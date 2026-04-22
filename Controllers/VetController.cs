@@ -1,125 +1,274 @@
-﻿// Controllers/VetController.cs
-// Graduation Project: Pets-friends
-// ---------------------------------------------------------------------------
-// MENTOR NOTE:
-//   Right now this controller manually builds a VetProfile object (dummy data).
-//   When you integrate EF Core, replace the dummy block inside Profile() with:
-//       var vet = await _context.VetProfiles
-//                               .Include(v => v.Reviews)
-//                               .FirstOrDefaultAsync(v => v.Id == id);
-//   Then inject your DbContext via the constructor.
-// ---------------------------------------------------------------------------
-
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Pets_friends.Controllers;
+using Microsoft.EntityFrameworkCore;
+using Pets_friends.Data;
+using Pets_friends.Data.ViewModels;
 using Pets_friends.Models;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
+
 namespace Pets_friends.Controllers
 {
     public class VetController : Controller
     {
-        // ── Future: inject DbContext here ────────────────────────────────────
-        // private readonly AppDbContext _context;
-        // public VetController(AppDbContext context) { _context = context; }
+        private readonly AppDbContext _context;
+        private readonly UserManager<UserAccount> _userManager;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        // GET /Vet/Profile/{id}
-        public IActionResult Profile(int id = 1)
+        public VetController(AppDbContext context, UserManager<UserAccount> userManager, IWebHostEnvironment webHostEnvironment)
         {
-            // ── DUMMY DATA – replace this block with a DB call later ──────────
-            var vet = new VetProfile
+            _context = context;
+            _userManager = userManager;
+            _webHostEnvironment = webHostEnvironment;
+        }
+
+        // ====================================================================
+        // 1. VET PRIVATE DASHBOARD
+        // ====================================================================
+        [Authorize(Roles = "Vet")]
+        public async Task<IActionResult> Dashboard()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login", "Account");
+
+            var profile = await _context.VetProfiles
+                .Include(p => p.UserAccount)
+                .Include(p => p.Reviews).ThenInclude(r => r.Reviewer)
+                .FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
+
+            if (profile == null) return RedirectToAction(nameof(Create));
+
+            var pendingAppointments = await _context.Appointments
+                .Include(a => a.ClientProfile).ThenInclude(c => c.UserAccount)
+                .Include(a => a.Pet)
+                .Include(a => a.Service)
+                .Where(a => a.VetProfileId == profile.Id && a.Status == "Pending")
+                .OrderBy(a => a.AppointmentDate)
+                .ToListAsync();
+
+            var vm = new VetDashboardVM
             {
-                Id = 1,
-                FullName = "Dr. Sarah Al-Khalidi",
-                Title = "Doctor of Veterinary Medicine",
-                PhotoUrl = "https://placehold.co/160x160/C8A882/white?text=Dr.Sarah",
-                Specialization = "Small Animal & Exotic Pet Specialist",
-                ClinicName = "PetPals Veterinary Center",
-                ClinicAddress = "12 Al-Madeena St., Amman, Jordan",
-                YearsOfExperience = 9,
-                Bio = "Dr. Sarah is a compassionate veterinarian with over 9 years of experience " +
-                                    "caring for dogs, cats, rabbits, and exotic companions. She graduated top of " +
-                                    "her class from Jordan University of Science & Technology and completed her " +
-                                    "residency at the Royal Veterinary College, London. Her philosophy is simple: " +
-                                    "treat every patient as if it were her own.",
-                Email = "sarah.khalidi@petpals.jo",
-                Phone = "+962 79 123 4567",
-                AverageRating = 4.8,
-                TotalReviews = 127,
-                HappyPatients = 1400,
-
-                Services = new List<string>
-                {
-                    "General Check-ups & Vaccinations",
-                    "Dental Cleaning & Oral Health",
-                    "Spay & Neuter Surgery",
-                    "Dermatology & Allergy Treatment",
-                    "Exotic Pet Care (rabbits, birds, reptiles)",
-                    "Emergency & Critical Care",
-                    "Nutrition & Weight Management",
-                    "Post-Surgery Rehabilitation"
-                },
-
-                Education = new List<EducationEntry>
-                {
-                    new() { Degree = "Doctor of Veterinary Medicine (DVM)",  Institution = "Jordan University of Science & Technology", Year = 2015 },
-                    new() { Degree = "Residency – Small Animal Medicine",     Institution = "Royal Veterinary College, London",           Year = 2017 },
-                    new() { Degree = "Certificate in Exotic Animal Practice", Institution = "University of Edinburgh",                    Year = 2019 }
-                },
-
-                Certifications = new List<string>
-                {
-                    "RCVS Registered Veterinary Surgeon",
-                    "AVMA Member",
-                    "Certified Fear-Free Practitioner",
-                    "Advanced Cardiac Ultrasound – Level II"
-                },
-
-                WorkingHours = new List<WorkingHoursEntry>
-                {
-                    new() { Day = "Sunday",    Hours = "9:00 AM – 5:00 PM"  },
-                    new() { Day = "Monday",    Hours = "9:00 AM – 5:00 PM"  },
-                    new() { Day = "Tuesday",   Hours = "9:00 AM – 5:00 PM"  },
-                    new() { Day = "Wednesday", Hours = "9:00 AM – 1:00 PM"  },
-                    new() { Day = "Thursday",  Hours = "9:00 AM – 5:00 PM"  },
-                    new() { Day = "Friday",    Hours = "Closed", IsOff = true },
-                    new() { Day = "Saturday",  Hours = "10:00 AM – 3:00 PM" }
-                },
-
-                Reviews = new List<ReviewEntry>
-                {
-                    new()
-                    {
-                        AuthorName = "Lina M.",
-AvatarUrl = "https://placehold.co/42x42/C8A882/white?text=L",               
-                        Rating     = 5,
-                        Comment    = "Dr. Sarah is absolutely wonderful! She treated our anxious golden retriever " +
-                                     "with so much patience and care. We will not go anywhere else.",
-                        Date       = new DateTime(2025, 3, 14),
-                        PetType    = "Dog"
-                    },
-                    new()
-                    {
-                        AuthorName = "Omar T.",
-                        AvatarUrl = "https://placehold.co/42x42/C8A882/white?text=O",
-                        Rating     = 5,
-                        Comment    = "Took my rabbit for a check-up and was impressed by how knowledgeable " +
-                                     "she is with exotic pets. Highly recommend for non-standard animals!",
-                        Date       = new DateTime(2025, 2, 28),
-                        PetType    = "Rabbit"
-                    },
-                    new()
-                    {
-                        AuthorName = "Reem A.",
-                        AvatarUrl = "https://placehold.co/42x42/C8A882/white?text=R",
-                        Rating     = 4,
-                        Comment    = "Very professional and thorough. The clinic is clean and the staff are " +
-                                     "friendly. Waiting time can be a bit long on busy days.",
-                        Date       = new DateTime(2025, 1, 9),
-                        PetType    = "Cat"
-                    }
-                }
+                Profile = profile,
+                PendingAppointments = pendingAppointments,
+                RecentReviews = profile.Reviews?.OrderByDescending(r => r.CreatedAt).Take(5).ToList() ?? new List<VetReview>()
             };
 
+            return View(vm);
+        }
+
+        // ====================================================================
+        // 2. PUBLIC PROFILE VIEW
+        // ====================================================================
+        [AllowAnonymous]
+        public async Task<IActionResult> Profile(int? id)
+        {
+            VetProfile vet = null;
+
+            if (id.HasValue && id.Value > 0)
+            {
+                vet = await _context.VetProfiles
+                    .Include(v => v.UserAccount)
+                    .Include(v => v.Schedule)
+                    .Include(v => v.Reviews).ThenInclude(r => r.Reviewer)
+                    .FirstOrDefaultAsync(v => v.Id == id);
+            }
+            else if (User.Identity.IsAuthenticated && User.IsInRole("Vet"))
+            {
+                var user = await _userManager.GetUserAsync(User);
+                vet = await _context.VetProfiles
+                    .Include(v => v.UserAccount)
+                    .Include(v => v.Schedule)
+                    .Include(v => v.Reviews).ThenInclude(r => r.Reviewer)
+                    .FirstOrDefaultAsync(v => v.UserAccountId == user.Id);
+
+                if (vet == null) return RedirectToAction(nameof(Create));
+            }
+
+            if (vet == null) return NotFound();
             return View(vet);
+        }
+
+        // ====================================================================
+        // 3. SECURE MANAGEMENT (Create, Edit, Delete)
+        // ====================================================================
+
+        [Authorize(Roles = "Vet")]
+        public async Task<IActionResult> Create()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (await _context.VetProfiles.AnyAsync(p => p.UserAccountId == user.Id))
+                return RedirectToAction(nameof(Edit));
+
+            var vm = new VetProfileFormVM();
+            // Initialize empty schedule for a fresh start
+            foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
+            {
+                vm.Schedule.Add(new WorkingDayVM { Day = day, IsOff = true });
+            }
+            return View("Edit", vm);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Vet")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(VetProfileFormVM vm)
+        {
+            if (!ModelState.IsValid) return View("Edit", vm);
+
+            var user = await _userManager.GetUserAsync(User);
+            var newProfile = new VetProfile
+            {
+                UserAccountId = user.Id,
+                Specialization = vm.Specialization,
+                ClinicName = vm.ClinicName,
+                ClinicAddress = vm.ClinicAddress,
+                YearsOfExperience = vm.YearsOfExperience,
+                Description = vm.Description,
+                Services = vm.Services,
+                // Handle the physical file upload
+                ImageUrl = await ProcessUploadedFile(vm.ImageFile) ?? "/images/default-vet.png"
+            };
+
+            foreach (var item in vm.Schedule)
+            {
+                newProfile.Schedule.Add(new WorkingDay
+                {
+                    Day = item.Day,
+                    IsOff = item.IsOff,
+                    OpenTime = (!item.IsOff && DateTime.TryParse(item.OpenTime, out var ot)) ? ot.TimeOfDay : null,
+                    CloseTime = (!item.IsOff && DateTime.TryParse(item.CloseTime, out var ct)) ? ct.TimeOfDay : null
+                });
+            }
+
+            _context.VetProfiles.Add(newProfile);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        [Authorize(Roles = "Vet")]
+        public async Task<IActionResult> Edit()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            // CRITICAL: .Include(p => p.Schedule) ensures the hours are loaded!
+            var profile = await _context.VetProfiles
+                .Include(p => p.Schedule)
+                .FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
+
+            if (profile == null) return RedirectToAction(nameof(Create));
+
+            var vm = new VetProfileFormVM
+            {
+                Id = profile.Id,
+                Specialization = profile.Specialization,
+                ClinicName = profile.ClinicName,
+                ClinicAddress = profile.ClinicAddress,
+                YearsOfExperience = profile.YearsOfExperience,
+                Description = profile.Description,
+                ExistingImageUrl = profile.ImageUrl,
+                Services = profile.Services,
+                // Format times strictly for HTML5 time picker (HH:mm)
+                Schedule = profile.Schedule.Select(w => new WorkingDayVM
+                {
+                    Id = w.Id,
+                    Day = w.Day,
+                    IsOff = w.IsOff,
+                    OpenTime = w.OpenTime?.ToString(@"hh\:mm"),
+                    CloseTime = w.CloseTime?.ToString(@"hh\:mm")
+                }).OrderBy(s => ((int)s.Day + 6) % 7).ToList() // Sort Mon-Sun
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Vet")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(VetProfileFormVM vm)
+        {
+            if (!ModelState.IsValid) return View(vm);
+
+            var user = await _userManager.GetUserAsync(User);
+
+            // CRITICAL: .Include(p => p.Schedule) so we can update existing hours
+            var profile = await _context.VetProfiles
+                .Include(p => p.Schedule)
+                .FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
+
+            if (profile == null) return NotFound();
+
+            profile.Specialization = vm.Specialization;
+            profile.ClinicName = vm.ClinicName;
+            profile.ClinicAddress = vm.ClinicAddress;
+            profile.YearsOfExperience = vm.YearsOfExperience;
+            profile.Description = vm.Description;
+            profile.Services = vm.Services;
+
+            // Physical File Upload Logic
+            if (vm.ImageFile != null)
+            {
+                // Delete old image file to save server space
+                if (!string.IsNullOrEmpty(profile.ImageUrl) && !profile.ImageUrl.Contains("placehold.co"))
+                {
+                    var oldPath = Path.Combine(_webHostEnvironment.WebRootPath, profile.ImageUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                }
+                profile.ImageUrl = await ProcessUploadedFile(vm.ImageFile);
+            }
+
+            // Sync Schedule updates
+            foreach (var item in vm.Schedule)
+            {
+                var dbDay = profile.Schedule.FirstOrDefault(w => w.Day == item.Day);
+                if (dbDay != null)
+                {
+                    dbDay.IsOff = item.IsOff;
+                    dbDay.OpenTime = (!item.IsOff && DateTime.TryParse(item.OpenTime, out var ot)) ? ot.TimeOfDay : null;
+                    dbDay.CloseTime = (!item.IsOff && DateTime.TryParse(item.CloseTime, out var ct)) ? ct.TimeOfDay : null;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Profile updated successfully!";
+            return RedirectToAction("Profile", "Vet");
+        }
+
+        // Helper Method for Professional File Saving
+        private async Task<string?> ProcessUploadedFile(IFormFile? file)
+        {
+            if (file == null || file.Length == 0) return null;
+
+            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/vets");
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+            string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+
+            return "/uploads/vets/" + uniqueFileName;
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Vet")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var profile = await _context.VetProfiles.FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
+
+            if (profile != null)
+            {
+                _context.VetProfiles.Remove(profile);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Profile deleted permanently.";
+            }
+
+            return RedirectToAction("Dashboard", "Vet");
         }
     }
 }

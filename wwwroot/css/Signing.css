@@ -1,5 +1,5 @@
 /* RESET */
-*{
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -20,7 +20,7 @@ body {
     padding: 20px;
 }
 
-/* MAIN CONTAINER */
+/* MAIN CONTAINER - Restored to your exact original size */
 .main-container {
     width: 100%;
     max-width: 1250px;
@@ -32,7 +32,7 @@ body {
     box-shadow: 0 25px 60px rgba(91, 62, 43, 0.18);
 }
 
-/* LEFT PANEL */
+/* LEFT PANEL - Restored to 50% split */
 .left-panel {
     flex: 1;
     min-height: 300px;
@@ -44,13 +44,16 @@ body {
         object-fit: cover;
     }
 
-/* RIGHT PANEL */
+/* RIGHT PANEL - Restored to 50% split */
 .right-panel {
     flex: 1;
     background: #f8f2ec;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* top aligned */
+    /* Using 'center' here ensures that the shorter Login form 
+       floats perfectly in the middle of your 700px box instead 
+       of awkwardly sticking to the ceiling! */
+    align-items: center;
     padding: 50px;
 }
 
@@ -105,6 +108,7 @@ body {
         font-size: 14px;
         font-weight: 500;
         transition: 0.3s ease;
+        cursor: pointer;
     }
 
     .toggle .active {
@@ -122,10 +126,13 @@ body {
 }
 
 /* INPUTS */
+.input-group {
+    margin-bottom: 16px;
+}
+
 input {
     width: 100%;
     padding: 15px 16px;
-    margin-bottom: 16px;
     border: 1px solid #d8c8b8;
     border-radius: 12px;
     font-size: 14px;
@@ -137,6 +144,43 @@ input {
         outline: none;
         border-color: #7b4f2c;
         box-shadow: 0 0 0 3px rgba(123, 79, 44, 0.12);
+    }
+
+/* ASP.NET CORE VALIDATION ERRORS */
+.input-validation-error {
+    border-color: #d9534f !important;
+    background-color: #fff8f8 !important;
+}
+
+    .input-validation-error:focus {
+        box-shadow: 0 0 0 3px rgba(217, 83, 79, 0.15) !important;
+    }
+
+.field-validation-error {
+    color: #d9534f;
+    font-size: 12px;
+    font-weight: 600;
+    display: block;
+    margin-top: 4px;
+    padding-left: 4px;
+    text-align: left;
+}
+
+.validation-summary-errors {
+    background: #fff8f8;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    color: #d9534f;
+    font-size: 13px;
+    text-align: center;
+}
+
+    .validation-summary-errors ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
     }
 
 /* BUTTON */
@@ -151,6 +195,7 @@ button {
     font-weight: 700;
     cursor: pointer;
     transition: 0.3s ease;
+    margin-top: 8px;
 }
 
     button:hover {
@@ -158,21 +203,16 @@ button {
         transform: translateY(-1px);
     }
 
-/* ERROR */
-.text-danger {
-    text-align: center;
-    margin-top: 12px;
-    font-size: 13px;
-    color: #d9534f;
-}
-
 /* LINKS */
 a {
     text-decoration: none;
 }
 
 .forgot-link {
-    margin: -6px 0 14px 4px;
+    margin-top: -6px;
+    margin-bottom: 16px;
+    text-align: right;
+    padding-right: 4px;
 }
 
     .forgot-link a {
@@ -182,8 +222,6 @@ a {
     }
 
 /* ========== RESPONSIVE ========== */
-
-/* Tablets */
 @media (max-width: 992px) {
     .right-panel {
         padding: 35px;
@@ -198,7 +236,6 @@ a {
     }
 }
 
-/* Phones */
 @media (max-width: 768px) {
     .main-container {
         flex-direction: column;
@@ -218,7 +255,6 @@ a {
     }
 }
 
-/* Small phones */
 @media (max-width: 480px) {
     .main-wrapper {
         padding: 10px;
@@ -242,8 +278,7 @@ a {
         font-size: 22px;
     }
 
-    input,
-    button {
+    input, button {
         padding: 13px;
         font-size: 14px;
     }

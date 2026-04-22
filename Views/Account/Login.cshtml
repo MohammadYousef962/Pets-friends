@@ -1,16 +1,15 @@
 ﻿@model Pets_friends.Data.ViewModels.LoginVM
 
 @{
-    Layout = null;
+    ViewData["Title"] = "Login";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml"; // Force the full-screen layout
 }
-
-<link rel="stylesheet" href="~/css/Signing.css" />
 
 <div class="main-wrapper">
     <div class="main-container">
 
         <div class="left-panel">
-            <img src="~/images/Pets.png" asp-append-version="true" />
+            <img src="~/images/Pets.png" alt="Happy Pets" asp-append-version="true" />
         </div>
 
         <div class="right-panel">
@@ -30,18 +29,23 @@
                 <h2>Welcome Back</h2>
 
                 <form asp-action="Login" method="post">
+                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
 
-                    <input asp-for="EmailAddress" placeholder="Email" />
-                    <input asp-for="Password" type="password" placeholder="Password" />
+                    <div class="input-group">
+                        <input asp-for="EmailAddress" placeholder="Email" />
+                        <span asp-validation-for="EmailAddress" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="input-group">
+                        <input asp-for="Password" type="password" placeholder="Password" />
+                        <span asp-validation-for="Password" class="field-validation-error"></span>
+                    </div>
 
                     <div class="forgot-link">
                         <a asp-action="ForgotPassword">Forgot Password?</a>
                     </div>
 
                     <button type="submit">Login</button>
-
-                    <div class="text-danger" asp-validation-summary="ModelOnly"></div>
-
                 </form>
 
             </div>

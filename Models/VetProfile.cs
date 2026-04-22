@@ -1,58 +1,34 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
+// ADD THIS NAMESPACE BLOCK AROUND YOUR CLASS
 namespace Pets_friends.Models
 {
     public class VetProfile
     {
+        [Key]
         public int Id { get; set; }
 
-        [Required, MaxLength(100)]
-        public string FullName { get; set; } = string.Empty;
-        public string Title { get; set; } = "Doctor of Veterinary Medicine";
-        public string PhotoUrl { get; set; } = "/images/vets/default.jpg";
+        [Required]
+        public string UserAccountId { get; set; } = string.Empty;
+
+        [ForeignKey("UserAccountId")]
+        public virtual UserAccount UserAccount { get; set; } = null!;
+
         public string Specialization { get; set; } = string.Empty;
         public string ClinicName { get; set; } = string.Empty;
         public string ClinicAddress { get; set; } = string.Empty;
         public int YearsOfExperience { get; set; }
-        public string Bio { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = "https://placehold.co/160x160/C8A882/white?text=Vet";
+        public string Services { get; set; } = string.Empty;
 
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
-        [Phone]
-        public string Phone { get; set; } = string.Empty;
+        public virtual ICollection<VetReview> Reviews { get; set; } = new List<VetReview>();
+        public double AverageRating => Reviews.Any() ? Reviews.Average(r => r.Rating) : 0;
+        public int TotalReviews => Reviews.Count;
 
-        public double AverageRating { get; set; }
-        public int TotalReviews { get; set; }
-        public int HappyPatients { get; set; }
+        public virtual ICollection<WorkingDay> Schedule { get; set; } = new List<WorkingDay>();
+        public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
-        public List<string> Services { get; set; } = new();
-        public List<EducationEntry> Education { get; set; } = new();
-        public List<string> Certifications { get; set; } = new();
-        public List<WorkingHoursEntry> WorkingHours { get; set; } = new();
-        public List<ReviewEntry> Reviews { get; set; } = new();
-    }
-
-    public class EducationEntry
-    {
-        public string Degree { get; set; } = string.Empty;
-        public string Institution { get; set; } = string.Empty;
-        public int Year { get; set; }
-    }
-
-    public class WorkingHoursEntry
-    {
-        public string Day { get; set; } = string.Empty;
-        public string Hours { get; set; } = string.Empty;
-        public bool IsOff { get; set; }
-    }
-
-    public class ReviewEntry
-    {
-        public string AuthorName { get; set; } = string.Empty;
-        public string AvatarUrl { get; set; } = string.Empty;
-        public int Rating { get; set; }
-        public string Comment { get; set; } = string.Empty;
-        public DateTime Date { get; set; }
-        public string PetType { get; set; } = string.Empty;
     }
 }

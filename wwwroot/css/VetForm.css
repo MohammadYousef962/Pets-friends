@@ -1,0 +1,165 @@
+﻿/* wwwroot/css/VetForm.css */
+
+:root {
+    --cream: #FAF6F1;
+    --beige: #EDE0D0;
+    --tan: #C8A882;
+    --tan-dark: #A0805A;
+    --brown: #5C3D1E;
+    --text-main: #2D1F0E;
+    --text-muted: #8C7560;
+    --white: #FFFFFF;
+    --error: #d9534f;
+}
+
+body {
+    background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.form-container {
+    background: rgba(255, 250, 245, 0.98);
+    width: 100%;
+    max-width: 800px;
+    border-radius: 28px;
+    padding: 50px;
+    box-shadow: 0 25px 60px rgba(91, 62, 43, 0.18);
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+    .form-header h2 {
+        font-family: 'Playfair Display', serif;
+        color: var(--brown);
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+
+    .form-header p {
+        color: var(--text-muted);
+        font-size: 15px;
+    }
+
+/* Grid Layout for Form */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.full-width {
+    grid-column: span 2;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    color: var(--brown);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #d8c8b8;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.25s ease;
+}
+
+    input:focus, textarea:focus {
+        outline: none;
+        border-color: var(--tan);
+        box-shadow: 0 0 0 3px rgba(200, 168, 130, 0.15);
+    }
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.btn-group {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+}
+
+.btn-save {
+    flex: 2;
+    background: var(--tan);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+    .btn-save:hover {
+        background: var(--tan-dark);
+        transform: translateY(-1px);
+    }
+
+.btn-cancel {
+    flex: 1;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--beige);
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+    .btn-cancel:hover {
+        background: #fdfaf7;
+    }
+
+/* Validation */
+.text-danger {
+    color: var(--error);
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
+
+.input-validation-error {
+    border-color: var(--error) !important;
+}
+
+@media (max-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .full-width {
+        grid-column: span 1;
+    }
+
+    .form-container {
+        padding: 30px 20px;
+    }
+}
+/* Custom Brown Toggles */
+.form-switch .form-check-input:checked {
+    background-color: #8E6F54; /* Active Brown accent matching your theme */
+    border-color: #8E6F54;
+    outline-color: #C8A882;
+}
+
+/* Also ensure the hover and focus outlines use the correct palette */
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(200, 168, 130, 0.25);
+    border-color: #C8A882;
+}

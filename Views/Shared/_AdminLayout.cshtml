@@ -1,0 +1,105 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@inject UserManager<UserAccount> UserManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Control</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/Admin.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
+
+    <style>
+        /* 1. Kills the horizontal scrollbar and fits the screen perfectly */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* 2. Premium Glass Navbar */
+        .admin-navbar {
+            background: rgba(250, 246, 241, 0.6); /* Semi-transparent */
+            backdrop-filter: blur(12px); /* Blurs the gradient behind it */
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(237, 224, 208, 0.5);
+            z-index: 10;
+        }
+
+        /* 3. Styled Logout Button */
+        .btn-logout {
+            color: #d9534f;
+            font-weight: 600;
+            background: transparent;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 6px 14px;
+            transition: all 0.2s ease;
+        }
+
+            .btn-logout:hover {
+                background: #fff5f5;
+                border-color: #ffe3e3;
+                transform: translateY(-1px);
+            }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav class="navbar navbar-expand-sm admin-navbar position-sticky top-0">
+            <div class="container-fluid px-4 py-1">
+                <a class="navbar-brand fw-bold d-flex align-items-center gap-2" style="color: #5C3D1E; font-family: 'Playfair Display';" asp-area="" asp-controller="Admin" asp-action="Dashboard">
+                    <i class="bi bi-shield-lock-fill" style="color: #C8A882; font-size: 1.2rem;"></i> Pet Friends Admin
+                </a>
+
+                <div class="d-flex align-items-center gap-3">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        var currentUser = await UserManager.GetUserAsync(User);
+                        <div class="user-greeting d-none d-sm-block" style="color: #8C7560; font-weight: 600; font-size: 0.95rem;">
+                            <i class="bi bi-person-circle me-1" style="color: #C8A882; font-size: 1.1rem;"></i>
+                            Hello, @(currentUser?.FullName ?? "Admin")
+                        </div>
+                    }
+
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                        <button type="submit" class="btn btn-sm btn-logout">
+                            Logout <i class="bi bi-box-arrow-right ms-1"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

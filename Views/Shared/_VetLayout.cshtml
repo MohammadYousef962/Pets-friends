@@ -1,0 +1,133 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@inject UserManager<UserAccount> UserManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Vet Portal</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/Admin.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .vet-navbar {
+            background: rgba(250, 246, 241, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(237, 224, 208, 0.8);
+            z-index: 10;
+            box-shadow: 0 4px 20px rgba(92, 61, 30, 0.05);
+        }
+
+        .vet-nav-link {
+            color: #8C7560;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            margin-right: 5px;
+        }
+
+            .vet-nav-link:hover {
+                background: #EDE0D0;
+                color: #5C3D1E;
+                font-weight: 600;
+            }
+
+        .btn-logout {
+            color: #d9534f;
+            font-weight: 600;
+            background: transparent;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 6px 14px;
+            transition: all 0.2s ease;
+        }
+
+            .btn-logout:hover {
+                background: #fff5f5;
+                border-color: #ffe3e3;
+                transform: translateY(-1px);
+            }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav class="navbar navbar-expand-sm vet-navbar position-sticky top-0">
+            <div class="container-fluid px-4 py-2">
+                <a class="navbar-brand fw-bold d-flex align-items-center gap-2 me-4" style="color: #5C3D1E; font-family: 'Playfair Display';" asp-controller="Vet" asp-action="Dashboard">
+                    <i class="bi bi-heart-pulse-fill" style="color: #C8A882; font-size: 1.4rem;"></i> Pet Friends Vet
+                </a>
+
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#vetNavbar">
+                    <i class="bi bi-list fs-2" style="color: #5C3D1E;"></i>
+                </button>
+
+                <div class="collapse navbar-collapse" id="vetNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-sm-0">
+                        <li class="nav-item">
+                            <a class="vet-nav-link" asp-controller="Product" asp-action="Index">
+                                <i class="bi bi-shop me-1"></i> Pet Store
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex align-items-center gap-3">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            var currentUser = await UserManager.GetUserAsync(User);
+                            <div class="user-greeting d-none d-sm-block" style="color: #8C7560; font-weight: 600; font-size: 0.95rem;">
+                                <i class="bi bi-person-circle me-1" style="color: #C8A882; font-size: 1.1rem;"></i>
+                                Hello, @(currentUser?.FullName ?? "User")
+                            </div>
+                        }
+
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                            <button type="submit" class="btn btn-sm btn-logout">
+                                Logout <i class="bi bi-box-arrow-right ms-1"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

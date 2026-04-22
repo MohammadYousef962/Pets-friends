@@ -1,4 +1,9 @@
+wwwroot\css\Admin.css
+wwwroot\css\Profile.css
+wwwroot\css\Signing.css
 wwwroot\css\site.css
+wwwroot\css\VetForm.css
+wwwroot\css\VetProfileForm.css
 wwwroot\Images\Pets.png
 wwwroot\js\site.js
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
@@ -58,4 +63,3 @@ wwwroot\lib\jquery\dist\jquery.js
 wwwroot\lib\jquery\dist\jquery.min.js
 wwwroot\lib\jquery\dist\jquery.min.map
 wwwroot\lib\jquery\LICENSE.txt
-wwwroot\css\Signing.css
