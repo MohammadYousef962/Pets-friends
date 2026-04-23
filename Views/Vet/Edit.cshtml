@@ -12,25 +12,28 @@
             --text-muted: #8C7560;
             --bg-card: #FAF6F1;
             --tan-accent: #C8A882;
+            --tan-medium: #EDE0D0;
             --brown-button: #5C3D1E;
             --border-light: #EBE0D5;
+            --validation-error: #d9534f;
         }
 
         body {
             font-family: 'DM Sans', sans-serif;
             color: var(--text-dark);
-            background-color: #fdfcfb;
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
+            min-height: 100vh;
         }
 
-        /* --- 1. PROFESSIONAL PFP UPLOAD ZONE --- */
+        /* --- PFP UPLOAD --- */
         .pfp-upload-container {
             background-color: var(--bg-card);
-            border-radius: 24px;
+            border-radius: 28px;
             padding: 40px;
             text-align: center;
             border: 1px solid var(--border-light);
-            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
             margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
         }
 
         .pfp-preview-circle {
@@ -55,204 +58,294 @@
 
         .upload-drop-zone {
             border: 2px dashed var(--tan-accent);
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 30px;
             background-color: rgba(255, 255, 255, 0.5);
             transition: all 0.3s ease;
             cursor: pointer;
-            position: relative;
         }
 
-            .upload-drop-zone:hover, .upload-drop-zone.dragover {
+            .upload-drop-zone:hover {
                 background-color: #fff;
                 border-color: var(--brown-button);
             }
 
-        .upload-icon {
-            font-size: 3rem;
-            color: var(--tan-accent);
-            margin-bottom: 10px;
-        }
-
-        .btn-browse {
-            background-color: var(--tan-accent);
-            color: white;
-            border: none;
-            padding: 8px 25px;
-            border-radius: 20px;
-            font-weight: 600;
-            margin-top: 15px;
-            transition: 0.2s;
-        }
-
-            .btn-browse:hover {
-                background-color: var(--brown-button);
-            }
-
-        /* File Name Pill */
-        .file-status-pill {
-            display: inline-flex;
-            align-items: center;
-            background: #EAE0D5;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            margin-top: 15px;
-            color: var(--text-dark);
-            font-weight: 500;
-        }
-
-        /* --- 2. FORM CARDS & TOGGLES --- */
+        /* --- CARDS & INPUTS --- */
         .glass-card {
             background-color: var(--bg-card);
-            border-radius: 20px;
-            padding: 30px;
+            border-radius: 24px;
+            padding: 35px;
             border: 1px solid var(--border-light);
             height: 100%;
+            overflow: hidden;
         }
 
-        .form-switch .form-check-input:checked {
-            background-color: #8E6F54 !important;
-            border-color: #8E6F54 !important;
+        h4.card-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--tan-medium);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
         }
 
         .form-control {
             border-radius: 12px;
-            padding: 12px;
-            border: 1px solid #EBE0D5;
+            padding: 12px 16px;
+            border: 1px solid var(--tan-medium);
             background: #fff;
+            transition: all 0.2s ease;
         }
 
+            .form-control:focus {
+                border-color: var(--tan-accent);
+                box-shadow: 0 0 0 0.25rem rgba(200, 168, 130, 0.15);
+            }
+
+        .time-input {
+            width: 100%;
+            max-width: 140px;
+            text-align: center;
+        }
+
+        /* --- TOGGLES --- */
+        .form-switch {
+            padding-left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+            .form-switch .form-check-input {
+                width: 52px;
+                height: 28px;
+                background-color: var(--tan-medium);
+                border: none;
+                border-radius: 50px;
+                position: relative;
+                cursor: pointer;
+                outline: none;
+                box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+                appearance: none;
+                -webkit-appearance: none;
+                background-image: none !important;
+                transition: all 0.3s ease;
+                margin: 0;
+            }
+
+                .form-switch .form-check-input::before {
+                    content: "";
+                    position: absolute;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    top: 2px;
+                    left: 2px;
+                    background-color: #fff;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+                }
+
+                .form-switch .form-check-input:checked {
+                    background-color: var(--brown-button) !important;
+                }
+
+                    .form-switch .form-check-input:checked::before {
+                        transform: translateX(24px);
+                    }
+
+        /* --- TAGS UI --- */
+        .tag-input-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--tan-medium);
+            background: #fff;
+            min-height: 50px;
+            cursor: text;
+        }
+
+        .tag-badge {
+            background-color: var(--tan-accent);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+        }
+
+        .tag-input-wrapper input {
+            border: none;
+            outline: none;
+            flex-grow: 1;
+            background: transparent;
+            min-width: 150px;
+        }
+
+        /* --- ACTION BAR --- */
         .action-bar {
             background-color: #F1EAE1;
-            border-radius: 15px;
+            border-radius: 18px;
             padding: 20px;
             display: flex;
             gap: 15px;
-            margin-top: 30px;
+            margin-top: 40px;
+        }
+
+        .btn-save, .btn-cancel, .btn-delete {
+            flex: 1;
+            border-radius: 12px;
+            font-weight: 700;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            text-decoration: none !important;
+            transition: 0.3s;
         }
 
         .btn-save {
             background-color: var(--brown-button);
             color: white;
-            flex: 2;
-            border-radius: 10px;
-            font-weight: 600;
-            padding: 12px;
-            border: none;
         }
 
         .btn-cancel {
             background-color: #EAE0D5;
-            color: var(--text-dark);
-            flex: 1;
-            border-radius: 10px;
-            font-weight: 600;
-            text-align: center;
-            text-decoration: none;
-            padding: 12px;
+            color: var(--text-dark) !important;
         }
 
         .btn-delete {
             background: transparent;
-            border: 1px solid #d9534f;
-            color: #d9534f;
-            flex: 1;
-            border-radius: 10px;
-            font-weight: 600;
+            border: 2px solid var(--validation-error);
+            color: var(--validation-error);
+        }
+
+            .btn-delete:hover {
+                background-color: var(--validation-error);
+                color: white;
+            }
+
+        .text-danger {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: block;
         }
     </style>
 }
 
-<div class="container py-5" style="max-width: 1000px;">
-
+<div class="container py-5" style="max-width: 1200px;">
     <form asp-action="Edit" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
+
         <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="ExistingImageUrl" />
 
         <div class="pfp-upload-container">
             <div class="pfp-preview-circle">
                 <img id="imgPreview" src="@(string.IsNullOrEmpty(Model.ExistingImageUrl) ? "https://placehold.co/160x160/C8A882/white?text=Vet" : Model.ExistingImageUrl)" alt="Profile">
             </div>
-
-            <h3 style="font-family: 'Playfair Display'; font-weight: 700; margin-bottom: 20px;">Edit Profile Photo</h3>
-
-            <div class="upload-drop-zone" id="drop-zone" onclick="document.getElementById('fileInput').click()">
-                <i class="bi bi-camera-fill upload-icon"></i>
-                <p class="mb-0" style="color: var(--text-muted); font-weight: 500;">Drag new photo here, or click to upload.</p>
-                <button type="button" class="btn-browse">Browse Files</button>
-
+            <h3 style="font-family: 'Playfair Display'; font-weight: 700; margin-bottom: 25px;">Edit Profile Photo</h3>
+            <div class="upload-drop-zone" onclick="document.getElementById('fileInput').click()">
+                <i class="bi bi-camera-fill" style="font-size: 3rem; color: var(--tan-accent);"></i>
+                <p class="mb-0 mt-2" style="color: var(--text-muted); font-weight: 500;">Click or drag to change photo</p>
                 <input asp-for="ImageFile" type="file" id="fileInput" hidden accept="image/*" onchange="handleFileSelect(this)" />
-            </div>
-
-            <div id="fileNameDisplay" class="file-status-pill d-none">
-                <i class="bi bi-file-earmark-image me-2"></i>
-                <span id="fileNameText">No file chosen</span>
-                <i class="bi bi-x-lg ms-2" style="cursor:pointer" onclick="resetFile(event)"></i>
             </div>
         </div>
 
         <div class="row g-4">
-            <div class="col-lg-7">
+            <div class="col-lg-6">
                 <div class="glass-card">
-                    <h4 class="mb-4" style="font-family: 'Playfair Display'; font-weight: 700;">Professional Details</h4>
+                    <h4 class="card-title">Professional Details</h4>
 
                     <div class="mb-3">
-                        <label asp-for="ClinicName" class="form-label fw-bold">Clinic Name</label>
-                        <input asp-for="ClinicName" class="form-control" />
+                        <label asp-for="ClinicName" class="form-label">Clinic Name</label>
+                        <input asp-for="ClinicName" class="form-control" maxlength="100" required />
+                        <span asp-validation-for="ClinicName" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="ClinicAddress" class="form-label fw-bold">Clinic Address</label>
-                        <input asp-for="ClinicAddress" class="form-control" />
+                        <label asp-for="ClinicAddress" class="form-label">Clinic Address</label>
+                        <input asp-for="ClinicAddress" class="form-control" maxlength="250" required />
+                        <span asp-validation-for="ClinicAddress" class="text-danger"></span>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-8 mb-3">
-                            <label asp-for="Specialization" class="form-label fw-bold">Specialization</label>
-                            <input asp-for="Specialization" class="form-control" />
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                            <input asp-for="PhoneNumber" id="strictPhoneInput" class="form-control" type="tel" placeholder="+123..." maxlength="16" required />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label asp-for="YearsOfExperience" class="form-label fw-bold">Years Exp.</label>
-                            <input asp-for="YearsOfExperience" type="number" class="form-control" />
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">Contact Email</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="clinic@example.com" maxlength="60" required />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-8 mb-3 mb-md-0">
+                            <label asp-for="Specialization" class="form-label">Specialization</label>
+                            <input asp-for="Specialization" class="form-control" maxlength="100" required />
+                            <span asp-validation-for="Specialization" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="YearsOfExperience" class="form-label">Years Exp.</label>
+                            <input asp-for="YearsOfExperience" type="number" class="form-control" min="0" max="60" required />
+                            <span asp-validation-for="YearsOfExperience" class="text-danger"></span>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Description" class="form-label fw-bold">About Me</label>
-                        <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                        <label class="form-label">Services Offered</label>
+                        <div class="tag-input-wrapper" onclick="document.getElementById('serviceEntry').focus()">
+                            <div id="tags-container" class="d-flex flex-wrap gap-2"></div>
+                            <input type="text" id="serviceEntry" placeholder="Type and press Enter..." maxlength="40" />
+                        </div>
+                        <input type="hidden" asp-for="Services" id="hiddenServicesInput" />
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Services" class="form-label fw-bold">Services</label>
-                        <input asp-for="Services" class="form-control" placeholder="Vaccines, Dental, Surgery" />
+                        <label asp-for="Description" class="form-label">About Me (Bio)</label>
+                        <textarea asp-for="Description" class="form-control" rows="5" maxlength="1000" required></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-5">
+            <div class="col-lg-6">
                 <div class="glass-card">
-                    <h4 class="mb-4" style="font-family: 'Playfair Display'; font-weight: 700;">Working Hours</h4>
+                    <h4 class="card-title">Working Hours</h4>
 
-                    @if (Model.Schedule != null)
+                    @if (Model.Schedule != null && Model.Schedule.Count > 0)
                     {
                         for (int i = 0; i < Model.Schedule.Count; i++)
                         {
-                            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom day-row">
+                            <div class="d-flex align-items-center mb-3 pb-3 border-bottom day-row w-100">
                                 <input type="hidden" asp-for="Schedule[i].Id" />
                                 <input type="hidden" asp-for="Schedule[i].Day" />
 
-                                <div class="fw-bold" style="width: 80px; font-size: 0.9rem;">@Model.Schedule[i].Day</div>
-
-                                <div class="d-flex align-items-center gap-1">
-                                    <input asp-for="Schedule[i].OpenTime" type="time" class="form-control form-control-sm time-input" style="width:105px;" />
-                                    <span class="text-muted">-</span>
-                                    <input asp-for="Schedule[i].CloseTime" type="time" class="form-control form-control-sm time-input" style="width:105px;" />
+                                <div class="fw-bold flex-shrink-0" style="width: 90px; font-size: 0.95rem;">
+                                    @Model.Schedule[i].Day
                                 </div>
 
-                                <div class="form-check form-switch ms-2">
-                                    <input asp-for="Schedule[i].IsOff" class="form-check-input off-toggle" type="checkbox" onchange="checkOff(this)">
-                                    <label class="form-check-label text-muted" style="font-size: 0.75rem;">Off</label>
+                                <div class="d-flex align-items-center justify-content-center gap-2 flex-grow-1 px-3">
+                                    <input asp-for="Schedule[i].OpenTime" type="time" class="form-control time-input" />
+                                    <span class="text-muted fw-bold">-</span>
+                                    <input asp-for="Schedule[i].CloseTime" type="time" class="form-control time-input" />
+                                </div>
+
+                                <div class="form-check form-switch m-0 flex-shrink-0" style="width: 52px;">
+                                    <input type="hidden" asp-for="Schedule[i].IsOff" class="hidden-is-off" />
+                                    <input class="form-check-input work-toggle" type="checkbox" onchange="toggleWork(this)" @(Model.Schedule[i].IsOff ? "" : "checked")>
                                 </div>
                             </div>
                         }
@@ -262,77 +355,105 @@
         </div>
 
         <div class="action-bar">
-            <button type="submit" class="btn-save"><i class="bi bi-check-circle me-2"></i>Save Changes</button>
+            <button type="submit" class="btn-save">Save Changes</button>
             <a asp-action="Dashboard" class="btn-cancel">Cancel</a>
-            @if (Model.Id > 0)
-            {
-                <button type="submit" asp-action="Delete" class="btn-delete" onclick="return confirm('Delete profile permanently?');">Delete</button>
-            }
+
+            <button type="button" class="btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete Profile</button>
         </div>
+
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 24px; border: none; overflow: hidden; box-shadow: 0 15px 35px rgba(92, 61, 30, 0.15);">
+                    <div class="modal-header" style="background-color: var(--validation-error); color: white; border-bottom: none; padding: 25px 30px;">
+                        <h4 class="modal-title" id="deleteModalLabel" style="font-family: 'Playfair Display', serif; font-weight: 700;"><i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Profile</h4>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="padding: 35px 30px; color: var(--text-dark);">
+                        <h5 style="font-weight: 700; color: #5C3D1E; margin-bottom: 15px;">Are you absolutely sure?</h5>
+                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6; margin-bottom: 0;">This action cannot be undone. All of your clinic information, services, working hours, and reviews will be permanently removed from the Pet Friends network.</p>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid var(--border-light); padding: 20px 30px; background: var(--bg-card); display: flex; gap: 10px;">
+                        <button type="button" class="btn flex-fill" style="background: #EAE0D5; color: var(--text-dark); border-radius: 12px; font-weight: 700; padding: 12px;" data-bs-dismiss="modal">Cancel</button>
+
+                        <button type="submit" asp-action="Delete" class="btn flex-fill" style="background: var(--validation-error); color: white; border-radius: 12px; font-weight: 700; padding: 12px;">Yes, Delete Everything</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </form>
 </div>
 
 @section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     <script>
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('fileInput');
-        const preview = document.getElementById('imgPreview');
-        const fileNameDisplay = document.getElementById('fileNameDisplay');
-        const fileNameText = document.getElementById('fileNameText');
+        // 1. SERVICES TAG LOGIC
+        const hiddenServicesInput = document.getElementById('hiddenServicesInput');
+        const tagsContainer = document.getElementById('tags-container');
+        let tags = hiddenServicesInput.value ? hiddenServicesInput.value.split(',').map(t => t.trim()).filter(t => t) : [];
 
-        // 1. CLICK TO UPLOAD handled by inline onclick
+        function renderTags() {
+            tagsContainer.innerHTML = '';
+            tags.forEach((tag, idx) => {
+                tagsContainer.innerHTML += `<span class="tag-badge">${tag} <i class="bi bi-x-circle-fill tag-remove" onclick="removeTag(${idx})"></i></span>`;
+            });
+            hiddenServicesInput.value = tags.join(', ');
+        }
 
-        // 2. DRAG & DROP LOGIC
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, preventDefaults, false);
+        document.getElementById('serviceEntry').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = this.value.trim().replace(/,/g, '');
+                if (val && !tags.includes(val)) { tags.push(val); renderTags(); }
+                this.value = '';
+            }
         });
 
-        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+        window.removeTag = (idx) => { tags.splice(idx, 1); renderTags(); };
+        renderTags();
 
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        // 2. PHONE INPUT
+        document.getElementById('strictPhoneInput').addEventListener('input', function (e) {
+            this.value = this.value.replace(/[^0-9+\-()\s]/g, '');
         });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            fileInput.files = files;
-            handleFileSelect(fileInput);
-        });
-
-        // 3. SELECTION & PREVIEW LOGIC
+        // 3. PFP UPLOAD
         function handleFileSelect(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) { preview.src = e.target.result; }
+                reader.onload = e => document.getElementById('imgPreview').src = e.target.result;
                 reader.readAsDataURL(input.files[0]);
-
-                fileNameText.innerText = input.files[0].name;
-                fileNameDisplay.classList.remove('d-none');
             }
         }
 
-        function resetFile(e) {
-            e.stopPropagation();
-            fileInput.value = "";
-            fileNameDisplay.classList.add('d-none');
-            preview.src = "@(string.IsNullOrEmpty(Model.ExistingImageUrl) ? "https://placehold.co/160x160/C8A882/white?text=Vet" : Model.ExistingImageUrl)";
-        }
-
-        // 4. SCHEDULE TOGGLES
-        function checkOff(checkbox) {
+        // 4. FIXED SMART WORKING HOURS LOGIC (ON = Working)
+        function toggleWork(checkbox) {
             const row = checkbox.closest('.day-row');
+            const hiddenIsOff = row.querySelector('.hidden-is-off');
             const inputs = row.querySelectorAll('.time-input');
+
+            // Sync the hidden DB input: If visually checked (working), IsOff is false
+            hiddenIsOff.value = checkbox.checked ? "false" : "true";
+
             inputs.forEach(input => {
-                input.disabled = checkbox.checked;
-                input.style.opacity = checkbox.checked ? "0.3" : "1";
-                if(checkbox.checked) input.value = "";
+                input.disabled = !checkbox.checked;
+                input.style.opacity = checkbox.checked ? "1" : "0.4";
+                input.style.backgroundColor = checkbox.checked ? "#fff" : "#F5F5F5";
+                if(!checkbox.checked) input.value = "";
             });
         }
-        document.querySelectorAll('.off-toggle').forEach(t => checkOff(t));
+
+        // Initialize UI on load
+        document.querySelectorAll('.work-toggle').forEach(t => {
+            const row = t.closest('.day-row');
+            const inputs = row.querySelectorAll('.time-input');
+            inputs.forEach(input => {
+                input.disabled = !t.checked;
+                input.style.opacity = t.checked ? "1" : "0.4";
+                input.style.backgroundColor = t.checked ? "#fff" : "#F5F5F5";
+            });
+        });
     </script>
 }

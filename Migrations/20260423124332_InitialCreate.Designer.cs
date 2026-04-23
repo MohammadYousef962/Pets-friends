@@ -12,8 +12,8 @@ using Pets_friends.Data;
 namespace Pets_friends.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260422185830_Initial_Clean_Schema")]
-    partial class Initial_Clean_Schema
+    [Migration("20260423124332_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

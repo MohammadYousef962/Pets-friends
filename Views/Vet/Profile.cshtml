@@ -1,109 +1,157 @@
 ﻿@model Pets_friends.Models.VetProfile
+@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@inject UserManager<UserAccount> UserManager
 
 @{
-    // 1. Updated to pull FullName from the linked Identity Account
-    ViewData["Title"] = Model.UserAccount?.FullName + " | Pet Vet";
+    var fullName = Model.UserAccount?.FullName ?? "Doctor";
+    var displayName = fullName.StartsWith("Dr.", StringComparison.OrdinalIgnoreCase) ? fullName : $"Dr. {fullName}";
+
+    ViewData["Title"] = displayName + " | Pet Vet";
+    Layout = "~/Views/Shared/_VetLayout.cshtml";
+
+    // --- NEW LOGIC: Check if this is the Vet's OWN profile ---
+    var currentUser = await UserManager.GetUserAsync(User);
+    bool isOwnProfile = currentUser != null && currentUser.Id == Model.UserAccountId;
 }
 
-@* ── Page-specific styles ─────────────────────────────────────────────────── *@
 @section Styles {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    @* Link to the new external CSS file! *@
     <link rel="stylesheet" href="~/css/Profile.css" asp-append-version="true" />
+    <style>
+        /* --- OVERRIDE DEFAULT LAYOUT BACKGROUND --- */
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+        }
+
+        main, .pb-3 {
+            background-color: transparent !important;
+        }
+
+        /* --- HERO CARD STYLING --- */
+        .hero-card {
+            background-color: #fff;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.04);
+            border: 1px solid #EBE0D5;
+        }
+
+        /* --- PERFECT 2x2 STATS GRID --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+        }
+
+        @@media (max-width: 991px) {
+            .stats-grid {
+                margin-left: 0;
+                max-width: 100%;
+            }
+        }
+
+        /* --- Extra style for disabled preview buttons --- */
+        .btn-disabled-preview {
+            opacity: 0.6 !important;
+            cursor: not-allowed !important;
+            pointer-events: none; /* Physically blocks clicks */
+        }
+    </style>
 }
 
-@* ══════════════════════════════════════════════════════════════════════════════
-   HERO SECTION
-══════════════════════════════════════════════════════════════════════════════ *@
-<div class="vet-hero">
-    <div class="container pb-4">
-        <div class="row align-items-end g-4">
+<div class="container pt-5 pb-2" style="max-width: 1300px;">
+    <div class="hero-card">
+        <div class="row align-items-center g-4">
 
-            @* Photo + core info *@
-            <div class="col-md-7 d-flex align-items-center gap-4">
+            <div class="col-lg-7 d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-4 text-center text-sm-start">
                 <div class="vet-photo-wrap flex-shrink-0">
-                    <img src="@Model.ImageUrl" alt="Photo of @Model.UserAccount?.FullName">
-                    <div class="vet-badge"><i class="bi bi-patch-check-fill"></i></div>
+                    <img src="@Model.ImageUrl" alt="Photo of @displayName" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+                    <div class="vet-badge" style="position: absolute; bottom: 5px; right: 5px; background: #C8A882; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 3px solid #fff;"><i class="bi bi-patch-check-fill"></i></div>
                 </div>
                 <div>
-                    <span class="vet-title-tag">Doctor of Veterinary Medicine</span>
-                    <h1 class="vet-name mb-1">@Model.UserAccount?.FullName</h1>
-                    <p class="vet-spec mb-1">
-                        <i class="bi bi-award me-1" style="color:var(--tan)"></i>@Model.Specialization
+                    <span class="vet-title-tag" style="background: rgba(200, 168, 130, 0.2); color: #8C7560; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; display: inline-block; margin-bottom: 10px; text-transform: uppercase;">Doctor of Veterinary Medicine</span>
+                    <h1 class="vet-name mb-1" style="font-family: 'Playfair Display', serif; font-weight: 700; color: #5C3D1E;">@displayName</h1>
+                    <p class="vet-spec mb-1" style="color: #8C7560; font-weight: 500;">
+                        <i class="bi bi-award me-1" style="color:#C8A882"></i>@Model.Specialization
                     </p>
-                    <p class="vet-spec mb-2">
-                        <i class="bi bi-geo-alt me-1" style="color:var(--tan)"></i>
+                    <p class="vet-spec mb-2" style="color: #8C7560; font-weight: 500;">
+                        <i class="bi bi-geo-alt me-1" style="color:#C8A882"></i>
                         @Model.ClinicName &middot; @Model.ClinicAddress
                     </p>
-                    <div class="d-flex align-items-center gap-1 mb-3">
+                    <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-1 mb-3">
                         @for (int i = 1; i <= 5; i++)
                         {
                             <i class="bi @(i <= Math.Floor(Model.AverageRating) ? "bi-star-fill" : (i - Model.AverageRating < 1 ? "bi-star-half" : "bi-star"))"
                                style="color:#E8A838; font-size:.95rem;"></i>
                         }
-                        <span style="font-weight:600; color:var(--brown); margin-left:.35rem;">@Model.AverageRating.ToString("0.0")</span>
-                        <span style="color:var(--text-muted); font-size:.85rem;">(@Model.TotalReviews reviews)</span>
+                        <span style="font-weight:700; color:#5C3D1E; margin-left:.35rem;">@Model.AverageRating.ToString("0.0")</span>
+                        <span style="color:#8C7560; font-size:.85rem; font-weight: 500;">(@Model.TotalReviews reviews)</span>
                     </div>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <button class="btn btn-book">
-                            <i class="bi bi-calendar-check me-1"></i>Book Appointment
-                        </button>
-                        <button class="btn btn-outline-tan">
-                            <i class="bi bi-chat-dots me-1"></i>Message
-                        </button>
+
+                    <div class="d-flex gap-2 flex-wrap justify-content-center justify-content-sm-start align-items-center">
+                        @if (isOwnProfile)
+                        {
+                            <button class="btn btn-disabled-preview" style="background: #C8A882; color: #fff; font-weight: 600; border-radius: 12px; padding: 8px 20px;" disabled>
+                                <i class="bi bi-calendar-check me-1"></i>Book Appointment
+                            </button>
+                            <button class="btn btn-disabled-preview" style="border: 2px solid #C8A882; color: #C8A882; font-weight: 600; border-radius: 12px; padding: 6px 20px; background: transparent;" disabled>
+                                <i class="bi bi-chat-dots me-1"></i>Message
+                            </button>
+                            <span class="ms-2 text-muted fw-bold" style="font-size: 0.85rem;"><i class="bi bi-eye me-1"></i>Preview Mode</span>
+                        }
+                        else
+                        {
+                            <button class="btn" style="background: #C8A882; color: #fff; font-weight: 600; border-radius: 12px; padding: 8px 20px;">
+                                <i class="bi bi-calendar-check me-1"></i>Book Appointment
+                            </button>
+                            <button class="btn" style="border: 2px solid #C8A882; color: #C8A882; font-weight: 600; border-radius: 12px; padding: 6px 20px; background: transparent;">
+                                <i class="bi bi-chat-dots me-1"></i>Message
+                            </button>
+                        }
                     </div>
                 </div>
             </div>
 
-            @* Stats strip *@
-            <div class="col-md-5">
-                <div class="d-flex gap-3 flex-wrap justify-content-md-end justify-content-start">
-                    <div class="stat-pill">
-                        <div class="stat-num">@Model.YearsOfExperience<span style="font-size:1rem">+</span></div>
-                        <div class="stat-label">Years Exp.</div>
+            <div class="col-lg-5 mt-4 mt-lg-0">
+                <div class="stats-grid">
+                    <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
+                        <div class="stat-num" style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">@Model.YearsOfExperience<span style="font-size:1rem; color: #C8A882;">+</span></div>
+                        <div class="stat-label" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Years Exp.</div>
                     </div>
-                    <div class="stat-pill">
-                        <div class="stat-num">500<span style="font-size:1rem">+</span></div>
-                        <div class="stat-label">Happy Pets</div>
+                    <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
+                        <div class="stat-num" style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">500<span style="font-size:1rem; color: #C8A882;">+</span></div>
+                        <div class="stat-label" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Happy Pets</div>
                     </div>
-                    <div class="stat-pill">
-                        <div class="stat-num">@Model.TotalReviews</div>
-                        <div class="stat-label">Reviews</div>
+                    <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
+                        <div class="stat-num" style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">@Model.TotalReviews</div>
+                        <div class="stat-label" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Reviews</div>
                     </div>
-                    <div class="stat-pill">
-                        <div class="stat-num">@Model.AverageRating.ToString("0.0")</div>
-                        <div class="stat-label">Avg Rating</div>
+                    <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
+                        <div class="stat-num" style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">@Model.AverageRating.ToString("0.0")</div>
+                        <div class="stat-label" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Avg Rating</div>
                     </div>
                 </div>
             </div>
 
-        </div>
-
-        @* Wavy bottom edge *@
-        <div style="margin-top:2rem; margin-bottom:-2px;">
-            <svg viewBox="0 0 1440 50" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width:100%; display:block;">
-                <path d="M0,30 C240,60 480,0 720,30 C960,60 1200,0 1440,30 L1440,50 L0,50 Z" fill="#FAF6F1" />
-            </svg>
         </div>
     </div>
 </div>
 
-@* ══════════════════════════════════════════════════════════════════════════════
-   MAIN BODY
-══════════════════════════════════════════════════════════════════════════════ *@
-<div class="container py-4">
+<div class="container py-4" style="max-width: 1300px;">
     <div class="row g-4">
 
-        @* ── LEFT COLUMN (main info) ────────────────────────────────────── *@
         <div class="col-lg-8">
 
-            @* About *@
             <div class="section-card">
-                <h2 class="section-title"><i class="bi bi-person-lines-fill"></i> About @Model.UserAccount?.FullName</h2>
+                <h2 class="section-title"><i class="bi bi-person-lines-fill"></i> About @displayName</h2>
                 <p style="color:var(--text-main); line-height:1.75; font-size:.95rem;">@Model.Description</p>
             </div>
 
-            @* Services (Assuming stored as comma-separated string based on previous DB setup) *@
             <div class="section-card">
                 <h2 class="section-title"><i class="bi bi-heart-pulse-fill"></i> Services Offered</h2>
                 <div>
@@ -123,23 +171,9 @@
                 </div>
             </div>
 
-            @* Education Placeholder (Static because it was removed from DB models) *@
-            <div class="section-card">
-                <h2 class="section-title"><i class="bi bi-mortarboard-fill"></i> Education</h2>
-                <div class="edu-item">
-                    <div class="edu-dot">✔</div>
-                    <div>
-                        <div class="edu-degree">Doctor of Veterinary Medicine (DVM)</div>
-                        <div class="edu-inst">Licensed Professional</div>
-                    </div>
-                </div>
-            </div>
-
-            @* Reviews *@
             <div class="section-card">
                 <h2 class="section-title"><i class="bi bi-chat-quote-fill"></i> Patient Reviews</h2>
 
-                @* Rating summary *@
                 <div class="rating-hero">
                     <div class="rating-big">@Model.AverageRating.ToString("0.0")</div>
                     <div class="stars my-1">
@@ -151,7 +185,6 @@
                     <div style="color:var(--text-muted); font-size:.85rem;">Based on @Model.TotalReviews reviews</div>
                 </div>
 
-                @* Individual reviews from DB *@
                 @if (Model.Reviews != null && Model.Reviews.Any())
                 {
                     foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedAt))
@@ -186,20 +219,26 @@
                     <p class="text-muted text-center py-3">No reviews yet. Be the first to leave one!</p>
                 }
 
-                @* CTA for adding a review *@
                 <div class="text-center mt-2">
-                    <button class="btn btn-outline-tan btn-sm">
-                        <i class="bi bi-pencil-square me-1"></i>Write a Review
-                    </button>
+                    @if (isOwnProfile)
+                    {
+                        <button class="btn btn-outline-tan btn-sm btn-disabled-preview" disabled>
+                            <i class="bi bi-pencil-square me-1"></i>Write a Review
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-tan btn-sm">
+                            <i class="bi bi-pencil-square me-1"></i>Write a Review
+                        </button>
+                    }
                 </div>
             </div>
 
         </div>
 
-        @* ── RIGHT SIDEBAR ───────────────────────────────────────────────── *@
         <div class="col-lg-4">
 
-            @* Working Hours (Pulled dynamically from DB Schedule) *@
             <div class="section-card">
                 <h2 class="section-title"><i class="bi bi-clock-fill"></i> Working Hours</h2>
                 @{
@@ -226,7 +265,6 @@
                             }
                             else
                             {
-                                // Formatting the TimeSpans nicely (e.g. 9:00 AM)
                                 var openStr = DateTime.Today.Add(wh.OpenTime.Value).ToString("h:mm tt");
                                 var closeStr = DateTime.Today.Add(wh.CloseTime.Value).ToString("h:mm tt");
                                 <span class="time">@openStr - @closeStr</span>
@@ -240,16 +278,6 @@
                 }
             </div>
 
-            @* Certifications Placeholder (Static because it was removed from DB models) *@
-            <div class="section-card">
-                <h2 class="section-title"><i class="bi bi-patch-check-fill"></i> Certifications</h2>
-                <div class="cert-item">
-                    <div class="cert-icon"><i class="bi bi-shield-check"></i></div>
-                    <div class="cert-text">Licensed Veterinary Practitioner</div>
-                </div>
-            </div>
-
-            @* Contact *@
             <div class="section-card">
                 <h2 class="section-title"><i class="bi bi-telephone-fill"></i> Contact</h2>
                 <div class="contact-item">
@@ -275,9 +303,18 @@
                 </div>
 
                 <div class="mt-3">
-                    <a href="tel:@Model.UserAccount?.PhoneNumber" class="btn btn-book w-100">
-                        <i class="bi bi-telephone me-1"></i>Call Now
-                    </a>
+                    @if (isOwnProfile)
+                    {
+                        <button class="btn btn-book w-100 btn-disabled-preview" disabled>
+                            <i class="bi bi-telephone me-1"></i>Call Now
+                        </button>
+                    }
+                    else
+                    {
+                        <a href="tel:@Model.UserAccount?.PhoneNumber" class="btn btn-book w-100">
+                            <i class="bi bi-telephone me-1"></i>Call Now
+                        </a>
+                    }
                 </div>
             </div>
 

@@ -136,7 +136,7 @@ namespace Pets_friends.Controllers
         }
 
         // ====================================================================
-        // 4. DELETE ACCOUNT (New!)
+        // 4. DELETE ACCOUNT (Updated with Profile Cascade Deletion)
         // ====================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -145,7 +145,6 @@ namespace Pets_friends.Controllers
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
-            // Prevent the admin from deleting themselves
             var loggedInUser = await _userManager.GetUserAsync(User);
             if (user.Id == loggedInUser.Id)
             {
@@ -155,12 +154,65 @@ namespace Pets_friends.Controllers
 
             try
             {
-                await _userManager.DeleteAsync(user);
-                TempData["SuccessMessage"] = $"{user.FullName}'s account was permanently deleted.";
+                // 1. WIPE CLIENT DATA (Pets, Appointments, Reviews)
+                var clientProfile = await _context.ClientProfiles
+                    .Include(c => c.Pets) // Assuming a client has Pets
+                    .FirstOrDefaultAsync(c => c.UserAccountId == userId);
+
+                if (clientProfile != null)
+                {
+                    // Find and delete all appointments for this client
+                    var appointments = await _context.Appointments.Where(a => a.ClientProfileId == clientProfile.Id).ToListAsync();
+                    _context.Appointments.RemoveRange(appointments);
+
+                    // Find and delete all reviews left by this client
+                    var reviews = await _context.VetReviews.Where(r => r.ReviewerId == userId).ToListAsync();
+                    _context.VetReviews.RemoveRange(reviews);
+
+                    // Remove the pets and the profile
+                    if (clientProfile.Pets != null) _context.RemoveRange(clientProfile.Pets);
+                    _context.ClientProfiles.Remove(clientProfile);
+                }
+
+                // 2. WIPE VET DATA (Schedule, Appointments attached to Vet)
+                var vetProfile = await _context.VetProfiles
+                    .Include(v => v.Schedule)
+                    .FirstOrDefaultAsync(v => v.UserAccountId == userId);
+
+                if (vetProfile != null)
+                {
+                    var vetAppointments = await _context.Appointments.Where(a => a.VetProfileId == vetProfile.Id).ToListAsync();
+                    _context.Appointments.RemoveRange(vetAppointments);
+
+                    if (vetProfile.Schedule != null) _context.RemoveRange(vetProfile.Schedule);
+                    _context.VetProfiles.Remove(vetProfile);
+                }
+
+                // WIPE MERCHANT/SHELTER PROFILES
+                var merchantProfile = await _context.MerchantProfiles.FirstOrDefaultAsync(m => m.UserAccountId == userId);
+                if (merchantProfile != null) _context.MerchantProfiles.Remove(merchantProfile);
+
+                var shelterProfile = await _context.ShelterProfiles.FirstOrDefaultAsync(s => s.UserAccountId == userId);
+                if (shelterProfile != null) _context.ShelterProfiles.Remove(shelterProfile);
+
+                // Save all the deep deletions
+                await _context.SaveChangesAsync();
+
+                // 3. FINALLY, DELETE THE LOGIN ACCOUNT
+                var result = await _userManager.DeleteAsync(user);
+
+                if (result.Succeeded)
+                {
+                    TempData["SuccessMessage"] = $"{user.FullName}'s entire account and data was permanently wiped.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Data cleared, but failed to delete Identity account.";
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Could not delete user. They may have active orders or reviews attached to them.";
+                TempData["ErrorMessage"] = $"Deep clean failed. Details: {ex.InnerException?.Message ?? ex.Message}";
             }
 
             return RedirectToAction(nameof(ManageUsers));

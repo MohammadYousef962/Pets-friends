@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http; // Required for file upload
+﻿using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -8,31 +8,45 @@ namespace Pets_friends.Data.ViewModels
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Specialization is required.")]
-        public string Specialization { get; set; } = string.Empty;
-
         [Required(ErrorMessage = "Clinic Name is required.")]
+        [StringLength(100)]
         public string ClinicName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Clinic Address is required.")]
+        [StringLength(200)]
         public string ClinicAddress { get; set; } = string.Empty;
+
+        // --- STRICT EMAIL: Requires .com, .jo, etc. ---
+        [Required(ErrorMessage = "Email is required.")]
+        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+            ErrorMessage = "Invalid format. Must be name@domain.com (or .jo, .net, etc)")]
+        public string Email { get; set; } = string.Empty;
+
+        // --- FIXED: Increased to {8,20} to match the HTML and long numbers ---
+        [Required(ErrorMessage = "Phone Number is required.")]
+        [RegularExpression(@"^\+?[0-9\s-]{8,20}$",
+            ErrorMessage = "Invalid phone format. (8-20 characters required)")]
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Specialization is required.")]
+        [StringLength(100)]
+        public string Specialization { get; set; } = string.Empty;
 
         [Required]
         [Range(0, 60, ErrorMessage = "Experience must be between 0 and 60 years.")]
         public int YearsOfExperience { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Bio is required.")]
+        [StringLength(1000)]
         public string Description { get; set; } = string.Empty;
 
-        // --- PHYSICAL FILE UPLOAD ---
         public IFormFile? ImageFile { get; set; }
-
-        // --- DISPLAY CURRENT IMAGE ---
         public string? ExistingImageUrl { get; set; }
 
+        // This handles the string sent by our new JavaScript Tag UI
+        [Required(ErrorMessage = "Please add at least one service.")]
         public string Services { get; set; } = string.Empty;
 
-        // --- SCHEDULES ---
         public List<WorkingDayVM> Schedule { get; set; } = new List<WorkingDayVM>();
     }
 }

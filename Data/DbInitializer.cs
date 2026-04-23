@@ -25,14 +25,14 @@ namespace Pets_friends.Data
             }
 
             // 3. Create a default Admin account if one doesn't exist
-            string adminEmail = "admin@petfriends.com";
+            string adminEmail = "admin@petfriends.jo";
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
 
             // ... (Your existing code for creating the Admin account is right above this)
 
             // 4. Create a Dummy Vet so we can test the UI!
-            string vetEmail = "dr.sarah@petfriends.jo";
+            string vetEmail = "drsarah@petfriends.jo";
             var vetUser = await userManager.FindByEmailAsync(vetEmail);
 
             if (vetUser == null)

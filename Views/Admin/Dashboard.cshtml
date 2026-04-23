@@ -1,207 +1,198 @@
-﻿@model Pets_friends.Data.ViewModels.VetDashboardVM
+﻿@model Pets_friends.Data.ViewModels.AdminDashboardVM
 @{
-    ViewData["Title"] = "Vet Dashboard";
-    Layout = "~/Views/Shared/_VetLayout.cshtml";
+    ViewData["Title"] = "Admin Control Center";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .dashboard-list-item {
-            border-bottom: 1px solid #EDE0D0;
-            padding: 15px 0;
+        :root {
+            --text-dark: #5C3D1E;
+            --text-muted: #8C7560;
+            --bg-card: #FAF6F1;
+            --border-light: #EBE0D5;
+            --tan-accent: #C8A882;
+            --brown-button: #5C3D1E;
         }
 
-            .dashboard-list-item:last-child {
-                border-bottom: none;
+        body {
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+            background-color: #fdfcfb;
+        }
+
+        .admin-header {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 2.4rem;
+            color: var(--text-dark);
+            margin-bottom: 0.2rem;
+        }
+
+        .admin-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            background-color: #fff;
+            border-radius: 20px;
+            padding: 30px 20px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 12px rgba(92, 61, 30, 0.03);
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            height: 100%;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 12px 28px rgba(92, 61, 30, 0.08);
             }
 
-        /* Interactive Action Buttons */
-        .btn-accept {
-            background: #e4f0e8;
-            color: #3a8a4f;
-            border: 1px solid #c3e6cb;
-            padding: 6px 14px;
-            border-radius: 8px;
+        .stat-icon {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .stat-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
             font-weight: 600;
             font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Action Cards */
+        .action-card {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+            .action-card:hover {
+                box-shadow: 0 8px 24px rgba(92, 61, 30, 0.06);
+            }
+
+        .btn-custom-outline {
+            background-color: var(--border-light);
+            color: var(--text-dark);
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 12px 24px;
+            text-decoration: none;
             transition: 0.2s;
         }
 
-            .btn-accept:hover {
-                background: #3a8a4f;
-                color: white;
-                transform: translateY(-1px);
+            .btn-custom-outline:hover {
+                background-color: var(--tan-accent);
+                color: #fff;
             }
 
-        .btn-decline {
-            background: #f8d7da;
-            color: #d9534f;
-            border: 1px solid #f5c6cb;
-            padding: 6px 14px;
-            border-radius: 8px;
+        .btn-custom-solid {
+            background-color: var(--brown-button);
+            color: #fff;
             font-weight: 600;
-            font-size: 0.85rem;
+            border-radius: 12px;
+            padding: 12px 24px;
+            text-decoration: none;
             transition: 0.2s;
         }
 
-            .btn-decline:hover {
-                background: #d9534f;
-                color: white;
-                transform: translateY(-1px);
+            .btn-custom-solid:hover {
+                background-color: #4A3118;
+                color: #fff;
             }
     </style>
 }
 
-<div class="admin-wrapper">
-    <div class="container">
+<div class="container py-5" style="max-width: 1200px;">
 
-        <h1 class="admin-header">Dr. @Model.Profile.UserAccount?.FullName's Dashboard</h1>
-        <p class="admin-subtitle">Manage your clinic schedule, read patient feedback, and update your profile.</p>
-
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success rounded-4" style="background: #d4edda; color: #155724; border:none;">
-                <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
-            </div>
-        }
-
-        <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <i class="bi bi-star-fill stat-icon"></i>
-                    <div class="stat-number">@Model.Profile.AverageRating.ToString("0.0")</div>
-                    <div class="stat-label">Average Rating</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <i class="bi bi-chat-quote-fill stat-icon"></i>
-                    <div class="stat-number">@Model.Profile.TotalReviews</div>
-                    <div class="stat-label">Patient Reviews</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <i class="bi bi-calendar-heart-fill stat-icon" style="color: #d9534f;"></i>
-                    <div class="stat-number">@Model.PendingAppointments.Count()</div>
-                    <div class="stat-label">Pending Requests</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-4 mb-4">
-
-            <div class="col-lg-7">
-                <div class="glass-panel h-100" style="padding: 30px;">
-                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; border-bottom: 2px solid #EDE0D0; padding-bottom: 10px;">
-                        <i class="bi bi-inbox-fill me-2" style="color: #C8A882;"></i> Appointment Requests
-                    </h3>
-
-                    @if (!Model.PendingAppointments.Any())
-                    {
-                        <div class="text-center text-muted py-5">
-                            <i class="bi bi-cup-hot fs-1 d-block mb-2" style="color: #EDE0D0;"></i>
-                            You have no pending appointment requests.
-                        </div>
-                    }
-                    else
-                    {
-                        foreach (var apt in Model.PendingAppointments)
-                        {
-                            <div class="dashboard-list-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-bold" style="color: #5C3D1E; font-size: 1.05rem;">
-                                        @apt.Pet?.Name <span class="text-muted fw-normal" style="font-size: 0.9rem;">(Owner: @apt.ClientProfile?.UserAccount?.FullName)</span>
-                                    </div>
-                                    <div style="color: #8C7560; font-size: 0.9rem;">
-                                        <i class="bi bi-calendar-event me-1"></i> @apt.AppointmentDate.ToString("MMM dd, yyyy 'at' hh:mm tt")
-                                    </div>
-                                    <div style="color: #C8A882; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">
-                                        @apt.Service?.Name
-                                    </div>
-                                </div>
-
-                                <div class="d-flex gap-2">
-                                    <form asp-action="UpdateAppointmentStatus" method="post" class="m-0">
-                                        <input type="hidden" name="appointmentId" value="@apt.Id" />
-                                        <input type="hidden" name="newStatus" value="Confirmed" />
-                                        <button type="submit" class="btn-accept" title="Accept"><i class="bi bi-check-lg"></i></button>
-                                    </form>
-
-                                    <form asp-action="UpdateAppointmentStatus" method="post" class="m-0" onsubmit="return confirm('Are you sure you want to decline this appointment?');">
-                                        <input type="hidden" name="appointmentId" value="@apt.Id" />
-                                        <input type="hidden" name="newStatus" value="Cancelled" />
-                                        <button type="submit" class="btn-decline" title="Decline"><i class="bi bi-x-lg"></i></button>
-                                    </form>
-                                </div>
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-
-            <div class="col-lg-5">
-                <div class="glass-panel h-100" style="padding: 30px;">
-                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; border-bottom: 2px solid #EDE0D0; padding-bottom: 10px;">
-                        <i class="bi bi-stars me-2" style="color: #C8A882;"></i> Recent Feedback
-                    </h3>
-
-                    @if (!Model.RecentReviews.Any())
-                    {
-                        <div class="text-center text-muted py-5">
-                            <i class="bi bi-chat-square-heart fs-1 d-block mb-2" style="color: #EDE0D0;"></i>
-                            No reviews yet. Check back later!
-                        </div>
-                    }
-                    else
-                    {
-                        foreach (var review in Model.RecentReviews)
-                        {
-                            <div class="dashboard-list-item">
-                                <div class="d-flex justify-content-between">
-                                    <div class="fw-bold" style="color: #5C3D1E; font-size: 0.95rem;">@review.Reviewer?.FullName</div>
-                                    <div style="color: #E8A838; font-size: 0.85rem;">
-                                        @for (int i = 0; i < review.Rating; i++)
-                                        {
-                                            <i class="bi bi-star-fill"></i>
-                                        }
-                                    </div>
-                                </div>
-                                <p style="color: #8C7560; font-size: 0.9rem; margin-top: 5px; margin-bottom: 0; line-height: 1.4;">
-                                    "@review.Comment"
-                                </p>
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-md-6">
-                <div class="action-card">
-                    <div>
-                        <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Public Profile</h3>
-                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">View how clients see your page.</p>
-                    </div>
-                    <a asp-action="Profile" class="btn-admin" style="background-color: #EDE0D0; color: #5C3D1E;">
-                        View Page <i class="bi bi-box-arrow-up-right ms-2"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="action-card">
-                    <div>
-                        <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Edit Details</h3>
-                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">Update your clinic info, services, and photo.</p>
-                    </div>
-                    <a asp-action="Edit" class="btn-admin">
-                        Edit Profile <i class="bi bi-pencil-square ms-2"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
+    <div class="mb-5">
+        <h1 class="admin-header">Master Admin Portal</h1>
+        <p class="admin-subtitle">Monitor platform activity, manage user roles, and oversee all operations.</p>
     </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success rounded-4 mb-4" style="background: #E4F0E8; color: #2D6A3F; border: 1px solid #C3E6CB; padding: 15px 20px;">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <i class="bi bi-people-fill stat-icon" style="color: var(--tan-accent);"></i>
+                <div class="stat-number">@Model.TotalUsers</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <i class="bi bi-calendar-check-fill stat-icon" style="color: #6C8EBF;"></i>
+                <div class="stat-number">@Model.TotalAppointments</div>
+                <div class="stat-label">Appointments</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <i class="bi bi-box-seam-fill stat-icon" style="color: #E8A838;"></i>
+                <div class="stat-number">@Model.TotalOrders</div>
+                <div class="stat-label">Product Orders</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <i class="bi bi-currency-dollar stat-icon" style="color: #5D8A66;"></i>
+                <div class="stat-number">@Model.TotalRevenue.ToString("C")</div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="action-card">
+                <div>
+                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0; font-size: 1.3rem;">Manage Users</h3>
+                    <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">View, edit roles, or delete user accounts.</p>
+                </div>
+                <a asp-controller="Admin" asp-action="ManageUsers" class="btn-custom-outline">
+                    User Directory <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="action-card">
+                <div>
+                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0; font-size: 1.3rem;">Financials & History</h3>
+                    <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">View all store orders and service payments.</p>
+                </div>
+                <a asp-controller="Admin" asp-action="Transactions" class="btn-custom-solid">
+                    View Ledger <i class="bi bi-receipt-cutoff ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
 </div>

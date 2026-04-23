@@ -94,15 +94,17 @@ textarea {
 }
 
 .btn-save {
-    flex: 2;
-    background: var(--tan);
+    background-color: var(--brown-button);
     color: white;
-    border: none;
-    padding: 16px;
+    flex: 1; /* <-- CHANGED THIS FROM 2 TO 1 */
     border-radius: 12px;
     font-weight: 700;
-    cursor: pointer;
-    transition: 0.3s ease;
+    padding: 14px;
+    border: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
     .btn-save:hover {
@@ -152,14 +154,109 @@ textarea {
     }
 }
 /* Custom Brown Toggles */
-.form-switch .form-check-input:checked {
-    background-color: #8E6F54; /* Active Brown accent matching your theme */
-    border-color: #8E6F54;
-    outline-color: #C8A882;
+/* --- 2. FORM CARDS & TOGGLES --- */
+.glass-card {
+    background-color: var(--bg-card);
+    border-radius: 20px;
+    padding: 35px;
+    border: 1px solid var(--border-light);
+    height: 100%;
+    overflow: hidden; /* Prevents contents from ever spilling out of the card */
 }
 
+/* KILL BOOTSTRAP'S DEFAULT BLUE */
+.form-switch .form-check-input {
+    cursor: pointer;
+}
+
+    .form-switch .form-check-input:checked {
+        background-color: var(--brown-button) !important;
+        border-color: var(--brown-button) !important;
+    }
+
+    .form-switch .form-check-input:focus {
+        border-color: var(--tan-accent) !important;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(200, 168, 130, 0.25) !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%2892, 61, 30, 0.5%29'/%3e%3c/svg%3e");
+    }
+
+    .form-switch .form-check-input:checked:focus {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+    }
+
+.form-control {
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #EBE0D5;
+    background: #fff;
+}
+
+    .form-control:focus {
+        border-color: var(--tan-accent);
+        box-shadow: 0 0 0 0.25rem rgba(200, 168, 130, 0.15);
+    }
+
+/* Strict flex alignment for working hours inputs */
+.time-input {
+    width: 100%;
+    max-width: 125px; /* Slightly smaller to ensure fit on all screens */
+    text-align: center;
+    padding: 8px 5px; /* Reduce side padding so the text fits */
+}
 /* Also ensure the hover and focus outlines use the correct palette */
 .form-check-input:focus {
     box-shadow: 0 0 0 0.25rem rgba(200, 168, 130, 0.25);
     border-color: #C8A882;
+}
+/* --- 5. TAG INPUT STYLES --- */
+.tag-input-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--tan-medium);
+    background: #fff;
+    min-height: 50px;
+    cursor: text;
+    transition: all 0.2s ease;
+}
+
+    .tag-input-wrapper:focus-within {
+        border-color: var(--tan-accent);
+        box-shadow: 0 0 0 0.25rem rgba(200, 168, 130, 0.15);
+    }
+
+.tag-badge {
+    background-color: var(--tan-accent);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.tag-remove {
+    cursor: pointer;
+    color: rgba(255,255,255,0.7);
+    transition: 0.2s;
+}
+
+    .tag-remove:hover {
+        color: white;
+    }
+
+.tag-input-wrapper input {
+    border: none;
+    outline: none;
+    flex-grow: 1;
+    min-width: 180px;
+    background: transparent;
+    color: var(--text-dark);
+    font-family: inherit;
 }

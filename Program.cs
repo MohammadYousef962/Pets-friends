@@ -12,27 +12,38 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 3. Identity (Configured for easy testing during development)
+// 3. Identity Configuration
 builder.Services.AddIdentity<UserAccount, IdentityRole>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false; // No email verification required yet
+    // --- THE STRICT RULES ---
+    options.User.RequireUniqueEmail = true; // GLOBAL RULE: No duplicate emails allowed
+
+    options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequireDigit = false;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false; // Added for easier testing
     options.Password.RequiredLength = 6;
 })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+// 4. Professional Routing Security
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromDays(30); // Keeps them logged in longer for better UX
+});
+
 var app = builder.Build();
 
-// 4. Initialize Database (Our new custom seeder!)
+// 5. Initialize Database (Seeder)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
-        // This triggers the class we made to create roles and the master admin
         await DbInitializer.SeedRolesAndAdminAsync(services);
     }
     catch (Exception ex)
@@ -42,7 +53,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// 5. Middleware Pipeline
+// 6. Middleware Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -54,11 +65,11 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); // Must come BEFORE Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}"); // Set to start at Login
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();

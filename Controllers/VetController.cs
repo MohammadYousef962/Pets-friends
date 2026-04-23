@@ -7,6 +7,10 @@ using Pets_friends.Data.ViewModels;
 using Pets_friends.Models;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Pets_friends.Controllers
 {
@@ -23,9 +27,9 @@ namespace Pets_friends.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // ====================================================================
-        // 1. VET PRIVATE DASHBOARD
-        // ====================================================================
+        // --------------------------------------------------------
+        // DASHBOARD
+        // --------------------------------------------------------
         [Authorize(Roles = "Vet")]
         public async Task<IActionResult> Dashboard()
         {
@@ -57,9 +61,9 @@ namespace Pets_friends.Controllers
             return View(vm);
         }
 
-        // ====================================================================
-        // 2. PUBLIC PROFILE VIEW
-        // ====================================================================
+        // --------------------------------------------------------
+        // PUBLIC PROFILE VIEW
+        // --------------------------------------------------------
         [AllowAnonymous]
         public async Task<IActionResult> Profile(int? id)
         {
@@ -89,24 +93,26 @@ namespace Pets_friends.Controllers
             return View(vet);
         }
 
-        // ====================================================================
-        // 3. SECURE MANAGEMENT (Create, Edit, Delete)
-        // ====================================================================
-
+        // --------------------------------------------------------
+        // CREATE PROFILE
+        // --------------------------------------------------------
         [Authorize(Roles = "Vet")]
         public async Task<IActionResult> Create()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            // Send them to edit if they already exist
             if (await _context.VetProfiles.AnyAsync(p => p.UserAccountId == user.Id))
                 return RedirectToAction(nameof(Edit));
 
-            var vm = new VetProfileFormVM();
-            // Initialize empty schedule for a fresh start
+            var vm = new VetProfileFormVM { Email = user.Email, PhoneNumber = user.PhoneNumber };
+
             foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
             {
                 vm.Schedule.Add(new WorkingDayVM { Day = day, IsOff = true });
             }
-            return View("Edit", vm);
+
+            return View(vm);
         }
 
         [HttpPost]
@@ -114,10 +120,33 @@ namespace Pets_friends.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(VetProfileFormVM vm)
         {
-            if (!ModelState.IsValid) return View("Edit", vm);
+            if (!ModelState.IsValid) return View(vm);
 
             var user = await _userManager.GetUserAsync(User);
-            var newProfile = new VetProfile
+
+            // --- SAFETY NET: Prevent Double-Click Crashes ---
+            var existingProfile = await _context.VetProfiles.FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
+            if (existingProfile != null)
+            {
+                return RedirectToAction("Profile", new { id = existingProfile.Id });
+            }
+
+            // Check for duplicate emails gracefully
+            if (user.Email.ToLower() != vm.Email.ToLower() && await _userManager.FindByEmailAsync(vm.Email) != null)
+            {
+                ModelState.AddModelError("Email", "This email is already in use by another account.");
+                return View(vm);
+            }
+
+            // Update User Identity
+            user.Email = vm.Email;
+            user.UserName = vm.Email;
+            user.PhoneNumber = vm.PhoneNumber;
+            user.IsProfileComplete = true; // Unlocks Dashboard
+            await _userManager.UpdateAsync(user);
+
+            // Create Profile
+            var profile = new VetProfile
             {
                 UserAccountId = user.Id,
                 Specialization = vm.Specialization,
@@ -125,50 +154,70 @@ namespace Pets_friends.Controllers
                 ClinicAddress = vm.ClinicAddress,
                 YearsOfExperience = vm.YearsOfExperience,
                 Description = vm.Description,
-                Services = vm.Services,
-                // Handle the physical file upload
+                Services = vm.Services, // Saved directly from JS tags
                 ImageUrl = await ProcessUploadedFile(vm.ImageFile) ?? "/images/default-vet.png"
             };
 
+            // Build Schedule
             foreach (var item in vm.Schedule)
             {
-                newProfile.Schedule.Add(new WorkingDay
+                profile.Schedule.Add(new WorkingDay
                 {
                     Day = item.Day,
                     IsOff = item.IsOff,
-                    OpenTime = (!item.IsOff && DateTime.TryParse(item.OpenTime, out var ot)) ? ot.TimeOfDay : null,
-                    CloseTime = (!item.IsOff && DateTime.TryParse(item.CloseTime, out var ct)) ? ct.TimeOfDay : null
+                    OpenTime = (!item.IsOff && TimeSpan.TryParse(item.OpenTime, out var ot)) ? ot : null,
+                    CloseTime = (!item.IsOff && TimeSpan.TryParse(item.CloseTime, out var ct)) ? ct : null
                 });
             }
 
-            _context.VetProfiles.Add(newProfile);
+            _context.VetProfiles.Add(profile);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Dashboard));
+
+            // Redirect to their shiny new profile page
+            return RedirectToAction("Profile", new { id = profile.Id });
         }
 
+        // --------------------------------------------------------
+        // EDIT PROFILE
+        // --------------------------------------------------------
         [Authorize(Roles = "Vet")]
         public async Task<IActionResult> Edit()
         {
             var user = await _userManager.GetUserAsync(User);
 
-            // CRITICAL: .Include(p => p.Schedule) ensures the hours are loaded!
             var profile = await _context.VetProfiles
                 .Include(p => p.Schedule)
+                .Include(p => p.UserAccount)
                 .FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
 
             if (profile == null) return RedirectToAction(nameof(Create));
 
+            // --- AUTO-REPAIR: Add missing days directly to the profile object ---
+            if (profile.Schedule == null || !profile.Schedule.Any())
+            {
+                profile.Schedule = new List<WorkingDay>();
+                foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
+                {
+                    var newDay = new WorkingDay { Day = day, IsOff = true, VetProfileId = profile.Id };
+                    _context.WorkingDays.Add(newDay);
+                    profile.Schedule.Add(newDay); // Crucial for immediate rendering
+                }
+                await _context.SaveChangesAsync();
+            }
+
             var vm = new VetProfileFormVM
             {
                 Id = profile.Id,
-                Specialization = profile.Specialization,
                 ClinicName = profile.ClinicName,
                 ClinicAddress = profile.ClinicAddress,
+                PhoneNumber = user.PhoneNumber,
+                Email = user.Email,
+                Specialization = profile.Specialization,
                 YearsOfExperience = profile.YearsOfExperience,
                 Description = profile.Description,
+                Services = profile.Services ?? "",
                 ExistingImageUrl = profile.ImageUrl,
-                Services = profile.Services,
-                // Format times strictly for HTML5 time picker (HH:mm)
+                // Order schedule starting from Monday
                 Schedule = profile.Schedule.Select(w => new WorkingDayVM
                 {
                     Id = w.Id,
@@ -176,7 +225,7 @@ namespace Pets_friends.Controllers
                     IsOff = w.IsOff,
                     OpenTime = w.OpenTime?.ToString(@"hh\:mm"),
                     CloseTime = w.CloseTime?.ToString(@"hh\:mm")
-                }).OrderBy(s => ((int)s.Day + 6) % 7).ToList() // Sort Mon-Sun
+                }).OrderBy(s => ((int)s.Day + 6) % 7).ToList()
             };
 
             return View(vm);
@@ -191,50 +240,102 @@ namespace Pets_friends.Controllers
 
             var user = await _userManager.GetUserAsync(User);
 
-            // CRITICAL: .Include(p => p.Schedule) so we can update existing hours
+            // Check for duplicate emails safely
+            if (user.Email.ToLower() != vm.Email.ToLower() && await _userManager.FindByEmailAsync(vm.Email) != null)
+            {
+                ModelState.AddModelError("Email", "This email address is already in use.");
+                return View(vm);
+            }
+
             var profile = await _context.VetProfiles
                 .Include(p => p.Schedule)
                 .FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
 
             if (profile == null) return NotFound();
 
-            profile.Specialization = vm.Specialization;
+            // 1. Update Identity
+            user.Email = vm.Email;
+            user.UserName = vm.Email;
+            user.PhoneNumber = vm.PhoneNumber;
+            await _userManager.UpdateAsync(user);
+
+            // 2. Update Profile
             profile.ClinicName = vm.ClinicName;
             profile.ClinicAddress = vm.ClinicAddress;
+            profile.Specialization = vm.Specialization;
             profile.YearsOfExperience = vm.YearsOfExperience;
             profile.Description = vm.Description;
             profile.Services = vm.Services;
 
-            // Physical File Upload Logic
             if (vm.ImageFile != null)
             {
-                // Delete old image file to save server space
-                if (!string.IsNullOrEmpty(profile.ImageUrl) && !profile.ImageUrl.Contains("placehold.co"))
-                {
-                    var oldPath = Path.Combine(_webHostEnvironment.WebRootPath, profile.ImageUrl.TrimStart('/'));
-                    if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
-                }
                 profile.ImageUrl = await ProcessUploadedFile(vm.ImageFile);
             }
 
-            // Sync Schedule updates
+            // 3. Update Schedule (Safely parsing TimeSpans)
             foreach (var item in vm.Schedule)
             {
                 var dbDay = profile.Schedule.FirstOrDefault(w => w.Day == item.Day);
                 if (dbDay != null)
                 {
                     dbDay.IsOff = item.IsOff;
-                    dbDay.OpenTime = (!item.IsOff && DateTime.TryParse(item.OpenTime, out var ot)) ? ot.TimeOfDay : null;
-                    dbDay.CloseTime = (!item.IsOff && DateTime.TryParse(item.CloseTime, out var ct)) ? ct.TimeOfDay : null;
+                    dbDay.OpenTime = (!item.IsOff && TimeSpan.TryParse(item.OpenTime, out var ot)) ? ot : null;
+                    dbDay.CloseTime = (!item.IsOff && TimeSpan.TryParse(item.CloseTime, out var ct)) ? ct : null;
                 }
             }
 
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Profile updated successfully!";
-            return RedirectToAction("Profile", "Vet");
+            return RedirectToAction("Profile", new { id = profile.Id });
         }
 
-        // Helper Method for Professional File Saving
+        // --------------------------------------------------------
+        // DELETE PROFILE
+        // --------------------------------------------------------
+        [HttpPost]
+        [Authorize(Roles = "Vet")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            // THE FIX: We must .Include() the Schedule so the database knows to grab the working days too!
+            var profile = await _context.VetProfiles
+                .Include(p => p.Schedule)
+                .Include(p => p.Reviews) // Also including reviews just in case they block deletion!
+                .FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
+
+            if (profile != null)
+            {
+                // 1. Delete the child records FIRST (Working Days) to satisfy the database rules
+                if (profile.Schedule != null && profile.Schedule.Any())
+                {
+                    _context.RemoveRange(profile.Schedule);
+                }
+
+                // 2. If they have reviews, delete those too
+                if (profile.Reviews != null && profile.Reviews.Any())
+                {
+                    _context.RemoveRange(profile.Reviews);
+                }
+
+                // 3. Now that the children are gone, we can safely delete the parent profile
+                _context.VetProfiles.Remove(profile);
+
+                // 4. Relock the dashboard so they are forced back to Create next time
+                user.IsProfileComplete = false;
+                await _userManager.UpdateAsync(user);
+
+                // 5. Save all the deletions!
+                await _context.SaveChangesAsync();
+            }
+
+            // Send them straight back to the Create page
+            return RedirectToAction("Create", "Vet");
+        }
+
+        // --------------------------------------------------------
+        // HELPER: FILE UPLOAD
+        // --------------------------------------------------------
         private async Task<string?> ProcessUploadedFile(IFormFile? file)
         {
             if (file == null || file.Length == 0) return null;
@@ -243,32 +344,12 @@ namespace Pets_friends.Controllers
             if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
             string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            using (var fileStream = new FileStream(Path.Combine(uploadsFolder, uniqueFileName), FileMode.Create))
             {
                 await file.CopyToAsync(fileStream);
             }
 
             return "/uploads/vets/" + uniqueFileName;
-        }
-
-        [HttpPost]
-        [Authorize(Roles = "Vet")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var profile = await _context.VetProfiles.FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
-
-            if (profile != null)
-            {
-                _context.VetProfiles.Remove(profile);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Profile deleted permanently.";
-            }
-
-            return RedirectToAction("Dashboard", "Vet");
         }
     }
 }

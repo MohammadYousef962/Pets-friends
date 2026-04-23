@@ -63,3 +63,6 @@ wwwroot\lib\jquery\dist\jquery.js
 wwwroot\lib\jquery\dist\jquery.min.js
 wwwroot\lib\jquery\dist\jquery.min.map
 wwwroot\lib\jquery\LICENSE.txt
+wwwroot\uploads\vets\37d00188-78a8-4f90-a3c6-f702169bc960_nqiPGK.webp
+wwwroot\uploads\vets\b83e07ba-9e8a-4b25-9184-be0076c01980_wallpapersden.com_red-black-abstract_1920x1080.jpg
+wwwroot\uploads\vets\edb6f445-f1bc-4ec8-bb7f-482dcce4f17c_geometric-black-and-red-abstract-n5xls2io03aniapp.jpg
