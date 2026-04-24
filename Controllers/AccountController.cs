@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Pets_friends.Data.ViewModels;
 using Pets_friends.Models;
+using System.Net;
+using System.Net.Mail;
 
 namespace Pets_friends.Controllers
 {
@@ -65,7 +67,6 @@ namespace Pets_friends.Controllers
                     }
                     return View(model);
                 }
-                TempData["SuccessMessage"] = "Account created successfully! Please login.";
                 return RedirectToAction("Login");
             }
 
@@ -84,8 +85,6 @@ namespace Pets_friends.Controllers
             return View();
         }
 
-        // LOGIN POST
-        [HttpPost]
         // LOGIN POST
         [HttpPost]
         public async Task<IActionResult> Login(LoginVM model)
@@ -134,6 +133,148 @@ namespace Pets_friends.Controllers
             ModelState.AddModelError("", "Invalid email or password.");
             return View(model);
         }
+
+        // 1. Show the Forgot Password Page
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        // 2. Handle the Submitted Email
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordVM model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+
+                if (user != null)
+                {
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    var passwordResetLink = Url.Action("ResetPassword", "Account",
+                        new { email = model.Email, token = token }, Request.Scheme);
+
+                    try
+                    {
+                        var smtpClient = new SmtpClient("smtp.gmail.com")
+                        {
+                            Port = 587,
+                            UseDefaultCredentials = false,
+                            Credentials = new NetworkCredential("petfriends.support@gmail.com", "aqbsztvthhmqtxyh"),
+                            EnableSsl = true
+                        };
+
+                        var mailMessage = new MailMessage
+                        {
+                            From = new MailAddress("petfriends.support@gmail.com", "Pet Friends Support"),
+                            Subject = "Reset Your Pet Friends Password",
+                            Body = $@"
+        <div style=""background-color: #f8f9fa; padding: 50px 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">
+            <div style=""max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"">
+                
+                <div style=""background-color: #5C3D1E; padding: 30px; text-align: center;"">
+                    <h1 style=""color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px;"">Pet Friends</h1>
+                </div>
+
+                <div style=""padding: 40px; text-align: center;"">
+                    <h2 style=""color: #333333; margin-top: 0;"">Password Reset Request</h2>
+                    <p style=""color: #666666; font-size: 16px; line-height: 1.6;"">
+                        Hello! We received a request to reset the password for your Pet Friends account. 
+                        No worries—it happens to the best of us! Click the button below to choose a new one.
+                    </p>
+                    
+                    <div style=""margin: 35px 0;"">
+                        <a href=""{passwordResetLink}"" 
+                           style=""background-color: #C8A882; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block; transition: background-color 0.3s;"">
+                            Reset Password
+                        </a>
+                    </div>
+
+                    <p style=""color: #999999; font-size: 13px;"">
+                        This link will expire in 2 hours for your security.
+                    </p>
+                </div>
+
+                <div style=""background-color: #f1f1f1; padding: 20px; text-align: center; border-top: 1px solid #eeeeee;"">
+                    <p style=""color: #999999; font-size: 12px; margin: 0;"">
+                        If you didn't request this email, you can safely ignore it. Your password won't change until you create a new one.
+                    </p>
+                    <p style=""color: #999999; font-size: 12px; margin-top: 10px;"">
+                        &copy; 2026 Pet Friends Team
+                    </p>
+                </div>
+            </div>
+        </div>",
+                            IsBodyHtml = true,
+                        };
+                        mailMessage.To.Add(model.Email);
+
+                        await smtpClient.SendMailAsync(mailMessage);
+
+                        // --- CHANGE HERE ---
+                        // We pass the email to the next page so we know the code found the user!
+                        TempData["SentToEmail"] = model.Email;
+                        return View("ForgotPasswordConfirmation");
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("", "GMAIL ERROR: " + ex.Message);
+                        return View(model);
+                    }
+                }
+                else
+                {
+                    // If the user isn't found, we stay on the page and show this:
+                    ModelState.AddModelError("", "We couldn't find an account with that email address.");
+                    return View(model);
+                }
+            }
+            return View(model);
+        }       
+        // 3. Show the Reset Password Page (when they click the email link)
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPassword(string token, string email)
+        {
+            if (token == null || email == null)
+            {
+                ModelState.AddModelError("", "Invalid password reset token.");
+            }
+            return View(new ResetPasswordVM { Token = token, Email = email });
+        }
+
+        // 4. Handle the New Password Submission
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordVM model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                return View("ResetPasswordConfirmation");
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+            if (result.Succeeded)
+            {
+                return View("ResetPasswordConfirmation");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(model);
+        }
+
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> EditProfile()

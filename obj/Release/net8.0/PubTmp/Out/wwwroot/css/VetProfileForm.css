@@ -1,0 +1,204 @@
+﻿/* wwwroot/css/VetProfileForm.css */
+
+:root {
+    --bg-main: #FAF6F1; /* Cream background from success view */
+    --brown-dark: #5C3D1E;
+    --brown-main: #8C7560;
+    --tan: #C8A882;
+    --tan-light: #EDE0D0;
+    --red-danger: #d9534f;
+    --shadow: 0 4px 12px rgba(92, 61, 30, 0.05);
+}
+
+body {
+    background-color: var(--bg-main) !important;
+    color: var(--brown-main);
+}
+
+.page-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    color: var(--brown-dark);
+    margin-bottom: 5px;
+}
+
+.page-subtitle {
+    color: var(--brown-main);
+    font-size: 1rem;
+}
+
+.form-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: var(--shadow);
+}
+
+.card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--brown-dark);
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--tan-light);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .card-title i {
+        color: var(--tan);
+        font-size: 1.3rem;
+    }
+
+/* Icon Inputs for professional polish */
+.form-group-with-icon {
+    position: relative;
+}
+
+    .form-group-with-icon i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--tan);
+        font-size: 1.1rem;
+        pointer-events: none;
+    }
+
+    .form-group-with-icon .form-control {
+        padding-left: 45px;
+    }
+
+    .form-group-with-icon.textarea-group i {
+        top: 25px; /* Adjust icon for textarea */
+    }
+
+.form-control {
+    background-color: #fff;
+    border: 1px solid var(--tan-light);
+    border-radius: 10px;
+    color: var(--brown-dark);
+    font-size: 0.95rem;
+    padding: 12px 16px;
+    transition: 0.2s;
+}
+
+    .form-control:focus {
+        border-color: var(--tan);
+        box-shadow: 0 0 0 3px rgba(200, 168, 130, 0.2);
+    }
+
+/* Time Input Styling: Sleek and professional-looking browser-native inputs */
+.hours-row-edit {
+    padding: 5px 0;
+}
+
+.day-label {
+    width: 80px;
+    font-size: 0.95rem;
+}
+
+.time-input {
+    width: 100px;
+    padding: 8px 10px;
+    border: 1px solid var(--tan-light);
+    border-radius: 8px;
+    text-align: center;
+    color: var(--brown-dark);
+    background: #fff;
+}
+
+    .time-input:disabled {
+        background-color: #f8f9fa;
+        border-color: #eee;
+        color: #bbb;
+        cursor: not-allowed;
+    }
+
+.form-check-input {
+    background-color: #fff;
+    border: 1px solid var(--tan-light);
+    cursor: pointer;
+}
+
+    .form-check-input:checked {
+        background-color: var(--tan);
+        border-color: var(--tan);
+    }
+
+/* Redesigned Button Group */
+.btn-group-main {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.btn {
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 12px 24px;
+    transition: 0.2s ease;
+}
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+.btn-save {
+    background-color: var(--brown-dark);
+    color: #fff !important;
+}
+
+    .btn-save:hover {
+        background-color: #4c3319;
+    }
+
+.btn-cancel {
+    background-color: var(--tan-light);
+    color: var(--brown-dark) !important;
+}
+
+    .btn-cancel:hover {
+        background-color: #e2d1be;
+    }
+
+.btn-delete-main {
+    background-color: #fff;
+    border: 1px solid var(--red-danger);
+    color: var(--red-danger) !important;
+}
+
+    .btn-delete-main:hover {
+        background-color: var(--red-danger);
+        color: #fff !important;
+    }
+
+/* Info Card (The side Tips in image_6.png) */
+.info-card {
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+}
+
+.info-card-title {
+    font-size: 1.2rem;
+    color: var(--brown-dark);
+    margin-bottom: 15px;
+}
+
+    .info-card-title i {
+        color: #f0ad4e;
+    }
+/* Orange bulb */
+.info-list {
+    font-size: 0.9rem;
+    color: var(--brown-main);
+    padding-left: 1rem;
+    line-height: 1.6;
+}
+
+    .info-list li {
+        margin-bottom: 8px;
+    }

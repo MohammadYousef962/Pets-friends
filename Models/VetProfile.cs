@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-// ADD THIS NAMESPACE BLOCK AROUND YOUR CLASS
 namespace Pets_friends.Models
 {
     public class VetProfile

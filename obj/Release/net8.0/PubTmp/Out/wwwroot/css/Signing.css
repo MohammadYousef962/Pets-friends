@@ -1,0 +1,290 @@
+/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
+    min-height: 100vh;
+}
+
+/* PAGE WRAPPER */
+.main-wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* MAIN CONTAINER - Restored to your exact original size */
+.main-container {
+    width: 100%;
+    max-width: 1250px;
+    min-height: 700px;
+    display: flex;
+    border-radius: 28px;
+    overflow: hidden;
+    background: rgba(255, 250, 245, 0.95);
+    box-shadow: 0 25px 60px rgba(91, 62, 43, 0.18);
+}
+
+/* LEFT PANEL - Restored to 50% split */
+.left-panel {
+    flex: 1;
+    min-height: 300px;
+}
+
+    .left-panel img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+/* RIGHT PANEL - Restored to 50% split */
+.right-panel {
+    flex: 1;
+    background: #f8f2ec;
+    display: flex;
+    justify-content: center;
+    /* Using 'center' here ensures that the shorter Login form 
+       floats perfectly in the middle of your 700px box instead 
+       of awkwardly sticking to the ceiling! */
+    align-items: center;
+    padding: 50px;
+}
+
+/* FORM BOX */
+.form-box {
+    width: 100%;
+    max-width: 380px;
+}
+
+/* LOGO */
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    margin-bottom: 50px;
+}
+
+.logo-circle {
+    font-size: 38px;
+    line-height: 1;
+    color: #7b4f2c;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.4), 0 3px 8px rgba(123, 79, 44, 0.28);
+}
+
+.logo-text {
+    font-family: 'Poppins', sans-serif;
+    font-size: 45px;
+    font-weight: 700;
+    color: #5a3e2b;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.35), 0 3px 8px rgba(90, 62, 43, 0.20);
+}
+
+/* TOGGLE */
+.toggle {
+    display: flex;
+    background: #e4d6c7;
+    border-radius: 999px;
+    padding: 5px;
+    margin-bottom: 28px;
+}
+
+    .toggle a {
+        flex: 1;
+        text-align: center;
+        padding: 10px 0;
+        border-radius: 999px;
+        text-decoration: none;
+        color: #7b4f2c;
+        font-size: 14px;
+        font-weight: 500;
+        transition: 0.3s ease;
+        cursor: pointer;
+    }
+
+    .toggle .active {
+        background: #7b4f2c;
+        color: white;
+        font-weight: 700;
+    }
+
+/* TITLE */
+.form-box h2 {
+    text-align: center;
+    color: #5a3e2b;
+    margin-bottom: 24px;
+    font-size: 28px;
+}
+
+/* INPUTS */
+.input-group {
+    margin-bottom: 16px;
+}
+
+input {
+    width: 100%;
+    padding: 15px 16px;
+    border: 1px solid #d8c8b8;
+    border-radius: 12px;
+    font-size: 14px;
+    background: white;
+    transition: all 0.25s ease;
+}
+
+    input:focus {
+        outline: none;
+        border-color: #7b4f2c;
+        box-shadow: 0 0 0 3px rgba(123, 79, 44, 0.12);
+    }
+
+/* ASP.NET CORE VALIDATION ERRORS */
+.input-validation-error {
+    border-color: #d9534f !important;
+    background-color: #fff8f8 !important;
+}
+
+    .input-validation-error:focus {
+        box-shadow: 0 0 0 3px rgba(217, 83, 79, 0.15) !important;
+    }
+
+.field-validation-error {
+    color: #d9534f;
+    font-size: 12px;
+    font-weight: 600;
+    display: block;
+    margin-top: 4px;
+    padding-left: 4px;
+    text-align: left;
+}
+
+.validation-summary-errors {
+    background: #fff8f8;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    color: #d9534f;
+    font-size: 13px;
+    text-align: center;
+}
+
+    .validation-summary-errors ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+/* BUTTON */
+button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    background: #7b4f2c;
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s ease;
+    margin-top: 8px;
+}
+
+    button:hover {
+        background: #5f3c21;
+        transform: translateY(-1px);
+    }
+
+/* LINKS */
+a {
+    text-decoration: none;
+}
+
+.forgot-link {
+    margin-top: -6px;
+    margin-bottom: 16px;
+    text-align: right;
+    padding-right: 4px;
+}
+
+    .forgot-link a {
+        font-size: 13px;
+        font-weight: 600;
+        color: #7b4f2c;
+    }
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 992px) {
+    .right-panel {
+        padding: 35px;
+    }
+
+    .form-box h2 {
+        font-size: 24px;
+    }
+
+    .logo-text {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-container {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .left-panel {
+        height: 220px;
+    }
+
+    .right-panel {
+        padding: 30px 20px;
+    }
+
+    .form-box {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-wrapper {
+        padding: 10px;
+    }
+
+    .right-panel {
+        padding: 25px 15px;
+    }
+
+    .logo-circle {
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
+    }
+
+    .logo-text {
+        font-size: 22px;
+    }
+
+    .form-box h2 {
+        font-size: 22px;
+    }
+
+    input, button {
+        padding: 13px;
+        font-size: 14px;
+    }
+
+    .toggle a {
+        font-size: 13px;
+        padding: 8px 0;
+    }
+}

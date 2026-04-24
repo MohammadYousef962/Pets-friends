@@ -134,7 +134,6 @@ C:\Users\wazed\source\repos\Pet friends\Pets friends\obj\Debug\net8.0\staticweba
 C:\Users\wazed\source\repos\Pet friends\Pets friends\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\wazed\source\repos\Pet friends\Pets friends\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\wazed\source\repos\Pet friends\Pets friends\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\Users\wazed\source\repos\Pet friends\Pets friends\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\wazed\source\repos\Pet friends\Pets friends\obj\Debug\net8.0\Pets fri.0C529201.Up2Date
 C:\Users\wazed\source\repos\Pet friends\Pets friends\obj\Debug\net8.0\Pets friends.dll
 C:\Users\wazed\source\repos\Pet friends\Pets friends\obj\Debug\net8.0\refint\Pets friends.dll

@@ -1,0 +1,442 @@
+﻿/* wwwroot/css/VetProfile.css */
+
+/* ── Tokens matching PetPals palette ── */
+:root {
+    --cream: #FAF6F1;
+    --beige: #EDE0D0;
+    --tan: #C8A882;
+    --tan-dark: #A0805A;
+    --brown: #5C3D1E;
+    --text-main: #2D1F0E;
+    --text-muted: #8C7560;
+    --white: #FFFFFF;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(92,61,30,.10);
+    --shadow-sm: 0 2px 12px rgba(92,61,30,.07);
+}
+
+body {
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-main);
+}
+
+/* ── Hero banner ── */
+.vet-hero {
+    background: linear-gradient(135deg, var(--beige) 0%, #D9C4A8 100%);
+    padding: 3rem 0 0;
+    position: relative;
+    overflow: hidden;
+}
+
+    .vet-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C8A882' fill-opacity='0.18'%3E%3Cellipse cx='10' cy='10' rx='4' ry='3'/%3E%3Cellipse cx='22' cy='7'  rx='3' ry='2.2'/%3E%3Cellipse cx='16' cy='19' rx='6' ry='5'/%3E%3Cellipse cx='46' cy='42' rx='4' ry='3'/%3E%3Cellipse cx='58' cy='39' rx='3' ry='2.2'/%3E%3Cellipse cx='52' cy='51' rx='6' ry='5'/%3E%3C/g%3E%3C/svg%3E");
+        background-size: 60px 60px;
+        pointer-events: none;
+    }
+
+    .vet-hero .container {
+        position: relative;
+    }
+
+/* ── Profile photo ── */
+.vet-photo-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+    .vet-photo-wrap img {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid var(--white);
+        box-shadow: var(--shadow);
+    }
+
+.vet-badge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    background: var(--tan);
+    color: var(--white);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .9rem;
+    border: 3px solid var(--white);
+}
+
+/* ── Name & meta ── */
+.vet-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--brown);
+    margin-bottom: .25rem;
+}
+
+.vet-title-tag {
+    background: var(--tan);
+    color: var(--white);
+    padding: .25rem .85rem;
+    border-radius: 30px;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: .6rem;
+}
+
+.vet-spec {
+    color: var(--text-muted);
+    font-size: .95rem;
+}
+
+/* ── Stat pills ── */
+.stat-pill {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: .85rem 1.4rem;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    flex: 1;
+    min-width: 120px;
+}
+
+    .stat-pill .stat-num {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.7rem;
+        color: var(--brown);
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .stat-pill .stat-label {
+        font-size: .75rem;
+        color: var(--text-muted);
+        margin-top: .2rem;
+        font-weight: 500;
+    }
+
+/* ── Action buttons ── */
+.btn-book {
+    background: var(--tan);
+    color: var(--white);
+    border: none;
+    border-radius: 30px;
+    padding: .65rem 1.8rem;
+    font-weight: 600;
+    font-size: .9rem;
+    transition: background .2s, transform .15s;
+}
+
+    .btn-book:hover {
+        background: var(--tan-dark);
+        color: var(--white);
+        transform: translateY(-1px);
+    }
+
+.btn-outline-tan {
+    background: transparent;
+    color: var(--tan-dark);
+    border: 2px solid var(--tan);
+    border-radius: 30px;
+    padding: .6rem 1.6rem;
+    font-weight: 600;
+    font-size: .9rem;
+    transition: all .2s;
+}
+
+    .btn-outline-tan:hover {
+        background: var(--tan);
+        color: var(--white);
+    }
+
+/* ── Section card ── */
+.section-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 1.8rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: var(--brown);
+    font-weight: 700;
+    margin-bottom: 1.1rem;
+    padding-bottom: .5rem;
+    border-bottom: 2px solid var(--beige);
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+    .section-title i {
+        color: var(--tan);
+    }
+
+/* ── Service tags ── */
+.service-tag {
+    background: var(--beige);
+    color: var(--brown);
+    border-radius: 30px;
+    padding: .35rem .9rem;
+    font-size: .82rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin: .25rem;
+}
+
+    .service-tag i {
+        color: var(--tan);
+        font-size: .75rem;
+    }
+
+/* ── Education timeline ── */
+.edu-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+}
+
+.edu-dot {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    background: var(--beige);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tan-dark);
+    font-weight: 700;
+    font-size: .78rem;
+    margin-top: 2px;
+}
+
+.edu-degree {
+    font-weight: 600;
+    font-size: .92rem;
+    color: var(--text-main);
+}
+
+.edu-inst {
+    font-size: .83rem;
+    color: var(--text-muted);
+}
+
+/* ── Working hours ── */
+.hours-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .5rem .6rem;
+    border-radius: 8px;
+    font-size: .88rem;
+    transition: background .15s;
+}
+
+    .hours-row:hover {
+        background: var(--beige);
+    }
+
+    .hours-row .day {
+        font-weight: 600;
+        color: var(--brown);
+    }
+
+    .hours-row .time {
+        color: var(--text-muted);
+    }
+
+    .hours-row.today {
+        background: var(--beige);
+    }
+
+        .hours-row.today .day {
+            color: var(--tan-dark);
+        }
+
+.badge-off {
+    background: #f5e9e0;
+    color: #c0714b;
+    border-radius: 20px;
+    padding: .15rem .6rem;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.badge-open {
+    background: #e4f0e8;
+    color: #3a8a4f;
+    border-radius: 20px;
+    padding: .15rem .6rem;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+/* ── Stars ── */
+.stars {
+    color: #E8A838;
+    font-size: .9rem;
+    letter-spacing: .05em;
+}
+
+/* ── Review card ── */
+.review-card {
+    border: 1.5px solid var(--beige);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+    .review-card:hover {
+        border-color: var(--tan);
+        box-shadow: var(--shadow-sm);
+    }
+
+.review-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--beige);
+}
+
+.review-author {
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.review-pet {
+    font-size: .78rem;
+    color: var(--text-muted);
+}
+
+.review-date {
+    font-size: .78rem;
+    color: var(--text-muted);
+}
+
+.review-text {
+    font-size: .88rem;
+    color: var(--text-main);
+    line-height: 1.6;
+    margin-top: .5rem;
+}
+
+/* ── Rating summary bar ── */
+.rating-hero {
+    background: linear-gradient(135deg, var(--beige), var(--cream));
+    border-radius: var(--radius);
+    padding: 1.4rem;
+    text-align: center;
+    margin-bottom: 1.2rem;
+}
+
+.rating-big {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.5rem;
+    color: var(--brown);
+    line-height: 1;
+    font-weight: 700;
+}
+
+.progress-star {
+    height: 8px;
+    border-radius: 10px;
+    background: var(--beige);
+}
+
+    .progress-star .bar {
+        height: 100%;
+        background: var(--tan);
+        border-radius: 10px;
+    }
+
+/* ── Cert badge ── */
+.cert-item {
+    display: flex;
+    gap: .7rem;
+    align-items: flex-start;
+    padding: .6rem 0;
+    border-bottom: 1px solid var(--beige);
+}
+
+    .cert-item:last-child {
+        border-bottom: none;
+    }
+
+.cert-icon {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    background: var(--beige);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tan-dark);
+}
+
+.cert-text {
+    font-size: .87rem;
+    font-weight: 500;
+    padding-top: 4px;
+}
+
+/* ── Contact info ── */
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .7rem 0;
+    border-bottom: 1px solid var(--beige);
+    font-size: .9rem;
+}
+
+    .contact-item:last-child {
+        border-bottom: none;
+    }
+
+.contact-icon {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    background: var(--beige);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tan-dark);
+}
+
+/* ── Responsive tweaks ── */
+@media (max-width: 767px) {
+    .vet-name {
+        font-size: 1.5rem;
+    }
+
+    .stat-pill {
+        min-width: 90px;
+        padding: .7rem .9rem;
+    }
+
+        .stat-pill .stat-num {
+            font-size: 1.35rem;
+        }
+}
