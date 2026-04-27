@@ -21,30 +21,26 @@ namespace Pets_friends.Controllers
             _signInManager = signInManager;
         }
 
-        // REGISTER GET
+        #region --- REGISTRATION & AUTHENTICATION ---
+
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
 
-        // REGISTER POST
         [HttpPost]
         public async Task<IActionResult> Register(RegisterVM model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(model);
 
-            // Check if email already exists
             var existingUser = await _userManager.FindByEmailAsync(model.EmailAddress);
-
             if (existingUser != null)
             {
                 ModelState.AddModelError("EmailAddress", "This email is already registered.");
                 return View(model);
             }
 
-            // Create user
             var user = new UserAccount
             {
                 FullName = model.FullName,
@@ -56,9 +52,7 @@ namespace Pets_friends.Controllers
 
             if (result.Succeeded)
             {
-                // Assign default role = User
                 var roleResult = await _userManager.AddToRoleAsync(user, "User");
-
                 if (!roleResult.Succeeded)
                 {
                     foreach (var error in roleResult.Errors)
@@ -78,55 +72,29 @@ namespace Pets_friends.Controllers
             return View(model);
         }
 
-        // LOGIN GET
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
 
-        // LOGIN POST
         [HttpPost]
         public async Task<IActionResult> Login(LoginVM model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(model);
 
-            var result = await _signInManager.PasswordSignInAsync(
-                model.EmailAddress,
-                model.Password,
-                false,
-                false);
+            var result = await _signInManager.PasswordSignInAsync(model.EmailAddress, model.Password, false, false);
 
             if (result.Succeeded)
             {
-                // 1. Get the user object based on the email they just logged in with
                 var user = await _userManager.FindByEmailAsync(model.EmailAddress);
-
-                // 2. Check what roles they have
                 var roles = await _userManager.GetRolesAsync(user);
 
-                // 3. Traffic Cop: Redirect based on their role
-                if (roles.Contains("Admin"))
-                {
-                    return RedirectToAction("Dashboard", "Admin"); // Send to Admin Dashboard
-                }
-                else if (roles.Contains("Vet"))
-                {
-                    return RedirectToAction("Dashboard", "Vet"); // Send Vet to their Profile Manager
-                }
-                else if (roles.Contains("Merchant"))
-                {
-                    // Update this later when you build the Merchant Controller!
-                    return RedirectToAction("Dashboard", "Merchant");
-                }
-                else if (roles.Contains("Shelter"))
-                {
-                    // Update this later when you build the Shelter Controller!
-                    return RedirectToAction("Dashboard", "Shelter");
-                }
+                if (roles.Contains("Admin")) return RedirectToAction("Dashboard", "Admin");
+                if (roles.Contains("Vet")) return RedirectToAction("Dashboard", "Vet");
+                if (roles.Contains("Merchant")) return RedirectToAction("Dashboard", "Merchant");
+                if (roles.Contains("Shelter")) return RedirectToAction("Dashboard", "Shelter");
 
-                // 4. Default: If they are just a "User" or "Client", send them to the Home Page
                 return RedirectToAction("Dashboard", "Client");
             }
 
@@ -134,7 +102,17 @@ namespace Pets_friends.Controllers
             return View(model);
         }
 
-        // 1. Show the Forgot Password Page
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Login");
+        }
+
+        #endregion
+
+        #region --- PASSWORD MANAGEMENT ---
+
         [HttpGet]
         [AllowAnonymous]
         public IActionResult ForgotPassword()
@@ -142,37 +120,175 @@ namespace Pets_friends.Controllers
             return View();
         }
 
-        // 2. Handle the Submitted Email
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordVM model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+            if (user != null)
             {
-                var user = await _userManager.FindByEmailAsync(model.Email);
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var passwordResetLink = Url.Action("ResetPassword", "Account", new { email = model.Email, token = token }, Request.Scheme);
 
-                if (user != null)
+                try
                 {
-                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                    var passwordResetLink = Url.Action("ResetPassword", "Account",
-                        new { email = model.Email, token = token }, Request.Scheme);
+                    await SendPasswordResetEmailAsync(model.Email, passwordResetLink);
+                    TempData["SentToEmail"] = model.Email;
+                    return View("ForgotPasswordConfirmation");
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "GMAIL ERROR: " + ex.Message);
+                    return View(model);
+                }
+            }
 
-                    try
-                    {
-                        var smtpClient = new SmtpClient("smtp.gmail.com")
-                        {
-                            Port = 587,
-                            UseDefaultCredentials = false,
-                            Credentials = new NetworkCredential("petfriends.support@gmail.com", "aqbsztvthhmqtxyh"),
-                            EnableSsl = true
-                        };
+            // We couldn't find the user
+            ModelState.AddModelError("", "We couldn't find an account with that email address.");
+            return View(model);
+        }
 
-                        var mailMessage = new MailMessage
-                        {
-                            From = new MailAddress("petfriends.support@gmail.com", "Pet Friends Support"),
-                            Subject = "Reset Your Pet Friends Password",
-                            Body = $@"
+        // 3. Show the Reset Password Page (when they click the email link)
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword(string token, string email)
+        {
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("TokenExpired");
+            }
+
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                // Verify the token BEFORE they even try to type a password
+                var isValid = await _userManager.VerifyUserTokenAsync(user, _userManager.Options.Tokens.PasswordResetTokenProvider, "ResetPassword", token);
+
+                if (!isValid)
+                {
+                    // If it's over the time limit, send them to the custom expired page!
+                    return RedirectToAction("TokenExpired");
+                }
+            }
+            else
+            {
+                // If the user doesn't exist, also pretend it's expired for security
+                return RedirectToAction("TokenExpired");
+            }
+
+            return View(new ResetPasswordVM { Token = token, Email = email });
+        }
+
+        // --- NEW: Custom Expired Token Page ---
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult TokenExpired()
+        {
+            return View();
+        }
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordVM model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null) return View("ResetPasswordConfirmation");
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+            if (result.Succeeded) return View("ResetPasswordConfirmation");
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(model);
+        }
+
+        #endregion
+
+        #region --- PROFILE & ACCESS MANAGEMENT ---
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> EditProfile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login");
+
+            var model = new EditProfileVM
+            {
+                FullName = user.FullName,
+                PhoneNumber = user.PhoneNumber,
+                Gender = user.Gender,
+                City = user.City
+            };
+
+            return View(model);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> EditProfile(EditProfileVM model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login");
+
+            user.FullName = model.FullName;
+            user.PhoneNumber = model.PhoneNumber;
+            user.Gender = model.Gender;
+            user.City = model.City;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                TempData["SuccessMessage"] = "Profile updated successfully!";
+                return RedirectToAction("Index", "Home");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+
+            return View(model);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            TempData["ErrorMessage"] = "You do not have permission to view that page.";
+            return RedirectToAction("Dashboard", "Home");
+        }
+
+        #endregion
+
+        #region --- PRIVATE HELPER METHODS ---
+
+        private async Task SendPasswordResetEmailAsync(string email, string passwordResetLink)
+        {
+            var smtpClient = new SmtpClient("smtp.gmail.com")
+            {
+                Port = 587,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential("petfriends.support@gmail.com", "aqbsztvthhmqtxyh"),
+                EnableSsl = true
+            };
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress("petfriends.support@gmail.com", "Pet Friends Support"),
+                Subject = "Reset Your Pet Friends Password",
+                Body = $@"
         <div style=""background-color: #f8f9fa; padding: 50px 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">
             <div style=""max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"">
                 
@@ -209,140 +325,13 @@ namespace Pets_friends.Controllers
                 </div>
             </div>
         </div>",
-                            IsBodyHtml = true,
-                        };
-                        mailMessage.To.Add(model.Email);
-
-                        await smtpClient.SendMailAsync(mailMessage);
-
-                        // --- CHANGE HERE ---
-                        // We pass the email to the next page so we know the code found the user!
-                        TempData["SentToEmail"] = model.Email;
-                        return View("ForgotPasswordConfirmation");
-                    }
-                    catch (Exception ex)
-                    {
-                        ModelState.AddModelError("", "GMAIL ERROR: " + ex.Message);
-                        return View(model);
-                    }
-                }
-                else
-                {
-                    // If the user isn't found, we stay on the page and show this:
-                    ModelState.AddModelError("", "We couldn't find an account with that email address.");
-                    return View(model);
-                }
-            }
-            return View(model);
-        }       
-        // 3. Show the Reset Password Page (when they click the email link)
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult ResetPassword(string token, string email)
-        {
-            if (token == null || email == null)
-            {
-                ModelState.AddModelError("", "Invalid password reset token.");
-            }
-            return View(new ResetPasswordVM { Token = token, Email = email });
-        }
-
-        // 4. Handle the New Password Submission
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ResetPassword(ResetPasswordVM model)
-        {
-            if (!ModelState.IsValid) return View(model);
-
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
-            {
-                // Don't reveal that the user does not exist
-                return View("ResetPasswordConfirmation");
-            }
-
-            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
-            if (result.Succeeded)
-            {
-                return View("ResetPasswordConfirmation");
-            }
-
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-            return View(model);
-        }
-
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> EditProfile()
-        {
-            // 1. Find who is currently logged in
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login");
-
-            // 2. Load their existing data into the ViewModel so the form isn't empty
-            var model = new EditProfileVM
-            {
-                FullName = user.FullName,
-                PhoneNumber = user.PhoneNumber,
-                Gender = user.Gender,
-                City = user.City
+                IsBodyHtml = true,
             };
 
-            return View(model);
+            mailMessage.To.Add(email);
+            await smtpClient.SendMailAsync(mailMessage);
         }
 
-        [Authorize]
-        [HttpPost]
-        public async Task<IActionResult> EditProfile(EditProfileVM model)
-        {
-            if (!ModelState.IsValid) return View(model);
-
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login");
-
-            // 3. Update the user object with the new data from the form
-            user.FullName = model.FullName;
-            user.PhoneNumber = model.PhoneNumber;
-            user.Gender = model.Gender;
-            user.City = model.City;
-
-            // 4. Save to Database!
-            var result = await _userManager.UpdateAsync(user);
-
-            if (result.Succeeded)
-            {
-                TempData["SuccessMessage"] = "Profile updated successfully!";
-                return RedirectToAction("Index", "Home"); // Or wherever you want them to go
-            }
-
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError("", error.Description);
-            }
-
-            return View(model);
-        }
-        // LOGOUT
-        [HttpPost]
-        public async Task<IActionResult> Logout()
-        {
-            await _signInManager.SignOutAsync();
-            return RedirectToAction("Login");
-        }
-
-        // GET: /Account/AccessDenied
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult AccessDenied()
-        {
-            // You can customize this later, but for now it safely redirects 
-            // unauthorized snoopers back to the home page with an error message.
-            TempData["ErrorMessage"] = "You do not have permission to view that page.";
-            return RedirectToAction("Dashboard", "Home");
-        }
+        #endregion
     }
 }

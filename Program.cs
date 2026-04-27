@@ -2,43 +2,60 @@
 using Microsoft.EntityFrameworkCore;
 using Pets_friends.Data;
 using Pets_friends.Models;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Services
-builder.Services.AddControllersWithViews();
+// ====================================================
+// PART 1: CONFIGURE SERVICES (The App's Toolbox)
+// ====================================================
 
-// 2. Database
+builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 3. Identity Configuration
+// 1. Identity & Password Rules
 builder.Services.AddIdentity<UserAccount, IdentityRole>(options =>
 {
-    // --- THE STRICT RULES ---
-    options.User.RequireUniqueEmail = true; // GLOBAL RULE: No duplicate emails allowed
-
+    options.User.RequireUniqueEmail = true;
     options.SignIn.RequireConfirmedAccount = false;
-    options.Password.RequireDigit = false;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = false;
-    options.Password.RequireLowercase = false; // Added for easier testing
-    options.Password.RequiredLength = 6;
-})
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
 
-// 4. Professional Routing Security
+    options.Password.RequireDigit = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequiredLength = 6;
+
+    // --- FORCE IDENTITY TO USE OUR NEW CUSTOM PROVIDER ---
+    options.Tokens.PasswordResetTokenProvider = "PetFriendsResetProvider";
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders()
+// --- REGISTER OUR CUSTOM PROVIDER ---
+.AddTokenProvider<PetFriendsTokenProvider<UserAccount>>("PetFriendsResetProvider");
+
+// 2. Security Tokens & Cookies
+// --- SET THE STRICT 1-MINUTE RULE FOR OUR CUSTOM PROVIDER ---
+builder.Services.Configure<PetFriendsTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromHours(2); // Set to 1 minute for testing!
+});
+
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
-    options.ExpireTimeSpan = TimeSpan.FromDays(30); // Keeps them logged in longer for better UX
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    options.SlidingExpiration = true;
 });
+
+// ====================================================
+// PART 2: BUILD APP & CONFIGURE PIPELINE
+// ====================================================
 
 var app = builder.Build();
 
-// 5. Initialize Database (Seeder)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -53,7 +70,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// 6. Middleware Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -73,3 +89,18 @@ app.MapControllerRoute(
     pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();
+
+// ====================================================
+// PART 3: OUR CUSTOM BULLETPROOF TOKEN GENERATOR
+// ====================================================
+public class PetFriendsTokenProvider<TUser> : DataProtectorTokenProvider<TUser> where TUser : class
+{
+    public PetFriendsTokenProvider(
+        IDataProtectionProvider dataProtectionProvider,
+        IOptions<PetFriendsTokenProviderOptions> options,
+        ILogger<DataProtectorTokenProvider<TUser>> logger)
+        : base(dataProtectionProvider, options, logger)
+    { }
+}
+
+public class PetFriendsTokenProviderOptions : DataProtectionTokenProviderOptions { }

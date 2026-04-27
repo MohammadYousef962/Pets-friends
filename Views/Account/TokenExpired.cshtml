@@ -1,0 +1,92 @@
+﻿@{
+    ViewData["Title"] = "Link Expired";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<style>
+    /* --- Custom Button Styles for this Page --- */
+    .expired-btn-primary {
+        background-color: #C8A882;
+        color: #ffffff !important;
+        padding: 14px 25px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 700;
+        display: block;
+        width: 100%;
+        transition: all 0.3s ease;
+        border: 2px solid #C8A882;
+        box-shadow: 0 4px 12px rgba(200, 168, 130, 0.25);
+    }
+
+    .expired-btn-primary:hover {
+        background-color: #b89770;
+        border-color: #b89770;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(200, 168, 130, 0.35);
+    }
+
+    .expired-btn-secondary {
+        background-color: transparent;
+        color: #8C7560 !important;
+        padding: 14px 25px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 700;
+        display: block;
+        width: 100%;
+        transition: all 0.3s ease;
+        border: 2px solid #EBE0D5; 
+    }
+
+    .expired-btn-secondary:hover {
+        border-color: #C8A882;
+        color: #5C3D1E !important;
+        background-color: rgba(200, 168, 130, 0.05);
+        transform: translateY(-2px);
+    }
+    
+    .expired-icon-badge {
+        width: 80px;
+        height: 80px;
+        background-color: #FFF2F2;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px auto;
+        font-size: 2.5rem;
+    }
+</style>
+
+<div class="main-wrapper">
+    <div class="main-container">
+        <div class="left-panel">
+            <img src="~/images/Pets.png" alt="Happy Pets" asp-append-version="true" />
+        </div>
+
+        <div class="right-panel" style="display: flex; flex: 1; padding: 40px;">
+            
+            <div class="form-box" style="text-align: center; width: 100%; margin: auto !important;">
+
+                <h2 style="margin-bottom: 15px; color: #5C3D1E; font-weight: 700;">Link Expired</h2>
+
+                <p style="color: #8C7560; font-size: 0.95rem; line-height: 1.6; padding: 0 10px; margin-bottom: 35px;">
+                    For your security, password reset links automatically expire after 2 hours. This link is no longer valid.
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: 14px; max-width: 320px; margin: 0 auto;">
+                    
+                    <a asp-action="ForgotPassword" class="expired-btn-primary">
+                        Request New Link
+                    </a>
+
+                    <a asp-action="Login" class="expired-btn-secondary">
+                        Back to Login
+                    </a>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
