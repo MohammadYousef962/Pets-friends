@@ -4,13 +4,12 @@
 @inject UserManager<UserAccount> UserManager
 
 @{
-    var fullName = Model.UserAccount?.FullName ?? "Doctor";
-    var displayName = fullName.StartsWith("Dr.", StringComparison.OrdinalIgnoreCase) ? fullName : $"Dr. {fullName}";
+    // --- UPDATED LOGIC: Focus entirely on the Clinic Name ---
+    var clinicName = !string.IsNullOrEmpty(Model.ClinicName) ? Model.ClinicName : "Veterinary Clinic";
 
-    ViewData["Title"] = displayName + " | Pet Vet";
+    ViewData["Title"] = clinicName + " | Pet Vet";
     Layout = "~/Views/Shared/_VetLayout.cshtml";
 
-    // --- NEW LOGIC: Check if this is the Vet's OWN profile ---
     var currentUser = await UserManager.GetUserAsync(User);
     bool isOwnProfile = currentUser != null && currentUser.Id == Model.UserAccountId;
 }
@@ -71,14 +70,15 @@
             <div class="col-lg-7 d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-4 text-center text-sm-start">
                 <div class="vet-photo-wrap flex-shrink-0" style="position: relative; width: 150px; height: 150px; border-radius: 50%; background-color: #EBE0D5; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
                     @{
-                        var defaultLetter = !string.IsNullOrEmpty(fullName) ? fullName.Substring(0, 1).ToUpper() : "V";
+                        // Uses the first letter of the Clinic Name now
+                        var defaultLetter = clinicName.Substring(0, 1).ToUpper();
                         var fallbackImg = $"https://placehold.co/150x150/C8A882/white?text={defaultLetter}&font=Playfair+Display";
                         var imgSrc = !string.IsNullOrEmpty(Model.ImageUrl) ? Model.ImageUrl : fallbackImg;
                     }
 
                     <img src="@imgSrc"
                          onerror="this.onerror=null; this.src='@fallbackImg';"
-                         alt="Photo of @displayName"
+                         alt="Photo of @clinicName"
                          style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; border: 4px solid #fff;">
 
                     <div class="vet-badge" style="position: absolute; bottom: 5px; right: 5px; background: #C8A882; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; z-index: 2;">
@@ -86,14 +86,16 @@
                     </div>
                 </div>
                 <div>
-                    <span class="vet-title-tag" style="background: rgba(200, 168, 130, 0.2); color: #8C7560; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; display: inline-block; margin-bottom: 10px; text-transform: uppercase;">Doctor of Veterinary Medicine</span>
-                    <h1 class="vet-name mb-1" style="font-family: 'Playfair Display', serif; font-weight: 700; color: #5C3D1E;">@displayName</h1>
+                    <span class="vet-title-tag" style="background: rgba(200, 168, 130, 0.2); color: #8C7560; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; display: inline-block; margin-bottom: 10px; text-transform: uppercase;">Veterinary Clinic</span>
+
+                    <h1 class="vet-name mb-1" style="font-family: 'Playfair Display', serif; font-weight: 700; color: #5C3D1E;">@clinicName</h1>
+
                     <p class="vet-spec mb-1" style="color: #8C7560; font-weight: 500;">
                         <i class="bi bi-award me-1" style="color:#C8A882"></i>@Model.Specialization
                     </p>
                     <p class="vet-spec mb-2" style="color: #8C7560; font-weight: 500;">
                         <i class="bi bi-geo-alt me-1" style="color:#C8A882"></i>
-                        @Model.ClinicName &middot; @Model.ClinicAddress
+                        @Model.ClinicAddress
                     </p>
                     <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-1 mb-3">
                         @for (int i = 1; i <= 5; i++)
@@ -160,7 +162,7 @@
         <div class="col-lg-8">
 
             <div class="section-card">
-                <h2 class="section-title"><i class="bi bi-person-lines-fill"></i> About @displayName</h2>
+                <h2 class="section-title"><i class="bi bi-person-lines-fill"></i> About @clinicName</h2>
                 <p style="color:var(--text-main); line-height:1.75; font-size:.95rem;">@Model.Description</p>
             </div>
 

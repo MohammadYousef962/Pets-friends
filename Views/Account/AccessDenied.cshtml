@@ -1,0 +1,114 @@
+﻿@{
+    ViewData["Title"] = "Access Denied";
+    Layout = null; // Standalone layout for security pages
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Pet Friends</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
+            font-family: 'DM Sans', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .access-container {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            padding: 3.5rem 2.5rem;
+            max-width: 550px;
+            text-align: center;
+            width: 90%;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .lock-icon {
+            font-size: 5rem;
+            color: #C8A882;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: #5C3D1E;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .text-muted-custom {
+            color: #8C7560;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .btn-custom {
+            background-color: #5C3D1E;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            border: none;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+            .btn-custom:hover {
+                background-color: #4A3118;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(92, 61, 30, 0.2);
+                color: white;
+            }
+    </style>
+</head>
+<body>
+
+    <div class="access-container">
+        <!-- Shield/Lock Icon -->
+        <i class="bi bi-shield-lock-fill lock-icon"></i>
+
+        <h1>Access Denied</h1>
+        <p class="text-muted-custom">
+            Hold your horses! You don't have the necessary permissions to access this area of Pet Friends.
+        </p>
+
+        <a href="@Url.Content(ViewData["DashboardUrl"]?.ToString())" class="btn-custom">
+            <i class="bi bi-arrow-left"></i> Return to Dashboard
+        </a>
+    </div>
+</body>
+</html>

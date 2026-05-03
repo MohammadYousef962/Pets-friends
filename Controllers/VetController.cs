@@ -27,21 +27,24 @@ namespace Pets_friends.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // --------------------------------------------------------
-        // DASHBOARD
-        // --------------------------------------------------------
         [Authorize(Roles = "Vet")]
         public async Task<IActionResult> Dashboard()
         {
+            // 1. Get the user (basic info only)
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Login", "Account");
 
+            // 2. Fetch the profile AND include the UserAccount back-reference
             var profile = await _context.VetProfiles
                 .Include(p => p.UserAccount)
                 .Include(p => p.Reviews).ThenInclude(r => r.Reviewer)
                 .FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
 
             if (profile == null) return RedirectToAction(nameof(Create));
+
+            // 3. IMPORTANT: Manually link the profile to the user object 
+            // so the Layout can find 'user.VetProfile.ImageUrl'
+            user.VetProfile = profile;
 
             var pendingAppointments = await _context.Appointments
                 .Include(a => a.ClientProfile).ThenInclude(c => c.UserAccount)

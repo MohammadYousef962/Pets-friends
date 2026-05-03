@@ -494,31 +494,44 @@
         }
 
         // 4. FIXED SMART WORKING HOURS LOGIC (ON = Working)
-        function toggleWork(checkbox) {
-            const row = checkbox.closest('.day-row');
-            const hiddenIsOff = row.querySelector('.hidden-is-off');
-            const inputs = row.querySelectorAll('.time-input');
+         function toggleWork(checkbox) {
+             const row = checkbox.closest('.day-row');
+             const hiddenIsOff = row.querySelector('.hidden-is-off');
 
-            // Sync the hidden DB input: If visually checked (working), IsOff is false
-            hiddenIsOff.value = checkbox.checked ? "false" : "true";
+             // inputs[0] is OpenTime, inputs[1] is CloseTime
+             const inputs = row.querySelectorAll('.time-input');
 
-            inputs.forEach(input => {
-                input.disabled = !checkbox.checked;
-                input.style.opacity = checkbox.checked ? "1" : "0.4";
-                input.style.backgroundColor = checkbox.checked ? "#fff" : "#F5F5F5";
-                if(!checkbox.checked) input.value = "";
-            });
-        }
+             // Sync the hidden DB input: If visually checked (working), IsOff is false
+             hiddenIsOff.value = checkbox.checked ? "false" : "true";
 
-        // Initialize UI on load
-        document.querySelectorAll('.work-toggle').forEach(t => {
-            const row = t.closest('.day-row');
-            const inputs = row.querySelectorAll('.time-input');
-            inputs.forEach(input => {
-                input.disabled = !t.checked;
-                input.style.opacity = t.checked ? "1" : "0.4";
-                input.style.backgroundColor = t.checked ? "#fff" : "#F5F5F5";
-            });
-        });
+             inputs.forEach((input, index) => {
+                 input.disabled = !checkbox.checked;
+                 input.style.opacity = checkbox.checked ? "1" : "0.4";
+                 input.style.backgroundColor = checkbox.checked ? "#fff" : "#F5F5F5";
+
+                 if (!checkbox.checked) {
+                     // Clear the time if they toggle the day OFF
+                     input.value = "";
+                 } else if (input.value === "") {
+                     // If they toggle it ON and the box is empty, set default 9 to 5
+                     if (index === 0) {
+                         input.value = "09:00"; // Default Open (9 AM)
+                     } else if (index === 1) {
+                         input.value = "17:00"; // Default Close (5 PM)
+                     }
+                 }
+             });
+         }
+
+         // Initialize UI on load
+         document.querySelectorAll('.work-toggle').forEach(t => {
+             const row = t.closest('.day-row');
+             const inputs = row.querySelectorAll('.time-input');
+             inputs.forEach(input => {
+                 input.disabled = !t.checked;
+                 input.style.opacity = t.checked ? "1" : "0.4";
+                 input.style.backgroundColor = t.checked ? "#fff" : "#F5F5F5";
+             });
+         });
     </script>
 }

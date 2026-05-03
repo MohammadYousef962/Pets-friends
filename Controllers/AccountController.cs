@@ -5,6 +5,7 @@ using Pets_friends.Data.ViewModels;
 using Pets_friends.Models;
 using System.Net;
 using System.Net.Mail;
+using Microsoft.Extensions.Configuration; // <-- Added this
 
 namespace Pets_friends.Controllers
 {
@@ -12,20 +13,41 @@ namespace Pets_friends.Controllers
     {
         private readonly UserManager<UserAccount> _userManager;
         private readonly SignInManager<UserAccount> _signInManager;
+        private readonly IConfiguration _configuration; // <-- Added this
 
+        // Inject IConfiguration into the constructor
         public AccountController(
             UserManager<UserAccount> userManager,
-            SignInManager<UserAccount> signInManager)
+            SignInManager<UserAccount> signInManager,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _configuration = configuration;
         }
 
         #region --- REGISTRATION & AUTHENTICATION ---
 
         [HttpGet]
-        public IActionResult Register()
+        public async Task<IActionResult> Register()
         {
+            // Bounce authenticated users away from the registration form
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    var roles = await _userManager.GetRolesAsync(user);
+
+                    if (roles.Contains("Admin")) return RedirectToAction("Dashboard", "Admin");
+                    if (roles.Contains("Vet")) return RedirectToAction("Dashboard", "Vet");
+                    if (roles.Contains("Merchant")) return RedirectToAction("Dashboard", "Merchant");
+                    if (roles.Contains("Shelter")) return RedirectToAction("Dashboard", "Shelter");
+
+                    return RedirectToAction("Dashboard", "Client");
+                }
+            }
+
             return View();
         }
 
@@ -73,8 +95,28 @@ namespace Pets_friends.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login()
+        public async Task<IActionResult> Login()
         {
+            // 1. Check if the user's browser already has a valid login cookie
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                // 2. If they are logged in, grab their info and roles
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    var roles = await _userManager.GetRolesAsync(user);
+
+                    // 3. Immediately redirect them to their correct dashboard!
+                    if (roles.Contains("Admin")) return RedirectToAction("Dashboard", "Admin");
+                    if (roles.Contains("Vet")) return RedirectToAction("Dashboard", "Vet");
+                    if (roles.Contains("Merchant")) return RedirectToAction("Dashboard", "Merchant");
+                    if (roles.Contains("Shelter")) return RedirectToAction("Dashboard", "Shelter");
+
+                    return RedirectToAction("Dashboard", "Client");
+                }
+            }
+
+            // 4. If they are NOT logged in, show the standard login page
             return View();
         }
 
@@ -83,7 +125,9 @@ namespace Pets_friends.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var result = await _signInManager.PasswordSignInAsync(model.EmailAddress, model.Password, false, false);
+            // CHANGED: The 3rd parameter is now 'true' to set a persistent cookie.
+            // This keeps them logged in even if they close the browser.
+            var result = await _signInManager.PasswordSignInAsync(model.EmailAddress, model.Password, isPersistent: true, lockoutOnFailure: false);
 
             if (result.Succeeded)
             {
@@ -95,7 +139,7 @@ namespace Pets_friends.Controllers
                 if (roles.Contains("Merchant")) return RedirectToAction("Dashboard", "Merchant");
                 if (roles.Contains("Shelter")) return RedirectToAction("Dashboard", "Shelter");
 
-                return RedirectToAction("Dashboard", "Client");
+                return RedirectToAction("Dashboard", "Client"); // Assuming Client is the default
             }
 
             ModelState.AddModelError("", "Invalid email or password.");
@@ -152,7 +196,6 @@ namespace Pets_friends.Controllers
             return View(model);
         }
 
-        // 3. Show the Reset Password Page (when they click the email link)
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ResetPassword(string token, string email)
@@ -165,31 +208,28 @@ namespace Pets_friends.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user != null)
             {
-                // Verify the token BEFORE they even try to type a password
                 var isValid = await _userManager.VerifyUserTokenAsync(user, _userManager.Options.Tokens.PasswordResetTokenProvider, "ResetPassword", token);
 
                 if (!isValid)
                 {
-                    // If it's over the time limit, send them to the custom expired page!
                     return RedirectToAction("TokenExpired");
                 }
             }
             else
             {
-                // If the user doesn't exist, also pretend it's expired for security
                 return RedirectToAction("TokenExpired");
             }
 
             return View(new ResetPasswordVM { Token = token, Email = email });
         }
 
-        // --- NEW: Custom Expired Token Page ---
         [HttpGet]
         [AllowAnonymous]
         public IActionResult TokenExpired()
         {
             return View();
         }
+
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -264,29 +304,59 @@ namespace Pets_friends.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult AccessDenied()
+        public async Task<IActionResult> AccessDenied(string returnUrl = null)
         {
-            TempData["ErrorMessage"] = "You do not have permission to view that page.";
-            return RedirectToAction("Dashboard", "Home");
-        }
+            ViewData["ReturnUrl"] = returnUrl;
 
+            // Default fallback
+            string dashboardUrl = "~/";
+
+            // If the user is logged in, find out their role and set the correct dashboard path
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    var roles = await _userManager.GetRolesAsync(user);
+
+                    if (roles.Contains("Admin")) dashboardUrl = "~/Admin/Dashboard";
+                    else if (roles.Contains("Vet")) dashboardUrl = "~/Vet/Dashboard";
+                    else if (roles.Contains("Merchant")) dashboardUrl = "~/Merchant/Dashboard";
+                    else if (roles.Contains("Shelter")) dashboardUrl = "~/Shelter/Dashboard";
+                    else dashboardUrl = "~/Client/Dashboard";
+                }
+            }
+
+            ViewData["DashboardUrl"] = dashboardUrl;
+            return View();
+        }
         #endregion
 
         #region --- PRIVATE HELPER METHODS ---
 
         private async Task SendPasswordResetEmailAsync(string email, string passwordResetLink)
         {
-            var smtpClient = new SmtpClient("smtp.gmail.com")
+            // Read settings securely from appsettings.json
+            string smtpServer = _configuration["EmailSettings:SmtpServer"];
+            int smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"]);
+            string senderEmail = _configuration["EmailSettings:SenderEmail"];
+            string senderName = _configuration["EmailSettings:SenderName"];
+            string appPassword = _configuration["EmailSettings:AppPassword"];
+
+            // Dynamic year for the footer
+            string currentYear = DateTime.Now.Year.ToString();
+
+            var smtpClient = new SmtpClient(smtpServer)
             {
-                Port = 587,
+                Port = smtpPort,
                 UseDefaultCredentials = false,
-                Credentials = new NetworkCredential("petfriends.support@gmail.com", "aqbsztvthhmqtxyh"),
+                Credentials = new NetworkCredential(senderEmail, appPassword),
                 EnableSsl = true
             };
 
             var mailMessage = new MailMessage
             {
-                From = new MailAddress("petfriends.support@gmail.com", "Pet Friends Support"),
+                From = new MailAddress(senderEmail, senderName),
                 Subject = "Reset Your Pet Friends Password",
                 Body = $@"
         <div style=""background-color: #f8f9fa; padding: 50px 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">
@@ -320,7 +390,7 @@ namespace Pets_friends.Controllers
                         If you didn't request this email, you can safely ignore it. Your password won't change until you create a new one.
                     </p>
                     <p style=""color: #999999; font-size: 12px; margin-top: 10px;"">
-                        &copy; 2026 Pet Friends Team
+                        &copy; {currentYear} Pet Friends Team
                     </p>
                 </div>
             </div>

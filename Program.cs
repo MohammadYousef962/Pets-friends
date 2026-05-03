@@ -39,7 +39,7 @@ builder.Services.AddIdentity<UserAccount, IdentityRole>(options =>
 // --- SET THE STRICT 1-MINUTE RULE FOR OUR CUSTOM PROVIDER ---
 builder.Services.Configure<PetFriendsTokenProviderOptions>(options =>
 {
-    options.TokenLifespan = TimeSpan.FromHours(2); // Set to 1 minute for testing!
+    options.TokenLifespan = TimeSpan.FromMinutes(1); // Set to 1 minute for testing!
 });
 
 builder.Services.ConfigureApplicationCookie(options =>
