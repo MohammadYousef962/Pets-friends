@@ -1,0 +1,318 @@
+﻿@model Pets_friends.Data.ViewModels.MerchantDashboardVM
+@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@inject UserManager<UserAccount> UserManager
+
+@{
+    ViewData["Title"] = "Store Dashboard";
+    Layout = "~/Views/Shared/_MerchantLayout.cshtml"; 
+
+    var currentUser = await UserManager.GetUserAsync(User);
+    var storeName = Model.Profile?.StoreName ?? "My Pet Store";
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-title {
+            font-family: 'Playfair Display', serif;
+            color: #5C3D1E;
+            font-weight: 700;
+            font-size: 2.2rem;
+            margin: 0;
+        }
+
+        /* --- BUTTONS --- */
+        .btn-brand {
+            background-color: #5C3D1E;
+            color: #fff;
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .btn-brand:hover {
+            background-color: #C8A882;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(200, 168, 130, 0.4);
+        }
+
+        .btn-brand-outline {
+            background-color: transparent;
+            color: #5C3D1E;
+            border: 2px solid #5C3D1E;
+            border-radius: 12px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .btn-brand-outline:hover {
+            background-color: #5C3D1E;
+            color: #fff;
+        }
+
+        /* --- GLASS CARDS --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(92, 61, 30, 0.05);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-heading {
+            font-family: 'Playfair Display', serif;
+            color: #2D1B0E;
+            font-weight: 700;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* --- STAT PILLS --- */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #C8A882;
+            box-shadow: 0 10px 25px rgba(200, 168, 130, 0.15);
+        }
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .stat-icon.sales { background: #EEDECB; color: #5C3D1E; }
+        .stat-icon.orders { background: #DBC3A9; color: #5C3D1E; }
+        .stat-icon.products { background: #EEDECB; color: #8C7560; }
+        .stat-icon.alerts { background: rgba(217, 83, 79, 0.15); color: #8b0000; }
+
+        .stat-info h5 { margin: 0; font-size: 0.85rem; color: #2D1B0E; font-weight: 500; }
+        .stat-info h2 { margin: 2px 0 0; font-family: 'DM Sans', sans-serif; color: #2D1B0E; font-weight: 700; font-size: 1.5rem; }
+
+        /* --- TABLES --- */
+        .custom-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .custom-table th {
+            color: #2D1B0E;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0 15px 15px;
+            border-bottom: 1px solid #DBC3A9;
+        }
+        .custom-table td {
+            padding: 16px 15px;
+            vertical-align: middle;
+            color: #2D1B0E;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(219, 195, 169, 0.4);
+        }
+        .custom-table tr:last-child td { border-bottom: none; }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-pending { background: #FFF3CD; color: #856404; }
+        .status-shipped { background: #D4EDDA; color: #155724; }
+    </style>
+}
+
+<div class="container py-5" style="max-width: 1300px;">
+
+    <div class="dashboard-header flex-column flex-md-row gap-3">
+        <div>
+            <h1 class="dashboard-title">Store Owner Overview</h1>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="Product" asp-action="Create" class="btn-brand"><i class="bi bi-plus-lg"></i> Add Product</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon sales"><i class="bi bi-currency-dollar"></i></div>
+                <div class="stat-info">
+                    <h5>Total Revenue:</h5>
+                    <h2>@Model.TotalRevenue.ToString("C0")</h2> 
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon orders"><i class="bi bi-cart3"></i></div>
+                <div class="stat-info">
+                    <h5>Active Orders:</h5>
+                    <h2>@Model.ActiveOrdersCount</h2> 
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon products"><i class="bi bi-box-seam"></i></div>
+                <div class="stat-info">
+                    <h5>Products:</h5>
+                    <h2>@Model.TotalProductsCount</h2> 
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon alerts"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="stat-info">
+                    <h5>Low Stock Items:</h5>
+                    <h2 style="color: #8b0000;">@(Model.LowStockProducts?.Count ?? 0)</h2> 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="glass-card">
+                <div class="card-heading">
+                    Recent Orders
+                </div>
+
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Date/Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentOrders != null && Model.RecentOrders.Any())
+                            {
+                                foreach (var order in Model.RecentOrders)
+                                {
+                                    <tr>
+                                        <td>@order.Id</td>
+                                        <td>@(order.ClientProfile?.UserAccount?.FullName ?? "Customer")</td>
+                                        <td>
+                                            <span class="status-badge @(order.Status == "Pending" ? "status-pending" : "status-shipped")">
+                                                @order.Status
+                                            </span>
+                                        </td>
+                                        <td style="text-align: right; color: #8C7560;">@order.OrderDate.ToString("MMM dd yyyy")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="4" class="text-center text-muted py-4">No recent orders found.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 d-flex flex-column gap-4">
+
+            <div style="background-color: #E8DCC8; border-radius: 12px; padding: 20px 25px; border-top: 4px solid #D9534F; box-shadow: 0 4px 15px rgba(92, 61, 30, 0.08); margin-bottom: 2px;">
+                <div style="font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; color: #1C150D; margin-bottom: 16px;">
+                    Low Stock Alerts
+                </div>
+
+                <div class="d-flex flex-column gap-2">
+                    @if (Model.LowStockProducts != null && Model.LowStockProducts.Any())
+                    {
+                        foreach (var item in Model.LowStockProducts.Take(4))
+                        {
+                            <div class="d-flex justify-content-between align-items-center" style="font-family: 'DM Sans', sans-serif; font-size: 0.95rem;">
+                                <span style="color: #1C150D; font-weight: 500;">@item.Name</span>
+                                <span style="font-weight: 600; color: @(item.StockQuantity <= 5 ? "#A63A3A" : "#8C7560");">
+                                    @item.StockQuantity left
+                                </span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div style="color: #8C7560; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-style: italic;">
+                            All products are stocked
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="glass-card flex-grow-1">
+                <div class="card-heading mb-3 d-flex justify-content-between align-items-center">
+                    <span>Store Information</span>
+                    <div style="background: #8C7560; color: #fff; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-family: sans-serif; font-weight: bold;">
+                        i
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-2 mb-4" style="color: #2D1B0E; font-size: 0.95rem;">
+                    <div>
+                        Store Name: '@(Model.Profile?.StoreName ?? "Not Set")'
+                    </div>
+                    <div>
+                        Owner: @(Model.Profile?.UserAccount?.FullName ?? "Not Set")
+                    </div>
+                    <div>
+                        Address: @(Model.Profile?.StoreAddress ?? "Not Set")
+                    </div>
+                    <div>
+                        Contact: @(Model.Profile?.UserAccount?.PhoneNumber ?? "No phone added")
+                    </div>
+                </div>
+
+                <div class="mt-auto text-end">
+                    <a asp-controller="Merchant" asp-action="EditProfile" class="btn-brand-outline" style="padding: 4px 16px; font-size: 0.9rem; background: #FAF6F1; border: 1px solid #C8A882; color: #5C3D1E;">
+                        Edit
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

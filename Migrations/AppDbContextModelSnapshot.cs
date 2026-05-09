@@ -257,6 +257,10 @@ namespace Pets_friends.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("StoreAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("StoreName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -381,6 +385,10 @@ namespace Pets_friends.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("MerchantProfileId")
                         .HasColumnType("int");
 
@@ -392,11 +400,48 @@ namespace Pets_friends.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("StockQuantity")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("MerchantProfileId");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("Pets_friends.Models.ProductReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClientProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReviewDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientProfileId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductReviews");
                 });
 
             modelBuilder.Entity("Pets_friends.Models.Service", b =>
@@ -848,6 +893,25 @@ namespace Pets_friends.Migrations
                     b.Navigation("MerchantProfile");
                 });
 
+            modelBuilder.Entity("Pets_friends.Models.ProductReview", b =>
+                {
+                    b.HasOne("Pets_friends.Models.ClientProfile", "ClientProfile")
+                        .WithMany()
+                        .HasForeignKey("ClientProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Pets_friends.Models.Product", "Product")
+                        .WithMany("Reviews")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClientProfile");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("Pets_friends.Models.Service", b =>
                 {
                     b.HasOne("Pets_friends.Models.ShelterProfile", "ShelterProfile")
@@ -927,6 +991,11 @@ namespace Pets_friends.Migrations
             modelBuilder.Entity("Pets_friends.Models.MerchantProfile", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("Pets_friends.Models.Product", b =>
+                {
+                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("Pets_friends.Models.ShelterProfile", b =>
