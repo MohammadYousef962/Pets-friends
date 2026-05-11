@@ -1,0 +1,330 @@
+﻿@model Pets_friends.Models.Order
+
+@{
+    ViewData["Title"] = $"Receipt #ORD-{Model.Id:D4}";
+    
+    // Determine if the current viewer is the merchant or the buyer
+    bool isMerchantView = User.IsInRole("Merchant");
+    
+    // Dynamically set the Back button text and route
+    string backAction = isMerchantView ? "StoreOrders" : "MyOrders";
+    string backText = isMerchantView ? "Back to Store Orders" : "Back to Order History";
+    
+    // Automatically load the correct sidebar/navigation layout
+    Layout = isMerchantView ? "~/Views/Shared/_MerchantLayout.cshtml" : "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: #5C3D1E;
+        }
+
+        .receipt-wrapper {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        .receipt-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 50px;
+            border: 1px solid #EBE0D5;
+            box-shadow: 0 20px 50px rgba(92, 61, 30, 0.08);
+        }
+
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px dashed #EDE0D0;
+            padding-bottom: 30px;
+            margin-bottom: 35px;
+        }
+
+        .receipt-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            margin: 0;
+        }
+
+        .receipt-meta {
+            text-align: right;
+        }
+
+        .meta-label {
+            font-size: 0.85rem;
+            color: #8C7560;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .meta-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #5C3D1E;
+        }
+
+        /* --- ENTITY BOXES (WHO & WHERE) --- */
+        .entity-row {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .entity-box {
+            flex: 1;
+            background: #FAF6F1;
+            padding: 20px 25px;
+            border-radius: 16px;
+            border: 1px solid #EBE0D5;
+        }
+
+        .entity-box h6 {
+            font-weight: 700;
+            color: #8C7560;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .entity-box p {
+            margin: 0;
+            color: #5C3D1E;
+            font-size: 1.05rem;
+            line-height: 1.5;
+        }
+
+        /* --- ITEMIZED TABLE --- */
+        .table-receipt {
+            width: 100%;
+            margin-bottom: 40px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table-receipt th {
+            font-weight: 700;
+            color: #8C7560;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #EDE0D0;
+        }
+
+        .table-receipt td {
+            padding: 20px 0;
+            border-bottom: 1px solid #FAF6F1;
+            vertical-align: middle;
+        }
+
+        .item-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 1px solid #EBE0D5;
+        }
+
+        .item-name {
+            font-weight: 700;
+            color: #2D1B0E;
+            font-size: 1.05rem;
+        }
+
+        /* --- TOTALS SUMMARY --- */
+        .summary-box {
+            margin-left: auto;
+            width: 100%;
+            max-width: 350px;
+            border-top: 2px solid #5C3D1E;
+            padding-top: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+            color: #8C7560;
+        }
+
+        .summary-row.grand-total {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            border-top: 1px dashed #EDE0D0;
+            padding-top: 15px;
+            margin-top: 5px;
+        }
+
+        /* --- BADGES --- */
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+        .status-Pending { background-color: #FFF3CD; color: #856404; }
+        .status-Shipped { background-color: #CCE5FF; color: #004085; }
+        .status-Delivered { background-color: #D4EDDA; color: #155724; }
+        .status-Cancelled { background-color: #F8D7DA; color: #721C24; }
+
+        /* --- BUTTONS --- */
+        .btn-brand {
+            background-color: #5C3D1E;
+            color: #fff;
+            border-radius: 12px;
+            padding: 12px 28px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-brand:hover { background-color: #C8A882; color: #fff; }
+
+        .btn-outline {
+            background-color: #fff;
+            color: #5C3D1E;
+            border: 2px solid #EBE0D5;
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-outline:hover { background-color: #FAF6F1; border-color: #5C3D1E; }
+
+        /* --- OPTIMIZED FOR PRINTERS --- */
+        @@media print {
+            body { background: #fff !important; color: #000 !important; margin: 0; padding: 0;}
+            .receipt-wrapper { padding: 0 !important; margin: 0 !important; max-width: 100%;}
+            .receipt-card { border: none; box-shadow: none; padding: 0; }
+            .no-print { display: none !important; }
+            header, footer, nav, aside { display: none !important; }
+            .entity-box { background: #fff; border: 1px solid #ccc; }
+        }
+    </style>
+}
+
+<div class="container py-5 receipt-wrapper">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <a asp-controller="Order" asp-action="@backAction" class="btn-outline">
+            <i class="bi bi-arrow-left me-2"></i> @backText
+        </a>
+        
+        <button onclick="window.print()" class="btn-brand">
+            <i class="bi bi-printer me-2"></i> Print Invoice
+        </button>
+    </div>
+
+    <div class="receipt-card">
+        
+        <div class="receipt-header flex-column flex-sm-row gap-3">
+            <div>
+                <h1 class="receipt-title">Invoice / Receipt</h1>
+                <p class="text-muted mb-2" style="font-size: 0.95rem;">Order ID: #ORD-@Model.Id.ToString("D4")</p>
+                <span class="status-badge status-@Model.Status">
+                    Status: @Model.Status
+                </span>
+            </div>
+            
+            <div class="receipt-meta">
+                <div class="meta-label">Date Paid</div>
+                <div class="meta-value mb-2 mb-sm-3">@Model.OrderDate.ToString("MMM dd, yyyy")</div>
+                
+                <div class="meta-label">Time</div>
+                <div class="meta-value" style="font-size: 0.95rem; font-weight: 500;">@Model.OrderDate.ToString("hh:mm tt")</div>
+            </div>
+        </div>
+
+        <div class="entity-row flex-column flex-sm-row">
+            <div class="entity-box">
+                <h6>Sold By</h6>
+                <p>
+                    <strong>@(Model.MerchantProfile?.StoreName ?? "Pet Friends Partner Store")</strong><br>
+                    <span style="font-size: 0.9rem; color: #8C7560;">Merchant Fulfillment Center</span>
+                </p>
+            </div>
+
+            <div class="entity-box">
+                <h6>Billed To</h6>
+                <p>
+                    <strong>@(Model.ClientProfile?.UserAccount?.FullName ?? "Valued Customer")</strong><br>
+                    <span style="font-size: 0.9rem; color: #8C7560;">Verified Marketplace Member</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table-receipt">
+                <thead>
+                    <tr>
+                        <th style="width: 55%;">Item Description</th>
+                        <th style="text-align: center; width: 15%;">Qty</th>
+                        <th style="text-align: right; width: 15%;">Price</th>
+                        <th style="text-align: right; width: 15%;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderItems)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="@item.Product.ImageUrl" class="item-preview" alt="" />
+                                    <div>
+                                        <div class="item-name">@item.Product.Name</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">x@item.Quantity</td>
+                            <td class="text-end">@item.UnitPrice.ToString("C")</td>
+                            <td class="text-end fw-bold">@((item.Quantity * item.UnitPrice).ToString("C"))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary-box">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span>@Model.TotalAmount.ToString("C")</span>
+            </div>
+            <div class="summary-row">
+                <span>Estimated Tax & Shipping</span>
+                <span style="color: #2e7d32; font-weight: 600;">FREE</span>
+            </div>
+            
+            <div class="summary-row grand-total">
+                <span>Total Paid</span>
+                <span>@Model.TotalAmount.ToString("C")</span>
+            </div>
+        </div>
+
+        <div class="text-center mt-5 pt-4 no-print" style="border-top: 1px solid #FAF6F1;">
+            <i class="bi bi-heart-fill" style="color: #d9534f; font-size: 1.2rem;"></i>
+            <p class="mt-2 mb-0" style="color: #8C7560; font-size: 0.9rem;">Thank you for supporting our community marketplace!</p>
+        </div>
+
+    </div>
+</div>

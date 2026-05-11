@@ -29,6 +29,7 @@ namespace Pets_friends.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<ProductReview> ProductReviews { get; set; }
+        public DbSet<ShoppingCart> ShoppingCarts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -58,6 +59,13 @@ namespace Pets_friends.Data
                 .HasOne(a => a.ClientProfile)
                 .WithMany()
                 .HasForeignKey(a => a.ClientProfileId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // ---> NEW: Fixes the Error 1785 crash for Orders <---
+            builder.Entity<Order>()
+                .HasOne(o => o.MerchantProfile)
+                .WithMany()
+                .HasForeignKey(o => o.MerchantProfileId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<Appointment>()

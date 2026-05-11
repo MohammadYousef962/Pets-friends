@@ -1,0 +1,351 @@
+﻿@model Pets_friends.Data.ViewModels.ProductDetailsVM
+
+@{
+    ViewData["Title"] = Model.Product.Name;
+    // SWITCHED: Now uses the professional Store Layout with search and cart
+    Layout = "~/Views/Shared/_StoreLayout.cshtml";
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: #5C3D1E;
+            padding-bottom: 60px;
+        }
+
+        .btn-outline-custom {
+            background-color: #fff;
+            color: #5C3D1E;
+            border: 2px solid #EBE0D5;
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+        }
+
+            .btn-outline-custom:hover {
+                background-color: #FAF6F1;
+                border-color: #5C3D1E;
+                color: #5C3D1E;
+            }
+
+        .product-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid #EBE0D5;
+            box-shadow: 0 20px 50px rgba(92, 61, 30, 0.08);
+            margin-bottom: 40px;
+        }
+
+        .product-image-wrapper {
+            background: #FAF6F1;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #EBE0D5;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+
+        .product-image {
+            max-width: 100%;
+            max-height: 450px;
+            object-fit: contain;
+            border-radius: 20px;
+        }
+
+        .product-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .rating-badge {
+            display: inline-flex;
+            align-items: center;
+            background: #FFF3CD;
+            color: #856404;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            border: 1px solid #FFEEBA;
+        }
+
+        .product-price {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            margin-bottom: 10px;
+        }
+
+        .stock-status {
+            font-size: 0.95rem;
+            color: #2e7d32;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 25px;
+        }
+
+        .product-description {
+            color: #6E5033;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #FAF6F1;
+            padding-bottom: 25px;
+        }
+
+        .qty-selector {
+            display: flex;
+            align-items: center;
+            background: #FAF6F1;
+            border: 1px solid #EBE0D5;
+            border-radius: 14px;
+            padding: 4px;
+            width: fit-content;
+        }
+
+        .qty-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: none;
+            background: #fff;
+            color: #5C3D1E;
+            font-weight: 700;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .qty-btn:hover {
+                background: #EBE0D5;
+            }
+
+        .qty-input {
+            width: 50px;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #2D1B0E;
+            outline: none;
+        }
+
+        .btn-add-cart {
+            background-color: #5C3D1E;
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 35px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            box-shadow: 0 10px 20px rgba(92, 61, 30, 0.15);
+            cursor: pointer;
+        }
+
+            .btn-add-cart:hover {
+                background-color: #C8A882;
+                transform: translateY(-2px);
+                color: #fff;
+            }
+
+        .reviews-section {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            margin-bottom: 30px;
+        }
+
+        .review-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #EBE0D5;
+            margin-bottom: 20px;
+        }
+
+        .reviewer-name {
+            font-weight: 700;
+            color: #5C3D1E;
+            font-size: 1.05rem;
+        }
+
+        .review-date {
+            font-size: 0.85rem;
+            color: #8C7560;
+        }
+
+        .stars {
+            color: #ffc107;
+            letter-spacing: 2px;
+            font-size: 1rem;
+        }
+    </style>
+}
+
+<div class="container py-5" style="max-width: 1200px;">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 16px;">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="mb-4">
+        <a asp-controller="Store" asp-action="Home" class="btn-outline-custom">
+            <i class="bi bi-arrow-left me-2"></i> Back to Catalog
+        </a>
+    </div>
+
+    <div class="product-card">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6">
+                <div class="product-image-wrapper">
+                    <img src="@Model.Product.ImageUrl" onerror="this.src='https://placehold.co/600x600/FAF6F1/8C7560?text=Product'" class="product-image" alt="@Model.Product.Name" />
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <h1 class="product-title">@Model.Product.Name</h1>
+
+                <div class="rating-badge">
+                    <i class="bi bi-star-fill me-1"></i> @Model.AverageRating.ToString("F1") / 5.0
+                    <span class="text-muted ms-2 fw-normal" style="font-size: 0.85rem;">(@Model.TotalReviews verified reviews)</span>
+                </div>
+
+                <div class="product-price">@Model.Product.Price.ToString("C")</div>
+                <div class="stock-status">
+                    <i class="bi bi-check2-circle"></i> In Stock & Ready to Ship
+                </div>
+
+                <p class="product-description">@Model.Product.Description</p>
+
+                <form asp-controller="Store" asp-action="AddToCart" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" value="@Model.Product.Id" />
+
+                    <div class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <label class="form-label fw-bold mb-1" style="font-size: 0.85rem; color: #8C7560;">QUANTITY</label>
+                            <div class="qty-selector">
+                                <button type="button" class="qty-btn" onclick="let input = document.getElementById('qty'); if(input.value > 1) input.value--;">-</button>
+                                <input type="number" id="qty" name="quantity" class="qty-input" value="1" min="1" max="20" readonly />
+                                <button type="button" class="qty-btn" onclick="let input = document.getElementById('qty'); input.value++;">+</button>
+                            </div>
+                        </div>
+
+                        <div class="col">
+                            <label class="form-label d-none d-sm-block mb-1">&nbsp;</label>
+                            <button type="submit" class="btn-add-cart">
+                                <i class="bi bi-cart-plus"></i> Add to Shopping Cart
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="reviews-section">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <h3 class="section-title mb-0">Customer Reviews</h3>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-controller="Store" asp-action="WriteReview" asp-route-productId="@Model.Product.Id" class="btn-outline-custom">Write a Review</a>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="btn-outline-custom">Log in to Review</a>
+            }
+        </div>
+
+        @if (!Model.Reviews.Any())
+        {
+            <p class="text-muted mb-0">No customer reviews yet. Be the first to share your thoughts!</p>
+        }
+        else
+        {
+            @foreach (var review in Model.Reviews)
+            {
+                string starsStr = new string('★', review.Rating) + new string('☆', 5 - review.Rating);
+                <div class="review-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <div class="reviewer-name">@(review.ClientProfile?.UserAccount?.FullName ?? "Valued Buyer")</div>
+                            <div class="review-date">Verified Buyer • @review.ReviewDate.ToString("MMM dd, yyyy")</div>
+                        </div>
+                        <div class="stars">@starsStr</div>
+                    </div>
+                    <p class="mb-0 text-muted">@review.Comment</p>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@if (TempData["ShowCartModal"] != null)
+{
+    <div class="modal fade" id="afterAddToCart" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px;">
+                <div class="modal-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-bag-check-fill text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h3 class="fw-bold">Added to Cart!</h3>
+                    <p class="text-muted">"@TempData["LastAddedItem"]" is waiting for you in your cart.</p>
+                    <div class="d-grid gap-2 mt-4">
+                        <a asp-action="Cart" class="btn btn-dark py-3 fw-bold" style="background: #5C3D1E; border-radius: 12px;">Go to Cart & Checkout</a>
+                        <button type="button" class="btn btn-outline-secondary py-3 fw-bold" data-bs-dismiss="modal" style="border-radius: 12px;">Continue Shopping</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            var myModal = new bootstrap.Modal(document.getElementById('afterAddToCart'));
+            myModal.show();
+        </script>
+    }
+}

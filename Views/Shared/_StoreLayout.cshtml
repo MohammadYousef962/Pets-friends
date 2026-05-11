@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - PetFriends Market</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .store-navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #EBE0D5;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(92, 61, 30, 0.05);
+        }
+
+        .store-brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: #5C3D1E;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .store-brand i {
+                color: #C8A882;
+            }
+
+        .search-container {
+            flex-grow: 1;
+            max-width: 600px;
+            margin: 0 30px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border-radius: 30px;
+            border: 2px solid #EBE0D5;
+            background: #FAF6F1;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+            .search-input:focus {
+                border-color: #C8A882;
+                background: #fff;
+                box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.1);
+            }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8C7560;
+            font-size: 1.1rem;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-action-btn {
+            color: #5C3D1E;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+            .nav-action-btn:hover {
+                color: #C8A882;
+            }
+
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -12px;
+            background-color: #d9534f;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 2px solid #fff;
+        }
+    </style>
+
+    @if (IsSectionDefined("Styles"))
+    {
+        @RenderSection("Styles", required: false)
+    }
+</head>
+<body>
+
+    <nav class="store-navbar">
+        <div class="container d-flex align-items-center justify-content-between">
+            <a asp-controller="Store" asp-action="Home" class="store-brand">
+                <i class="bi bi-shop"></i> PetFriends Market
+            </a>
+
+            <form class="search-container d-none d-md-block" asp-controller="Store" asp-action="Home" method="get">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" name="searchString" class="search-input" placeholder="Search for food, toys, meds, and more...">
+            </form>
+
+            <div class="nav-actions">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    string profileAction = User.IsInRole("Vet") ? "Dashboard" : "MyOrders";
+                    string profileController = User.IsInRole("Vet") ? "Vet" : "Order";
+
+                    <a asp-controller="@profileController" asp-action="@profileAction" class="nav-action-btn d-none d-sm-flex">
+                        <i class="bi bi-person-circle fs-5"></i> My Account
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="nav-action-btn d-none d-sm-flex">
+                        <i class="bi bi-box-arrow-in-right fs-5"></i> Login
+                    </a>
+                }
+
+                <a asp-controller="Store" asp-action="Cart" class="nav-action-btn">
+                    <i class="bi bi-cart3 fs-5"></i> Cart
+                    <span class="cart-badge">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    @if (IsSectionDefined("Scripts"))
+    {
+        @RenderSection("Scripts", required: false)
+    }
+</body>
+</html>
