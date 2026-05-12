@@ -1,0 +1,139 @@
+﻿@model Pets_friends.Data.ViewModels.ShelterDashboardVM
+
+@{
+    ViewData["Title"] = "Shelter Dashboard";
+    Layout = "~/Views/Shared/_ShelterLayout.cshtml";
+}
+
+<div class="admin-wrapper">
+    <div class="container">
+
+        <!-- Top statistics cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="bi bi-heart-fill stat-icon"></i>
+                    <div class="stat-number">@Model.ServicesCount</div>
+                    <div class="stat-label">Services Listed</div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="bi bi-calendar-week-fill stat-icon"></i>
+                    <div class="stat-number">@Model.OpenDaysCount</div>
+                    <div class="stat-label">Open Days</div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="bi bi-building-heart stat-icon" style="color: #d9534f;"></i>
+                    <div class="stat-number">@Model.Profile.ShelterName.Length</div>
+                    <div class="stat-label">Profile Strength</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main dashboard content -->
+        <div class="row g-4 mb-4">
+
+            <!-- Shelter summary panel -->
+            <div class="col-lg-7">
+                <div class="glass-panel h-100" style="padding: 30px;">
+                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; border-bottom: 2px solid #EDE0D0; padding-bottom: 10px;">
+                        <i class="bi bi-info-circle-fill me-2" style="color: #C8A882;"></i> Shelter Overview
+                    </h3>
+
+                    <div class="pt-3">
+                        <div class="dashboard-list-item">
+                            <div class="fw-bold" style="color: #5C3D1E;">Shelter Name</div>
+                            <div style="color: #8C7560;">@Model.Profile.ShelterName</div>
+                        </div>
+
+                        <div class="dashboard-list-item">
+                            <div class="fw-bold" style="color: #5C3D1E;">Address</div>
+                            <div style="color: #8C7560;">@Model.Profile.ShelterAddress</div>
+                        </div>
+
+                        <div class="dashboard-list-item">
+                            <div class="fw-bold" style="color: #5C3D1E;">Contact Email</div>
+                            <div style="color: #8C7560;">@Model.Profile.UserAccount?.Email</div>
+                        </div>
+
+                        <div class="dashboard-list-item" style="border-bottom:none;">
+                            <div class="fw-bold" style="color: #5C3D1E;">About</div>
+                            <div style="color: #8C7560;">@Model.Profile.Description</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Working hours preview -->
+            <div class="col-lg-5">
+                <div class="glass-panel h-100" style="padding: 30px;">
+                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; border-bottom: 2px solid #EDE0D0; padding-bottom: 10px;">
+                        <i class="bi bi-clock-history me-2" style="color: #C8A882;"></i> Schedule Snapshot
+                    </h3>
+
+                    @if (!Model.SchedulePreview.Any())
+                    {
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-calendar-x fs-1 d-block mb-2" style="color: #EDE0D0;"></i>
+                        No schedule has been set yet.
+                    </div>
+                    }
+                    else
+                    {
+                        foreach (var day in Model.SchedulePreview)
+                        {
+                    <div class="dashboard-list-item d-flex justify-content-between align-items-center">
+                        <div class="fw-bold" style="color: #5C3D1E;">@day.Day</div>
+
+                        @if (day.IsOff || day.OpenTime == null || day.CloseTime == null)
+                                {
+                        <span style="color:#d9534f; font-weight:600;">Closed</span>
+                                }
+                                else
+                                {
+                        <span style="color:#8C7560;">
+                            @DateTime.Today.Add(day.OpenTime.Value).ToString("h:mm tt")
+                            -
+                            @DateTime.Today.Add(day.CloseTime.Value).ToString("h:mm tt")
+                        </span>
+                                }
+                    </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick action cards -->
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="action-card">
+                    <div>
+                        <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Public Profile</h3>
+                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">View how visitors see your shelter.</p>
+                    </div>
+                    <a asp-action="Profile" class="btn-admin" style="background-color: #EDE0D0; color: #5C3D1E;">
+                        View Page <i class="bi bi-box-arrow-up-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="action-card">
+                    <div>
+                        <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Edit Details</h3>
+                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">Update your shelter info, services, and photo.</p>
+                    </div>
+                    <a asp-action="Edit" class="btn-admin">
+                        Edit Profile <i class="bi bi-pencil-square ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

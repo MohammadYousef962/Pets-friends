@@ -1,0 +1,280 @@
+﻿@model Pets_friends.Models.ShelterProfile
+@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@inject UserManager<UserAccount> UserManager
+
+
+    @{
+    // Use the saved shelter name, or a fallback title if empty
+    var shelterName = !string.IsNullOrEmpty(Model.ShelterName) ? Model.ShelterName : "Animal Shelter";
+
+    ViewData["Title"] = shelterName + " | Pet Friends";
+    Layout = "~/Views/Shared/_ShelterLayout.cshtml";
+
+    // Detect whether the current logged-in user is viewing their own profile
+    var currentUser = await UserManager.GetUserAsync(User);
+    bool isOwnProfile = currentUser != null && currentUser.Id == Model.UserAccountId;
+
+    // Split the comma-separated services string into a list
+    var services = string.IsNullOrWhiteSpace(Model.Services)
+        ? new string[0]
+        : Model.Services.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+
+    @section Styles {
+        <!-- Reuse the existing profile stylesheet -->
+        <link rel="stylesheet" href="~/css/Profile.css" asp-append-version="true" />
+
+        <style>
+            /* Page background */
+            body {
+                background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+                background-attachment: fixed !important;
+            }
+
+            main, .pb-3 {
+                background-color: transparent !important;
+            }
+
+            /* Main hero card */
+            .hero-card {
+                background-color: #fff;
+                border-radius: 24px;
+                padding: 40px;
+                box-shadow: 0 10px 30px rgba(92, 61, 30, 0.04);
+                border: 1px solid #EBE0D5;
+            }
+
+            /* Small stats grid */
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                width: 100%;
+                max-width: 400px;
+                margin-left: auto;
+            }
+
+            /* Disabled preview buttons for own profile */
+            .btn-disabled-preview {
+                opacity: 0.6 !important;
+                cursor: not-allowed !important;
+                pointer-events: none;
+            }
+
+            @@media (max-width: 991px) {
+                .stats-grid {
+                    margin-left: 0;
+                    max-width: 100%;
+                }
+            }
+        </style>
+    }
+
+    <!-- Hero section -->
+    <div class="container pt-5 pb-2" style="max-width: 1300px;">
+        <div class="hero-card">
+            <div class="row align-items-center g-4">
+
+                <!-- Left side: shelter image and main info -->
+                <div class="col-lg-7 d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-4 text-center text-sm-start">
+                    <div style="position: relative; width: 150px; height: 150px; border-radius: 50%; background-color: #EBE0D5; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+                        @{
+                        var defaultLetter = shelterName.Substring(0, 1).ToUpper();
+                        var fallbackImg = $"https://placehold.co/150x150/C8A882/white?text={defaultLetter}&font=Playfair+Display";
+                        var imgSrc = !string.IsNullOrEmpty(Model.ImageUrl) ? Model.ImageUrl : fallbackImg;
+                        }
+
+                        <img src="@imgSrc"
+                             onerror="this.onerror=null; this.src='@fallbackImg';"
+                             alt="Photo of @shelterName"
+                             style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; border: 4px solid #fff;">
+
+                        <!-- Shelter badge -->
+                        <div style="position: absolute; bottom: 5px; right: 5px; background: #C8A882; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; z-index: 2;">
+                            <i class="bi bi-house-heart-fill"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span style="background: rgba(200, 168, 130, 0.2); color: #8C7560; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; display: inline-block; margin-bottom: 10px; text-transform: uppercase;">Animal Shelter</span>
+
+                        <h1 style="font-family: 'Playfair Display', serif; font-weight: 700; color: #5C3D1E;">@shelterName</h1>
+
+                        <p style="color: #8C7560; font-weight: 500;">
+                            <i class="bi bi-geo-alt me-1" style="color:#C8A882"></i>@Model.ShelterAddress
+                        </p>
+
+                        <p style="color: #8C7560; font-weight: 500;">
+                            <i class="bi bi-heart-pulse me-1" style="color:#C8A882"></i>@services.Length services available
+                        </p>
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-2 flex-wrap justify-content-center justify-content-sm-start align-items-center">
+                            @if (isOwnProfile)
+                        {
+                            <button class="btn btn-disabled-preview" style="background: #C8A882; color: #fff; font-weight: 600; border-radius: 12px; padding: 8px 20px;" disabled>
+                                <i class="bi bi-house-door me-1"></i>Visit Shelter
+                            </button>
+
+                            <span class="ms-2 text-muted fw-bold" style="font-size: 0.85rem;">
+                                <i class="bi bi-eye me-1"></i>Preview Mode
+                            </span>
+                        }
+                        else
+                        {
+                            <button class="btn" style="background: #C8A882; color: #fff; font-weight: 600; border-radius: 12px; padding: 8px 20px;">
+                                <i class="bi bi-house-door me-1"></i>Visit Shelter
+                            </button>
+                        }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right side: simple stats -->
+                <div class="col-lg-5 mt-4 mt-lg-0">
+                    <div class="stats-grid">
+                        <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
+                            <div style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">@services.Length</div>
+                            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Services</div>
+                        </div>
+
+                        <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
+                            <div style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">@(Model.Schedule?.Count(s => !s.IsOff) ?? 0)</div>
+                            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Open Days</div>
+                        </div>
+
+                        <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
+                            <div style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">@shelterName.Substring(0, 1).ToUpper()</div>
+                            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Shelter ID</div>
+                        </div>
+
+                        <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
+                            <div style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">@(Model.UserAccount?.PhoneNumber != null ? "24/7" : "--")</div>
+                            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Contact</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main body -->
+    <div class="container py-4" style="max-width: 1300px;">
+        <div class="row g-4">
+
+            <!-- Left side sections -->
+            <div class="col-lg-8">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-person-hearts"></i> About @shelterName</h2>
+                    <p style="color:var(--text-main); line-height:1.75; font-size:.95rem;">@Model.Description</p>
+                </div>
+
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-heart-fill"></i> Services Offered</h2>
+                    <div>
+                        @if (services.Any())
+                    {
+                        foreach (var svc in services)
+                        {
+                        <span class="service-tag">
+                            <i class="bi bi-check-circle-fill"></i>@svc
+                        </span>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No specific services listed yet.</p>
+                    }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right side sections -->
+            <div class="col-lg-4">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-clock-fill"></i> Working Hours</h2>
+
+                    @{
+                    var todayName = DateTime.Now.DayOfWeek.ToString();
+                    }
+
+                    @if (Model.Schedule != null && Model.Schedule.Any())
+                {
+                    foreach (var wh in Model.Schedule.OrderBy(s => s.Day))
+                    {
+                        var isToday = wh.Day.ToString().Equals(todayName, StringComparison.OrdinalIgnoreCase);
+
+                    <div class="hours-row @(isToday ? "today" : "")">
+                        <span class="day">
+                            @wh.Day
+                            @if (isToday)
+                                {
+                            <span style="font-size:.72rem; color:var(--tan-dark); margin-left:.3rem;">(Today)</span>
+                                }
+                        </span>
+
+                        @if (wh.IsOff || wh.OpenTime == null || wh.CloseTime == null)
+                            {
+                        <span class="badge-off">Closed</span>
+                            }
+                            else
+                            {
+                                var openStr = DateTime.Today.Add(wh.OpenTime.Value).ToString("h:mm tt");
+                                var closeStr = DateTime.Today.Add(wh.CloseTime.Value).ToString("h:mm tt");
+                        <span class="time">@openStr - @closeStr</span>
+                            }
+                    </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Schedule not set.</p>
+                }
+                </div>
+
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-telephone-fill"></i> Contact</h2>
+
+                    <div class="contact-item">
+                        <div class="contact-icon"><i class="bi bi-envelope-fill"></i></div>
+                        <div>
+                            <div style="font-size:.75rem; color:var(--text-muted); font-weight:500;">Email</div>
+                            <a href="mailto:@Model.UserAccount?.Email" style="color:var(--tan-dark); font-size:.9rem; font-weight:500; text-decoration:none;">@Model.UserAccount?.Email</a>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <div class="contact-icon"><i class="bi bi-telephone-fill"></i></div>
+                        <div>
+                            <div style="font-size:.75rem; color:var(--text-muted); font-weight:500;">Phone</div>
+                            <a href="tel:@Model.UserAccount?.PhoneNumber" style="color:var(--tan-dark); font-size:.9rem; font-weight:500; text-decoration:none;">@Model.UserAccount?.PhoneNumber</a>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <div class="contact-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                        <div>
+                            <div style="font-size:.75rem; color:var(--text-muted); font-weight:500;">Shelter</div>
+                            <span style="font-size:.9rem;">@Model.ShelterAddress</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        @if (isOwnProfile)
+                    {
+                        <button class="btn btn-book w-100 btn-disabled-preview" disabled>
+                            <i class="bi bi-telephone me-1"></i>Call Now
+                        </button>
+                    }
+                    else
+                    {
+                        <a href="tel:@Model.UserAccount?.PhoneNumber" class="btn btn-book w-100">
+                            <i class="bi bi-telephone me-1"></i>Call Now
+                        </a>
+                    }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

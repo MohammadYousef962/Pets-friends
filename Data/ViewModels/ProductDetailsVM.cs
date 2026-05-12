@@ -7,12 +7,13 @@ namespace Pets_friends.Data.ViewModels
     {
         public Product Product { get; set; } = null!;
 
-        // CHANGED: Correctly uses your ProductReview entity
+        // Strictly uses your established ProductReview database entity
         public List<ProductReview> Reviews { get; set; } = new List<ProductReview>();
 
         public double AverageRating { get; set; }
         public int TotalReviews { get; set; }
 
+        // RESTORED: Prevents the controller build/publish crash
         public int SelectedQuantity { get; set; } = 1;
     }
 }

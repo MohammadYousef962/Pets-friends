@@ -1,70 +1,384 @@
 ﻿@model Pets_friends.Data.ViewModels.CartVM
 
 @{
-    ViewData["Title"] = "Your Cart";
+    ViewData["Title"] = "Your Shopping Cart";
     Layout = "~/Views/Shared/_StoreLayout.cshtml";
 }
 
-<div class="container py-5" style="max-width: 1200px;">
-    <h1 class="mb-4" style="font-family: 'Playfair Display', serif; font-weight: 700;">Shopping Cart</h1>
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: #5C3D1E;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            margin-bottom: 35px;
+            margin-top: 20px;
+        }
+
+        /* --- GLASSMORPHISM CART CARD --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 15px 40px rgba(92, 61, 30, 0.06);
+            padding: 35px;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            padding-bottom: 25px;
+            margin-bottom: 25px;
+            border-bottom: 1px dashed #EBE0D5;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .item-img-wrapper {
+            width: 110px;
+            height: 110px;
+            flex-shrink: 0;
+            background: #fff;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #EBE0D5;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .item-img-wrapper img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .item-info {
+            flex-grow: 1;
+        }
+
+        .store-badge {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: #A89582;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .item-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            text-decoration: none;
+            line-height: 1.3;
+            display: block;
+            margin-bottom: 12px;
+            transition: color 0.2s;
+        }
+
+        .item-title:hover {
+            color: #C8A882;
+        }
+
+        /* --- QTY SELECTOR & TRASH --- */
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .qty-control-wrapper {
+            display: flex;
+            align-items: center;
+            background: #FAF6F1;
+            border: 1px solid #EBE0D5;
+            border-radius: 12px;
+            width: fit-content;
+            padding: 4px;
+            gap: 5px;
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: #fff;
+            color: #5C3D1E;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .qty-btn:hover:not(:disabled) {
+            background: #5C3D1E;
+            color: #fff;
+        }
+
+        .qty-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .qty-number {
+            width: 35px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #2D1B0E;
+        }
+
+        .btn-trash {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d9534f;
+            background: #FFF5F5;
+            border: 1px solid #F5C6CB;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-trash:hover {
+            background: #d9534f;
+            color: #fff;
+            border-color: #d9534f;
+        }
+
+        .item-price-col {
+            text-align: right;
+            min-width: 120px;
+        }
+
+        .price-total {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #5C3D1E;
+        }
+
+        .price-each {
+            font-size: 0.8rem;
+            color: #8C7560;
+        }
+
+        .stock-msg {
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        /* --- SUMMARY PANEL --- */
+        .summary-panel {
+            background: #FAF6F1;
+            border-radius: 24px;
+            padding: 35px;
+            border: 1px solid #EBE0D5;
+            position: sticky;
+            top: 100px;
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
+        }
+
+        .summary-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            margin-bottom: 25px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+            color: #6E5033;
+        }
+
+        .summary-row.total {
+            border-top: 2px dashed #EBE0D5;
+            margin-top: 20px;
+            padding-top: 20px;
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #2D1B0E;
+        }
+
+        .btn-checkout {
+            background-color: #5C3D1E;
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 18px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            width: 100%;
+            margin-top: 25px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(92, 61, 30, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn-checkout:hover {
+            background-color: #C8A882;
+            transform: translateY(-2px);
+            color: #fff;
+        }
+    </style>
+}
+
+<div class="container py-4" style="max-width: 1200px;">
+    <h1 class="page-title">Shopping Cart</h1>
 
     @if (!Model.Items.Any())
     {
         <div class="text-center py-5">
-            <i class="bi bi-cart-x" style="font-size: 5rem; color: #EBE0D5;"></i>
-            <h3 class="mt-3">Your cart is empty</h3>
-            <a asp-action="Home" class="btn btn-primary mt-3" style="background: #5C3D1E; border: none;">Start Shopping</a>
+            <i class="bi bi-bag-heart" style="font-size: 6rem; color: #EBE0D5;"></i>
+            <h2 class="fw-bold mt-4">Your bag is empty</h2>
+            <p class="text-muted mb-4">You haven't added any products to your cart yet.</p>
+            <a asp-action="Home" class="btn btn-dark px-5 py-3 fw-bold" style="background: #5C3D1E; border-radius: 12px;">Browse Marketplace</a>
         </div>
     }
     else
     {
         <div class="row g-5">
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm" style="border-radius: 20px; padding: 25px;">
+                <div class="glass-card">
                     @foreach (var item in Model.Items)
                     {
-                        <div class="d-flex align-items-center gap-3 pb-4 mb-4 border-bottom">
-                            <img src="@item.Product.ImageUrl" style="width: 100px; height: 100px; object-fit: cover; border-radius: 12px; border: 1px solid #EBE0D5;">
-                            <div class="flex-grow-1">
-                                <h5 class="fw-bold mb-1">@item.Product.Name</h5>
-                                <p class="text-muted small mb-2"><i class="bi bi-shop me-1"></i> @item.Product.MerchantProfile?.StoreName</p>
-                                <div class="d-flex align-items-center gap-3">
-                                    <span class="fw-bold" style="color: #5C3D1E;">@item.Product.Price.ToString("C")</span>
-                                    <span class="badge bg-light text-dark border">Qty: @item.Quantity</span>
-                                </div>
+                        int maxPossible = Math.Min(10, item.Product.StockQuantity);
+                        bool isAtMax = item.Quantity >= maxPossible;
+                        bool isAtMin = item.Quantity <= 1;
+
+                        <div class="cart-item">
+                            <div class="item-img-wrapper">
+                                <img src="@item.Product.ImageUrl" onerror="this.src='https://placehold.co/150x150/FAF6F1/8C7560?text=Item'">
                             </div>
-                            <form asp-action="RemoveFromCart" method="post">
-                                <input type="hidden" name="id" value="@item.Id" />
-                                <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;"><i class="bi bi-trash"></i></button>
-                            </form>
+
+                            <div class="item-info">
+                                <span class="store-badge"><i class="bi bi-shop"></i> @(item.Product.MerchantProfile?.StoreName ?? "PetFriends Partner")</span>
+                                <a asp-action="Details" asp-route-id="@item.Product.Id" class="item-title">@item.Product.Name</a>
+
+                                <div class="item-actions">
+                                    <div class="qty-control-wrapper">
+                                        <form asp-action="UpdateQuantity" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="hidden" name="newQuantity" value="@(item.Quantity - 1)" />
+                                            <button type="submit" class="qty-btn" @(isAtMin ? "disabled" : "") title="Decrease Quantity">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                        </form>
+
+                                        <div class="qty-number">@item.Quantity</div>
+
+                                        <form asp-action="UpdateQuantity" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="hidden" name="newQuantity" value="@(item.Quantity + 1)" />
+                                            <button type="submit" class="qty-btn" @(isAtMax ? "disabled" : "") title="Increase Quantity">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <form asp-action="RemoveFromCart" method="post" class="m-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn-trash" title="Remove Item from Bag">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                @if (isAtMax)
+                                {
+                                    <div class="stock-msg text-danger">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                        @(item.Product.StockQuantity < 10 ? $"Only {item.Product.StockQuantity} available in stock" : "Maximum purchase limit reached (10)")
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="item-price-col">
+                                <div class="price-total">@((item.Product.Price * item.Quantity).ToString("C"))</div>
+                                <div class="price-each">@item.Product.Price.ToString("C") each</div>
+                            </div>
                         </div>
                     }
-                    <a asp-action="Home" class="text-decoration-none" style="color: #5C3D1E; font-weight: 600;">
-                        <i class="bi bi-arrow-left me-1"></i> Continue Shopping
-                    </a>
+
+                    <div class="mt-5 pt-3 border-top" style="border-color: #FAF6F1 !important;">
+                        <a asp-action="Home" class="text-decoration-none fw-bold" style="color: #5C3D1E;">
+                            <i class="bi bi-arrow-left-circle-fill me-2 fs-5 align-middle"></i> Continue Shopping
+                        </a>
+                    </div>
                 </div>
             </div>
 
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm" style="border-radius: 20px; background: #FAF6F1; padding: 25px;">
-                    <h4 class="fw-bold mb-4">Order Summary</h4>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal</span>
-                        <span>@Model.Subtotal.ToString("C")</span>
+                <div class="summary-panel">
+                    <h3 class="summary-title">Summary</h3>
+
+                    <div class="summary-row">
+                        <span>Items (@Model.Items.Count())</span>
+                        <span class="fw-bold">@Model.Subtotal.ToString("C")</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Tax (8%)</span>
-                        <span>@Model.Tax.ToString("C")</span>
+
+                    <div class="summary-row">
+                        <span>Taxes & Fees (8%)</span>
+                        <span class="fw-bold">@Model.Tax.ToString("C")</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-4 pb-4 border-bottom">
+
+                    <div class="summary-row">
                         <span>Shipping</span>
                         <span class="text-success fw-bold">FREE</span>
                     </div>
-                    <div class="d-flex justify-content-between h4 fw-bold mb-4">
-                        <span>Total</span>
+
+                    <div class="summary-row total">
+                        <span>Total Paid</span>
                         <span>@Model.Total.ToString("C")</span>
                     </div>
-                    <button class="btn btn-dark w-100 py-3 fw-bold" style="background: #5C3D1E; border-radius: 12px;">Proceed to Checkout</button>
+
+                    <a asp-controller="Order" asp-action="Checkout" class="btn-checkout">
+                        Proceed to Payment <i class="bi bi-shield-lock-fill"></i>
+                    </a>
+
+                    <div class="text-center mt-4">
+                        <i class="bi bi-shield-check text-success fs-5"></i>
+                        <span class="small fw-bold text-muted ms-1">SECURE CHECKOUT</span>
+                    </div>
                 </div>
             </div>
         </div>

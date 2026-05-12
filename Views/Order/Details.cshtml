@@ -3,15 +3,15 @@
 @{
     ViewData["Title"] = $"Receipt #ORD-{Model.Id:D4}";
     
-    // Determine if the current viewer is the merchant or the buyer
+    // Determine if the current viewer is the merchant selling the items or the client buying them
     bool isMerchantView = User.IsInRole("Merchant");
     
-    // Dynamically set the Back button text and route
+    // Dynamically set the navigation back points
     string backAction = isMerchantView ? "StoreOrders" : "MyOrders";
     string backText = isMerchantView ? "Back to Store Orders" : "Back to Order History";
     
-    // Automatically load the correct sidebar/navigation layout
-    Layout = isMerchantView ? "~/Views/Shared/_MerchantLayout.cshtml" : "~/Views/Shared/_Layout.cshtml";
+    // Load the correct global layout frame based on user profile context
+    Layout = isMerchantView ? "~/Views/Shared/_MerchantLayout.cshtml" : "~/Views/Shared/_StoreLayout.cshtml";
 }
 
 @section Styles {
@@ -73,7 +73,7 @@
             color: #5C3D1E;
         }
 
-        /* --- ENTITY BOXES (WHO & WHERE) --- */
+        /* --- ENTITY ASSIGNMENT BOXES --- */
         .entity-row {
             display: flex;
             gap: 30px;
@@ -104,7 +104,7 @@
             line-height: 1.5;
         }
 
-        /* --- ITEMIZED TABLE --- */
+        /* --- ITEMIZED TABLE BREAKDOWN --- */
         .table-receipt {
             width: 100%;
             margin-bottom: 40px;
@@ -135,6 +135,7 @@
             object-fit: cover;
             margin-right: 15px;
             border: 1px solid #EBE0D5;
+            background: #fff;
         }
 
         .item-name {
@@ -143,7 +144,7 @@
             font-size: 1.05rem;
         }
 
-        /* --- TOTALS SUMMARY --- */
+        /* --- TOTALS FOOTER --- */
         .summary-box {
             margin-left: auto;
             width: 100%;
@@ -169,50 +170,38 @@
             margin-top: 5px;
         }
 
-        /* --- BADGES --- */
+        /* --- UI STATUS STYLING --- */
         .status-badge {
             padding: 6px 16px;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 700;
             display: inline-block;
+            margin-top: 10px;
         }
         .status-Pending { background-color: #FFF3CD; color: #856404; }
-        .status-Shipped { background-color: #CCE5FF; color: #004085; }
-        .status-Delivered { background-color: #D4EDDA; color: #155724; }
+        .status-Shipped { background-color: #D1ECF1; color: #0C5460; }
+        .status-Delivered { background: #D4EDDA; color: #155724; }
         .status-Cancelled { background-color: #F8D7DA; color: #721C24; }
 
-        /* --- BUTTONS --- */
+        /* --- ACTION TRIGGERS --- */
         .btn-brand {
-            background-color: #5C3D1E;
-            color: #fff;
-            border-radius: 12px;
-            padding: 12px 28px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            border: none;
-            cursor: pointer;
+            background-color: #5C3D1E; color: #fff; border-radius: 12px;
+            padding: 12px 28px; font-weight: 600; text-decoration: none;
+            transition: all 0.3s; display: inline-flex; align-items: center;
+            border: none; cursor: pointer;
         }
         .btn-brand:hover { background-color: #C8A882; color: #fff; }
 
-        .btn-outline {
-            background-color: #fff;
-            color: #5C3D1E;
-            border: 2px solid #EBE0D5;
-            border-radius: 12px;
-            padding: 10px 24px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s;
-            display: inline-flex;
+        .btn-outline-custom {
+            background-color: #fff; color: #5C3D1E; border: 2px solid #EBE0D5;
+            border-radius: 12px; padding: 10px 24px; font-weight: 600;
+            text-decoration: none; transition: all 0.3s; display: inline-flex;
             align-items: center;
         }
-        .btn-outline:hover { background-color: #FAF6F1; border-color: #5C3D1E; }
+        .btn-outline-custom:hover { background-color: #FAF6F1; border-color: #5C3D1E; color: #5C3D1E; }
 
-        /* --- OPTIMIZED FOR PRINTERS --- */
+        /* --- HARDWARE PRINTER OPTIMIZATION --- */
         @@media print {
             body { background: #fff !important; color: #000 !important; margin: 0; padding: 0;}
             .receipt-wrapper { padding: 0 !important; margin: 0 !important; max-width: 100%;}
@@ -225,34 +214,28 @@
 }
 
 <div class="container py-5 receipt-wrapper">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-        <a asp-controller="Order" asp-action="@backAction" class="btn-outline">
-            <i class="bi bi-arrow-left me-2"></i> @backText
-        </a>
-        
-        <button onclick="window.print()" class="btn-brand">
-            <i class="bi bi-printer me-2"></i> Print Invoice
-        </button>
-    </div>
 
     <div class="receipt-card">
         
         <div class="receipt-header flex-column flex-sm-row gap-3">
             <div>
                 <h1 class="receipt-title">Invoice / Receipt</h1>
-                <p class="text-muted mb-2" style="font-size: 0.95rem;">Order ID: #ORD-@Model.Id.ToString("D4")</p>
+                <p class="text-muted mb-1" style="font-size: 0.95rem;">Order Reference: #ORD-@Model.Id.ToString("D4")</p>
                 <span class="status-badge status-@Model.Status">
-                    Status: @Model.Status
+                    Fulfillment Status: @Model.Status
                 </span>
             </div>
             
             <div class="receipt-meta">
-                <div class="meta-label">Date Paid</div>
-                <div class="meta-value mb-2 mb-sm-3">@Model.OrderDate.ToString("MMM dd, yyyy")</div>
+                <div class="meta-label">Date Dispatched</div>
+                <div class="meta-value mb-2 mb-sm-3 device-date" data-utc="@Model.OrderDate.ToString("o")">
+                    @Model.OrderDate.ToString("MMM dd, yyyy")
+                </div>
                 
-                <div class="meta-label">Time</div>
-                <div class="meta-value" style="font-size: 0.95rem; font-weight: 500;">@Model.OrderDate.ToString("hh:mm tt")</div>
+                <div class="meta-label">Timestamp</div>
+                <div class="meta-value device-time" data-utc="@Model.OrderDate.ToString("o")" style="font-size: 0.95rem; font-weight: 500;">
+                    @Model.OrderDate.ToString("hh:mm tt")
+                </div>
             </div>
         </div>
 
@@ -260,16 +243,16 @@
             <div class="entity-box">
                 <h6>Sold By</h6>
                 <p>
-                    <strong>@(Model.MerchantProfile?.StoreName ?? "Pet Friends Partner Store")</strong><br>
-                    <span style="font-size: 0.9rem; color: #8C7560;">Merchant Fulfillment Center</span>
+                    <strong>@(Model.MerchantProfile?.StoreName ?? "PetFriends Partner Store")</strong><br>
+                    <span style="font-size: 0.9rem; color: #8C7560;">Verified Vendor Platform</span>
                 </p>
             </div>
 
             <div class="entity-box">
                 <h6>Billed To</h6>
                 <p>
-                    <strong>@(Model.ClientProfile?.UserAccount?.FullName ?? "Valued Customer")</strong><br>
-                    <span style="font-size: 0.9rem; color: #8C7560;">Verified Marketplace Member</span>
+                    <strong>@(Model.ClientProfile?.UserAccount?.FullName ?? "Valued Client")</strong><br>
+                    <span style="font-size: 0.9rem; color: #8C7560;">Marketplace Member Profile</span>
                 </p>
             </div>
         </div>
@@ -279,52 +262,100 @@
                 <thead>
                     <tr>
                         <th style="width: 55%;">Item Description</th>
-                        <th style="text-align: center; width: 15%;">Qty</th>
-                        <th style="text-align: right; width: 15%;">Price</th>
-                        <th style="text-align: right; width: 15%;">Total</th>
+                        <th style="text-align: center; width: 15%;">Quantity</th>
+                        <th style="text-align: right; width: 15%;">Unit Price</th>
+                        <th style="text-align: right; width: 15%;">Line Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in Model.OrderItems)
+                    @if (Model.OrderItems != null)
                     {
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <img src="@item.Product.ImageUrl" class="item-preview" alt="" />
-                                    <div>
-                                        <div class="item-name">@item.Product.Name</div>
+                        @foreach (var item in Model.OrderItems)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="@item.Product?.ImageUrl" onerror="this.src='https://placehold.co/100x100/FAF6F1/8C7560?text=Item'" class="item-preview" alt="Item Thumb" />
+                                        <div>
+                                            <div class="item-name">@(item.Product?.Name ?? "Item")</div>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="text-center">x@item.Quantity</td>
-                            <td class="text-end">@item.UnitPrice.ToString("C")</td>
-                            <td class="text-end fw-bold">@((item.Quantity * item.UnitPrice).ToString("C"))</td>
-                        </tr>
+                                </td>
+                                <td class="text-center fw-bold">x@(item.Quantity)</td>
+                                <td class="text-end">@item.UnitPrice.ToString("C")</td>
+                                <td class="text-end fw-bold" style="color: #2D1B0E;">@(((decimal)item.Quantity * item.UnitPrice).ToString("C"))</td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
         </div>
 
         <div class="summary-box">
+            @{
+                // 1. Calculate raw item subtotal cleanly
+                decimal rawSubtotal = Model.OrderItems?.Sum(i => (decimal)i.Quantity * i.UnitPrice) ?? 0m;
+                
+                // 2. Dynamically calculate the exact fee difference stored in TotalAmount
+                decimal totalPaid = (decimal)Model.TotalAmount;
+                decimal feesAndTaxes = totalPaid - rawSubtotal;
+            }
+            
             <div class="summary-row">
                 <span>Subtotal</span>
-                <span>@Model.TotalAmount.ToString("C")</span>
+                <span>@rawSubtotal.ToString("C")</span>
             </div>
+            
             <div class="summary-row">
-                <span>Estimated Tax & Shipping</span>
+                <span>Taxes & Fees (8%)</span>
+                <span>@feesAndTaxes.ToString("C")</span>
+            </div>
+
+            <div class="summary-row">
+                <span>Fulfillment & Dispatch</span>
                 <span style="color: #2e7d32; font-weight: 600;">FREE</span>
             </div>
             
             <div class="summary-row grand-total">
                 <span>Total Paid</span>
-                <span>@Model.TotalAmount.ToString("C")</span>
+                <span>@totalPaid.ToString("C")</span>
             </div>
         </div>
 
         <div class="text-center mt-5 pt-4 no-print" style="border-top: 1px solid #FAF6F1;">
-            <i class="bi bi-heart-fill" style="color: #d9534f; font-size: 1.2rem;"></i>
-            <p class="mt-2 mb-0" style="color: #8C7560; font-size: 0.9rem;">Thank you for supporting our community marketplace!</p>
+            <button onclick="window.print()" class="btn-brand">
+                <i class="bi bi-printer me-2"></i> Print Invoice
+            </button>
+            <p class="mt-2 mb-0" style="color: #8C7560; font-size: 0.9rem;">Thank you for driving local logistics within our community marketplace!</p>
         </div>
 
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. Convert Date Display seamlessly to local device layout
+            const dateElem = document.querySelector('.device-date');
+            if (dateElem && dateElem.dataset.utc) {
+                const dateObj = new Date(dateElem.dataset.utc);
+                dateElem.innerText = dateObj.toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+            }
+
+            // 2. Convert Time Display perfectly aligned with device clock
+            const timeElem = document.querySelector('.device-time');
+            if (timeElem && timeElem.dataset.utc) {
+                const timeObj = new Date(timeElem.dataset.utc);
+                timeElem.innerText = timeObj.toLocaleTimeString(undefined, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            }
+        });
+    </script>
+}

@@ -1,6 +1,11 @@
 ﻿@{
     ViewData["Title"] = "Access Denied";
-    Layout = null; // Standalone layout for security pages
+    Layout = null; // Full creative freedom, completely detached from the standard navigation frame
+
+    string safeReturnUrl = ViewData["ReturnUrl"]?.ToString() ?? "";
+    
+    // Evaluate if we should use the explicit referer routing link
+    bool hasReferer = !string.IsNullOrEmpty(safeReturnUrl) && !safeReturnUrl.Contains("AccessDenied");
 }
 
 <!DOCTYPE html>
@@ -8,107 +13,153 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Pet Friends</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Restricted Access - PetFriends</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <style>
-        html, body {
-            height: 100%;
+        :root {
+            --brand-primary: #5C3D1E;
+            --brand-secondary: #C8A882;
+            --text-muted: #8C7560;
+            --bg-gradient: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            font-family: 'DM Sans', sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
-            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .access-container {
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-            padding: 3.5rem 2.5rem;
-            max-width: 550px;
+        .denied-wrapper {
+            padding: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .denied-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 20px 50px rgba(92, 61, 30, 0.08);
+            padding: 60px 50px;
+            max-width: 500px;
             text-align: center;
-            width: 90%;
-            animation: fadeIn 0.4s ease-out;
+            animation: fadeIn 0.6s ease-out;
         }
 
         @@keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .lock-icon {
-            font-size: 5rem;
-            color: #C8A882;
-            margin-bottom: 1rem;
-            display: inline-block;
-        }
-
-        h1 {
-            font-family: 'Playfair Display', serif;
-            color: #5C3D1E;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-        }
-
-        .text-muted-custom {
-            color: #8C7560;
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-
-        .btn-custom {
-            background-color: #5C3D1E;
-            color: white;
-            font-weight: 600;
-            padding: 0.75rem 2rem;
-            border-radius: 10px;
-            border: none;
-            transition: all 0.3s ease;
-            text-decoration: none;
+        .icon-circle {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: #FAF6F1;
+            color: var(--brand-secondary);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            border: 2px solid #EBE0D5;
+            box-shadow: inset 0 4px 10px rgba(92, 61, 30, 0.05);
         }
 
-            .btn-custom:hover {
-                background-color: #4A3118;
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(92, 61, 30, 0.2);
-                color: white;
-            }
+        .title-denied {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            margin: 0 0 15px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .desc-denied {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin: 0 0 40px 0;
+        }
+
+        .btn-primary-back {
+            background-color: var(--brand-primary);
+            color: #fff;
+            border: none;
+            border-radius: 16px;
+            padding: 16px 36px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 10px 20px rgba(92, 61, 30, 0.15);
+            cursor: pointer;
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .btn-primary-back:hover {
+            background-color: var(--brand-secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(92, 61, 30, 0.2);
+            color: #fff;
+        }
+
+        .btn-primary-back i {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .btn-primary-back:hover i {
+            transform: translateX(-4px);
+        }
     </style>
 </head>
 <body>
 
-    <div class="access-container">
-        <!-- Shield/Lock Icon -->
-        <i class="bi bi-shield-lock-fill lock-icon"></i>
+    <div class="denied-wrapper">
+        <div class="denied-card">
+            
+            <div class="icon-circle">
+                <i class="bi bi-lock-fill"></i>
+            </div>
 
-        <h1>Access Denied</h1>
-        <p class="text-muted-custom">
-            Hold your horses! You don't have the necessary permissions to access this area of Pet Friends.
-        </p>
+            <h1 class="title-denied">Restricted Area</h1>
+            
+            <p class="desc-denied">
+                Your current account permissions do not authorize access to this specific view. Let's get you back to where you were.
+            </p>
 
-        <a href="@Url.Content(ViewData["DashboardUrl"]?.ToString())" class="btn-custom">
-            <i class="bi bi-arrow-left"></i> Return to Dashboard
-        </a>
+            @if (hasReferer)
+            {
+                <a href="@safeReturnUrl" class="btn-primary-back">
+                    <i class="bi bi-arrow-left"></i> Go Back
+                </a>
+            }
+            else
+            {
+                <button onclick="window.history.back()" class="btn-primary-back">
+                    <i class="bi bi-arrow-left"></i> Go Back
+                </button>
+            }
+
+        </div>
     </div>
+
 </body>
 </html>
