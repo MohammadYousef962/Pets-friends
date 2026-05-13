@@ -1,0 +1,632 @@
+﻿@model IEnumerable<Pets_friends.Models.Product>
+
+@{
+    ViewData["Title"] = "My Inventory";
+    Layout = "~/Views/Shared/_MerchantLayout.cshtml";
+
+    // Dynamic categories: Extracts distinct available categories for this vendor
+    var activeCategories = Model.Select(m => m.Category)
+                                .Where(c => !string.IsNullOrEmpty(c))
+                                .Distinct()
+                                .OrderBy(c => c)
+                                .ToList();
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- RESTORED PREMIUM BACKGROUND --- */
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: #5C3D1E;
+            padding-bottom: 60px;
+        }
+
+        .inventory-header {
+            margin-bottom: 25px;
+        }
+
+        .inventory-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            margin: 0 0 5px 0;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- RESTORED PREMIUM SEARCH & FILTER WRAPPER --- */
+        .controls-wrapper {
+            background: #fff;
+            padding: 20px 24px;
+            border-radius: 20px;
+            border: 1px solid #EBE0D5;
+            box-shadow: 0 4px 15px rgba(92, 61, 30, 0.02);
+            margin-bottom: 35px;
+        }
+
+        .search-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        @@media (min-width: 768px) {
+            .search-section {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border-radius: 14px;
+            border: 2px solid #EBE0D5;
+            background: #FAF6F1; /* Warm internal input layout */
+            font-size: 0.95rem;
+            color: #5C3D1E;
+            transition: all 0.2s ease;
+            outline: none;
+            font-weight: 500;
+        }
+
+            .search-input:focus {
+                border-color: #C8A882;
+                background: #fff;
+            }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8C7560;
+            font-size: 1.1rem;
+        }
+
+        /* Clean internal dividing plane perfectly separating search and pills */
+        .filter-divider {
+            border-top: 1px solid #FAF6F1;
+            margin: 20px 0 15px 0;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-btn {
+            background-color: #FAF6F1;
+            color: #5C3D1E;
+            border: 1px solid #EBE0D5;
+            border-radius: 12px;
+            padding: 8px 18px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+            .filter-btn:hover {
+                background-color: #fff;
+                border-color: #C8A882;
+                transform: translateY(-2px);
+            }
+
+            .filter-btn.active {
+                background-color: #5C3D1E;
+                color: #fff;
+                border-color: #5C3D1E;
+                box-shadow: 0 4px 12px rgba(92, 61, 30, 0.12);
+            }
+
+        /* --- PRODUCT GRID CARDS --- */
+        .product-grid-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #EBE0D5;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
+            position: relative;
+        }
+
+            .product-grid-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 40px rgba(92, 61, 30, 0.12);
+            }
+
+        .card-img-container {
+            background: #fff;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-bottom: 1px solid #FAF6F1;
+            position: relative;
+        }
+
+            .card-img-container img {
+                max-height: 100%;
+                max-width: 100%;
+                object-fit: contain;
+                transition: transform 0.3s;
+            }
+
+        .product-grid-card:hover .card-img-container img {
+            transform: scale(1.05);
+        }
+
+        /* --- BADGES --- */
+        .category-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            color: #5C3D1E;
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            z-index: 2;
+            border: 1px solid #EBE0D5;
+        }
+
+        .stock-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            z-index: 2;
+        }
+
+        .stock-ok {
+            background-color: #D4EDDA;
+            color: #155724;
+        }
+
+        .stock-low {
+            background-color: #F8D7DA;
+            color: #721C24;
+        }
+
+        .stock-out {
+            background-color: #E2E3E5;
+            color: #383D41;
+        }
+
+        .card-body-custom {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .item-title {
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: #2D1B0E;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .item-price-row {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+        }
+
+        .item-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #5C3D1E;
+        }
+
+        /* --- APPENDED CREATION TRIGGER CARD --- */
+        .create-card {
+            background: #FAF6F1;
+            border-radius: 20px;
+            border: 2px dashed #C8A882;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 360px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            color: #5C3D1E;
+            padding: 30px;
+            text-align: center;
+        }
+
+            .create-card:hover {
+                background: #fff;
+                border-style: solid;
+                border-color: #5C3D1E;
+                color: #5C3D1E;
+                transform: translateY(-5px);
+                box-shadow: 0 12px 30px rgba(92, 61, 30, 0.06);
+            }
+
+        .create-icon {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #C8A882;
+            border: 1px solid #EBE0D5;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .create-card:hover .create-icon {
+            background: #5C3D1E;
+            color: #fff;
+            border-color: #5C3D1E;
+        }
+
+        /* --- ACTIONS MODULE --- */
+        .btn-edit {
+            background-color: #FAF6F1;
+            color: #5C3D1E;
+            border: 1px solid #EBE0D5;
+            border-radius: 12px;
+            padding: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .btn-edit:hover {
+                background-color: #5C3D1E;
+                color: #fff;
+                border-color: #5C3D1E;
+            }
+
+        /* --- PAGINATION --- */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #EBE0D5;
+            color: #5C3D1E;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+            .page-btn:hover {
+                background: #FAF6F1;
+                border-color: #C8A882;
+                color: #5C3D1E;
+            }
+
+            .page-btn.active {
+                background: #5C3D1E;
+                color: #fff;
+                border-color: #5C3D1E;
+                pointer-events: none;
+            }
+
+            .page-btn.disabled {
+                opacity: 0.5;
+                pointer-events: none;
+            }
+    </style>
+}
+
+<main class="container py-4" style="max-width: 1200px;">
+
+
+    <div class="controls-wrapper">
+        <div class="search-section">
+            <div class="search-wrapper">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="inventorySearchInput" class="search-input" autocomplete="off" placeholder="Search product title...">
+            </div>
+            <div class="text-muted small fw-bold text-md-end">
+                Showing <span id="visibleItemCount">@Model.Count()</span> Items
+            </div>
+        </div>
+
+        @if (activeCategories.Any())
+        {
+            <div class="filter-divider"></div>
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">All Inventory</button>
+                @foreach (var category in activeCategories)
+                {
+                    <button class="filter-btn" data-filter="@category">@category</button>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="row g-4" id="inventoryGrid">
+        @foreach (var item in Model)
+        {
+            string catSafe = (item.Category ?? "").ToLower();
+            string stockClass = "stock-ok";
+            string stockText = $"{item.StockQuantity} in stock";
+
+            if (item.StockQuantity == 0)
+            {
+                stockClass = "stock-out";
+                stockText = "Out of stock";
+            }
+            else if (item.StockQuantity <= 5)
+            {
+                stockClass = "stock-low";
+                stockText = $"Low: {item.StockQuantity} left";
+            }
+
+            <div class="col-sm-6 col-md-4 col-lg-3 product-item" data-category="@catSafe" data-title="@((item.Name ?? "").ToLower())">
+                <div class="product-grid-card">
+
+                    <div class="card-img-container">
+                        <span class="category-badge">@item.Category</span>
+                        <span class="stock-badge @stockClass">@stockText</span>
+                        <img src="@item.ImageUrl" onerror="this.src='https://placehold.co/300x300/FAF6F1/8C7560?text=Product'" alt="@item.Name">
+                    </div>
+
+                    <div class="card-body-custom">
+                        <div class="item-title">@item.Name</div>
+
+                        <div class="item-price-row">
+                            <span class="item-price">@(item.Price == 0 ? "FREE" : item.Price.ToString("C"))</span>
+                        </div>
+
+                        <div class="mt-3 d-flex gap-2">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-edit flex-grow-1">
+                                <i class="bi bi-pencil me-1"></i> Edit
+                            </a>
+
+                            <button type="button" class="btn-edit text-danger" style="background: #FFF5F5; border-color: #F5C6CB;" title="Delete"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteProductModal"
+                                    data-product-id="@item.Id"
+                                    data-product-name="@item.Name">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        }
+
+        <div class="col-sm-6 col-md-4 col-lg-3" id="creationCardSlot">
+            <a asp-action="Create" class="create-card">
+                <div class="create-icon">
+                    <i class="bi bi-plus-lg"></i>
+                </div>
+                <h4 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; font-size: 1.25rem;">Add Item</h4>
+                <p class="small text-muted mb-0">Expand your catalog inventory instantly.</p>
+            </a>
+        </div>
+
+    </div>
+
+    <div id="noResultsMsg" class="text-center py-5" style="display: none;">
+        <i class="bi bi-search" style="font-size: 3rem; color: #EBE0D5;"></i>
+        <h4 class="mt-3 fw-bold" style="color: #5C3D1E;">No matching inventory found</h4>
+        <p class="text-muted">Try clearing your keystroke queries or adjusting active category pills.</p>
+    </div>
+
+    <div class="pagination-container" id="paginationContainer"></div>
+
+</main>
+
+<div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; border: 1px solid #EBE0D5; overflow: hidden; box-shadow: 0 15px 35px rgba(92, 61, 30, 0.08);">
+
+            <div class="modal-header" style="background-color: #d9534f; color: white; border-bottom: none; padding: 20px 25px;">
+                <h5 class="modal-title" id="deleteProductModalLabel" style="font-family: 'Playfair Display', serif; font-weight: 700;">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Product
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body" style="padding: 30px 25px; color: #5C3D1E;">
+                <h6 style="font-weight: 700; color: #5C3D1E; margin-bottom: 12px;">Are you absolutely sure?</h6>
+                <p class="text-muted" style="font-size: 0.95rem; line-height: 1.5; margin-bottom: 0;">
+                    You are about to permanently remove <strong id="modalProductName" style="color: #d9534f;">this product</strong> from your inventory. This action cannot be undone, and all associated customer reviews will be deleted.
+                </p>
+            </div>
+
+            <div class="modal-footer" style="border-top: 1px solid #FAF6F1; padding: 15px 25px; background: #FAF6F1; display: flex; gap: 8px;">
+                <button type="button" class="btn flex-fill border" style="background: #fff; color: #5C3D1E; border-radius: 12px; font-weight: 600;" data-bs-dismiss="modal">Cancel</button>
+
+                <form asp-action="Delete" method="post" id="deleteProductForm" class="flex-fill m-0">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="modalProductId" value="" />
+                    <button type="submit" class="btn w-100" style="background: #d9534f; color: white; border-radius: 12px; font-weight: 600;">
+                        Yes, Delete Item
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Evaluates exact page layout slice parameters cleanly
+            const itemsPerPage = 12;
+            let currentPage = 1;
+            let currentCategory = 'all';
+            let searchQuery = '';
+
+            const allItems = Array.from(document.querySelectorAll('.product-item'));
+            const grid = document.getElementById('inventoryGrid');
+            const paginationContainer = document.getElementById('paginationContainer');
+            const noResultsMsg = document.getElementById('noResultsMsg');
+            const searchInput = document.getElementById('inventorySearchInput');
+            const creationCardSlot = document.getElementById('creationCardSlot');
+            const counterBadge = document.getElementById('visibleItemCount');
+
+            // --- Primary Rendering & Filter Synchronization Logic ---
+            function updateView() {
+                const filteredItems = allItems.filter(item => {
+                    const itemCat = item.getAttribute('data-category');
+                    const itemTitle = item.getAttribute('data-title');
+
+                    const categoryMatch = currentCategory === 'all' || itemCat === currentCategory;
+                    const titleMatch = itemTitle.includes(searchQuery);
+
+                    return categoryMatch && titleMatch;
+                });
+
+                const totalPages = Math.ceil(filteredItems.length / itemsPerPage) || 1;
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
+
+                // Initialize canvas cleanly
+                allItems.forEach(item => item.style.display = 'none');
+
+                if (filteredItems.length === 0) {
+                    noResultsMsg.style.display = 'block';
+                    if (creationCardSlot) creationCardSlot.style.display = 'none';
+                } else {
+                    noResultsMsg.style.display = 'none';
+                    paginatedItems.forEach(item => item.style.display = 'block');
+
+                    // Explicitly append the Plus item node as the final layout child contextually
+                    if (creationCardSlot) {
+                        creationCardSlot.style.display = 'block';
+                        grid.appendChild(creationCardSlot);
+                    }
+                }
+
+                // Update runtime metric counters
+                if (counterBadge) counterBadge.innerText = filteredItems.length;
+
+                renderPagination(totalPages);
+            }
+
+            // --- Dynamic Pagination Engine Construction ---
+            function renderPagination(totalPages) {
+                paginationContainer.innerHTML = '';
+                if (totalPages <= 1) return;
+
+                const prevBtn = document.createElement('div');
+                prevBtn.className = `page-btn ${currentPage === 1 ? 'disabled' : ''}`;
+                prevBtn.innerHTML = '<i class="bi bi-chevron-left"></i>';
+                prevBtn.onclick = () => {
+                    if (currentPage > 1) {
+                        currentPage--; updateView(); window.scrollTo({top: 0, behavior: 'smooth'});
+                    }
+                };
+                paginationContainer.appendChild(prevBtn);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageBtn = document.createElement('div');
+                    pageBtn.className = `page-btn ${currentPage === i ? 'active' : ''}`;
+                    pageBtn.innerText = i;
+                    pageBtn.onclick = () => {
+                        currentPage = i; updateView(); window.scrollTo({top: 0, behavior: 'smooth'});
+                    };
+                    paginationContainer.appendChild(pageBtn);
+                }
+
+                const nextBtn = document.createElement('div');
+                nextBtn.className = `page-btn ${currentPage === totalPages ? 'disabled' : ''}`;
+                nextBtn.innerHTML = '<i class="bi bi-chevron-right"></i>';
+                nextBtn.onclick = () => {
+                    if (currentPage < totalPages) {
+                        currentPage++; updateView(); window.scrollTo({top: 0, behavior: 'smooth'});
+                    }
+                };
+                paginationContainer.appendChild(nextBtn);
+            }
+
+            // --- UI Listeners Setup ---
+            document.querySelectorAll('.filter-btn').forEach(pill => {
+                pill.addEventListener('click', function () {
+                    document.querySelectorAll('.filter-btn').forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                    currentCategory = this.getAttribute('data-filter').toLowerCase();
+                    currentPage = 1;
+                    updateView();
+                });
+            });
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function (e) {
+                    searchQuery = e.target.value.toLowerCase().trim();
+                    currentPage = 1;
+                    updateView();
+                });
+
+                // Suppress accidental enter key submit cascades safely
+                const form = searchInput.closest('form');
+                if (form) form.addEventListener('submit', e => e.preventDefault());
+            }
+
+            updateView(); // Trigger standard generation sequence cleanly
+
+            // --- Map Deletion Request Intercept Targets ---
+            const deleteModal = document.getElementById('deleteProductModal');
+            if (deleteModal) {
+                deleteModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const productId = button.getAttribute('data-product-id');
+                    const productName = button.getAttribute('data-product-name');
+
+                    deleteModal.querySelector('#modalProductId').value = productId;
+                    deleteModal.querySelector('#modalProductName').textContent = "'" + productName + "'";
+                });
+            }
+        });
+    </script>
+}

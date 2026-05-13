@@ -1,0 +1,556 @@
+﻿@model Pets_friends.Data.ViewModels.CheckoutVM
+
+@{
+    ViewData["Title"] = "Secure Checkout";
+    Layout = "~/Views/Shared/_StoreLayout.cshtml";
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: #5C3D1E;
+            padding-bottom: 60px;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            margin-bottom: 10px;
+            margin-top: 20px;
+        }
+
+        .checkout-subtitle {
+            font-size: 1.05rem;
+            color: #8C7560;
+            margin-bottom: 40px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 15px 40px rgba(92, 61, 30, 0.05);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #2D1B0E;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #EBE0D5;
+            padding-bottom: 15px;
+        }
+
+        .section-step {
+            background: #5C3D1E;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 0.9rem;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* --- FORM INPUTS --- */
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #8C7560;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .form-control-custom {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: 2px solid #EBE0D5;
+            background: #fff;
+            font-size: 1rem;
+            color: #2D1B0E;
+            font-weight: 600;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+            .form-control-custom:focus {
+                border-color: #C8A882;
+                box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.1);
+            }
+
+            .form-control-custom::placeholder {
+                color: #bbaea0;
+                font-weight: 400;
+            }
+
+        /* --- PAYMENT METHOD INTERFACE --- */
+        .payment-methods {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .payment-card {
+            border: 2px solid #EBE0D5;
+            border-radius: 16px;
+            padding: 18px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            background: #fff;
+            gap: 15px;
+        }
+
+            .payment-card:hover {
+                border-color: #C8A882;
+                background: #FFFCF9;
+            }
+
+            .payment-card.active {
+                border-color: #5C3D1E;
+                background: #FAF6F1;
+                box-shadow: 0 5px 15px rgba(92, 61, 30, 0.08);
+            }
+
+        .radio-circle {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #C8A882;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .radio-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #5C3D1E;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .payment-card.active .radio-circle {
+            border-color: #5C3D1E;
+        }
+
+        .payment-card.active .radio-dot {
+            opacity: 1;
+        }
+
+        .payment-info {
+            flex-grow: 1;
+        }
+
+        .payment-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #2D1B0E;
+            margin-bottom: 2px;
+        }
+
+        .payment-desc {
+            font-size: 0.85rem;
+            color: #8C7560;
+        }
+
+        .payment-logos {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+            .payment-logos img {
+                height: 20px;
+            }
+
+        /* Dynamic Target Panels */
+        .payment-details-panel {
+            display: none;
+            background: #fff;
+            border: 1px solid #EBE0D5;
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: -5px;
+            margin-bottom: 15px;
+        }
+
+            .payment-details-panel.active {
+                display: block;
+                animation: fadeIn 0.3s ease;
+            }
+        @@keyframes fadeIn {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        /* --- SUMMARY PANEL --- */
+        .summary-panel {
+            background: #FAF6F1;
+            border-radius: 24px;
+            padding: 35px;
+            border: 1px solid #EBE0D5;
+            position: sticky;
+            top: 100px;
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
+        }
+
+        .summary-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #EBE0D5;
+            padding-bottom: 15px;
+        }
+
+        .order-item-mini {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+            .order-item-mini img {
+                width: 55px;
+                height: 55px;
+                border-radius: 12px;
+                object-fit: cover;
+                border: 1px solid #EBE0D5;
+                background: #fff;
+            }
+
+        .mini-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #2D1B0E;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .mini-price {
+            font-weight: 700;
+            color: #5C3D1E;
+            font-size: 0.95rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            color: #6E5033;
+        }
+
+            .summary-row.total {
+                border-top: 2px dashed #EBE0D5;
+                margin-top: 20px;
+                padding-top: 20px;
+                font-size: 1.6rem;
+                font-weight: 700;
+                color: #2D1B0E;
+            }
+
+        .btn-checkout {
+            background-color: #5C3D1E;
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 20px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            width: 100%;
+            margin-top: 25px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(92, 61, 30, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+            .btn-checkout:hover {
+                background-color: #C8A882;
+                transform: translateY(-2px);
+                color: #fff;
+            }
+    </style>
+}
+
+<div class="container py-4" style="max-width: 1200px;">
+    <h1 class="page-title">Complete Your Order</h1>
+    <p class="checkout-subtitle">Securely verify your logistics instructions and payment framework below.</p>
+
+    <form asp-controller="Order" asp-action="Checkout" method="post" id="checkoutForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="PaymentMethod" id="selectedPaymentMethod" value="card" />
+
+        <div class="row g-5">
+            <div class="col-lg-7 col-xl-8">
+
+                <div class="glass-card">
+                    <h2 class="section-header"><span class="section-step">1</span> Shipping Details</h2>
+
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" asp-for="FullName" class="form-control-custom" placeholder="Sarah Connor" required />
+                            <span asp-validation-for="FullName" class="text-danger small fw-bold"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" asp-for="PhoneNumber" class="form-control-custom"
+                                   placeholder="079XXXXXXX"
+                                   pattern="^(07[789]\d{7}|\+9627[789]\d{7})$"
+                                   title="Must strictly match localized formatting (e.g. 079XXXXXXX or +96279XXXXXXX)" required />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small fw-bold"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">City</label>
+                            <input type="text" asp-for="City" class="form-control-custom" placeholder="Amman" required />
+                            <span asp-validation-for="City" class="text-danger small fw-bold"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Street Address</label>
+                            <input type="text" asp-for="StreetAddress" class="form-control-custom" placeholder="123 Marketplace Avenue, Suite 4B" required />
+                            <span asp-validation-for="StreetAddress" class="text-danger small fw-bold"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h2 class="section-header"><span class="section-step">2</span> Payment Framework</h2>
+
+                    <div class="payment-methods">
+
+                        <div class="payment-card active" data-method="card" onclick="selectPayment('card')">
+                            <div class="radio-circle"><div class="radio-dot"></div></div>
+                            <div class="payment-info">
+                                <div class="payment-title">Credit / Debit Card</div>
+                                <div class="payment-desc">Encrypted transmission via dynamic localized processing</div>
+                            </div>
+                            <div class="payment-logos">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard">
+                            </div>
+                        </div>
+
+                        <div class="payment-details-panel active" id="panel-card">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Card Number</label>
+                                    <input type="text" asp-for="CardNumber" id="inpCardNumber" class="form-control-custom"
+                                           placeholder="0000 0000 0000 0000"
+                                           pattern="\d{16}" maxlength="16"
+                                           title="Requires exactly 16 sequential numeric digits" required />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Expiry Date</label>
+                                    <input type="text" asp-for="CardExpiry" id="inpCardExpiry" class="form-control-custom"
+                                           placeholder="MM/YY"
+                                           pattern="(0[1-9]|1[0-2])\/\d{2}" maxlength="5"
+                                           title="Must reflect format MM/YY" required />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Security Code (CVV)</label>
+                                    <input type="password" asp-for="CardCvv" id="inpCardCvv" class="form-control-custom"
+                                           placeholder="123"
+                                           pattern="\d{3,4}" maxlength="4"
+                                           title="Requires standard 3-4 numeric backing security keys" required />
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <label class="form-label">Cardholder Name</label>
+                                    <input type="text" asp-for="NameOnCard" id="inpCardName" class="form-control-custom" placeholder="Sarah Connor" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-card" data-method="cliq" onclick="selectPayment('cliq')">
+                            <div class="radio-circle"><div class="radio-dot"></div></div>
+                            <div class="payment-info">
+                                <div class="payment-title" style="color: #4B0082;">CliQ <i class="bi bi-lightning-charge-fill text-warning"></i></div>
+                                <div class="payment-desc">Instant real-time dispatch validation alias mapping</div>
+                            </div>
+                        </div>
+
+                        <div class="payment-details-panel" id="panel-cliq">
+                            <div class="alert mb-4" style="background: #F3E5F5; color: #4B0082; border-radius: 12px; border: none;">
+                                <i class="bi bi-info-circle-fill me-2"></i> Authorized corporate network target mapping alias: <strong>PETMARKET</strong>. Enter your personal transfer alias below to verify transaction assignment.
+                            </div>
+                            <label class="form-label">Your Client Authorization Alias</label>
+                            <input type="text" asp-for="CliqAlias" id="inpCliqAlias" class="form-control-custom" placeholder="e.g. SARAHC" />
+                        </div>
+
+                        <div class="payment-card" data-method="paypal" onclick="selectPayment('paypal')">
+                            <div class="radio-circle"><div class="radio-dot"></div></div>
+                            <div class="payment-info">
+                                <div class="payment-title">PayPal</div>
+                                <div class="payment-desc">External portal gateway token processing link</div>
+                            </div>
+                            <div class="payment-logos">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal_.svg" alt="PayPal">
+                            </div>
+                        </div>
+
+                        <div class="payment-details-panel" id="panel-paypal" style="text-align: center; padding: 30px;">
+                            <i class="bi bi-paypal" style="font-size: 3rem; color: #003087;"></i>
+                            <h5 class="mt-3 fw-bold" style="color: #2D1B0E;">External Authentication Loop</h5>
+                            <p class="text-muted mb-0">Confirming checkout routes pipeline securely utilizing authenticated PayPal session handshakes instantly.</p>
+                        </div>
+
+                        <div class="payment-card" data-method="cod" onclick="selectPayment('cod')">
+                            <div class="radio-circle"><div class="radio-dot"></div></div>
+                            <div class="payment-info">
+                                <div class="payment-title">Pay on Delivery</div>
+                                <div class="payment-desc">Physical fulfillment validation processing directly on dropoff</div>
+                            </div>
+                            <div class="payment-logos">
+                                <i class="bi bi-cash-stack fs-4 text-success"></i>
+                            </div>
+                        </div>
+
+                        <div class="payment-details-panel" id="panel-cod">
+                            <div class="d-flex align-items-center gap-3 p-2">
+                                <div style="width: 50px; height: 50px; background: #D4EDDA; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #155724; font-size: 1.5rem;">
+                                    <i class="bi bi-truck"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1" style="color: #2D1B0E;">Deferred Point of Transfer Selected.</h6>
+                                    <p class="text-muted mb-0" style="font-size: 0.9rem;">Ensure native payment amounts match item drops seamlessly upon destination execution.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col-lg-5 col-xl-4">
+                <div class="summary-panel">
+                    <h3 class="summary-title">Order Overview</h3>
+
+                    <div class="mb-4 pb-4 border-bottom" style="border-color: #EBE0D5 !important;">
+                        @foreach (var item in Model.CartItems)
+                        {
+                            <div class="order-item-mini">
+                                <img src="@item.Product.ImageUrl" onerror="this.src='https://placehold.co/100x100/FAF6F1/8C7560?text=Item'">
+                                <div class="flex-grow-1">
+                                    <div class="mini-title" title="@item.Product.Name">@item.Product.Name</div>
+                                    <div class="d-flex justify-content-between mt-1">
+                                        <span class="text-muted small fw-bold">Qty: @item.Quantity</span>
+                                        <span class="mini-price">@((item.Quantity * item.Product.Price).ToString("C"))</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Distinct Entries (@Model.CartItems.Count)</span>
+                        <span class="fw-bold">@Model.Subtotal.ToString("C")</span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Estimated Taxes (8%)</span>
+                        <span class="fw-bold">@Model.Tax.ToString("C")</span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Fulfillment & Dispatch</span>
+                        <span class="text-success fw-bold">FREE</span>
+                    </div>
+
+                    <div class="summary-row total">
+                        <span>Grand Total</span>
+                        <span>@Model.GrandTotal.ToString("C")</span>
+                    </div>
+
+                    <button type="submit" class="btn-checkout">
+                        Authorize Order <i class="bi bi-shield-check"></i>
+                    </button>
+
+                    <div class="text-center mt-4">
+                        <i class="bi bi-lock-fill text-success fs-4 mb-2"></i>
+                        <p class="small text-muted mb-0" style="line-height: 1.4;">Transaction routing architecture is cryptographically verified and validated securely.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // --- SECURE DYNAMIC VALIDATION MANAGEMENT ENGINE ---
+        // Isolates standard HTML forms cleanly to prevent non-focusable UI exceptions
+        function selectPayment(method) {
+            document.getElementById('selectedPaymentMethod').value = method;
+
+            // 1. Purge active visual boundaries and unmount targeted validation attributes globally
+            document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.payment-details-panel').forEach(p => {
+                p.classList.remove('active');
+                p.querySelectorAll('input').forEach(inp => inp.required = false);
+            });
+
+            // 2. Enable active structural indicators cleanly
+            const activeTab = document.querySelector(`.payment-card[data-method="${method}"]`);
+            if (activeTab) activeTab.classList.add('active');
+
+            const targetPane = document.getElementById(`panel-${method}`);
+            if (targetPane) {
+                targetPane.classList.add('active');
+
+                // 3. Remount explicit structural constraints strictly to isolated focus target loops
+                if (method === 'card') {
+                    document.getElementById('inpCardNumber').required = true;
+                    document.getElementById('inpCardExpiry').required = true;
+                    document.getElementById('inpCardCvv').required = true;
+                    document.getElementById('inpCardName').required = true;
+                } else if (method === 'cliq') {
+                    document.getElementById('inpCliqAlias').required = true;
+                }
+            }
+        }
+    </script>
+}

@@ -313,6 +313,10 @@ namespace Pets_friends.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("StoreAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("StoreName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -340,12 +344,16 @@ namespace Pets_friends.Migrations
                     b.Property<int>("ClientProfileId")
                         .HasColumnType("int");
 
+                    b.Property<int>("MerchantProfileId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("TotalAmount")
                         .HasPrecision(18, 2)
@@ -354,6 +362,8 @@ namespace Pets_friends.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClientProfileId");
+
+                    b.HasIndex("MerchantProfileId");
 
                     b.ToTable("Orders");
                 });
@@ -369,15 +379,15 @@ namespace Pets_friends.Migrations
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -452,6 +462,10 @@ namespace Pets_friends.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("MerchantProfileId")
                         .HasColumnType("int");
 
@@ -463,11 +477,48 @@ namespace Pets_friends.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("StockQuantity")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("MerchantProfileId");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("Pets_friends.Models.ProductReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClientProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReviewDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientProfileId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductReviews");
                 });
 
             modelBuilder.Entity("Pets_friends.Models.Service", b =>
@@ -543,6 +594,31 @@ namespace Pets_friends.Migrations
                         .IsUnique();
 
                     b.ToTable("ShelterProfiles");
+                });
+
+            modelBuilder.Entity("Pets_friends.Models.ShoppingCart", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserAccountId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ShoppingCarts");
                 });
 
             modelBuilder.Entity("Pets_friends.Models.UserAccount", b =>
@@ -900,13 +976,21 @@ namespace Pets_friends.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Pets_friends.Models.MerchantProfile", "MerchantProfile")
+                        .WithMany()
+                        .HasForeignKey("MerchantProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.Navigation("ClientProfile");
+
+                    b.Navigation("MerchantProfile");
                 });
 
             modelBuilder.Entity("Pets_friends.Models.OrderItem", b =>
                 {
                     b.HasOne("Pets_friends.Models.Order", "Order")
-                        .WithMany()
+                        .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -950,6 +1034,25 @@ namespace Pets_friends.Migrations
                     b.Navigation("MerchantProfile");
                 });
 
+            modelBuilder.Entity("Pets_friends.Models.ProductReview", b =>
+                {
+                    b.HasOne("Pets_friends.Models.ClientProfile", "ClientProfile")
+                        .WithMany()
+                        .HasForeignKey("ClientProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Pets_friends.Models.Product", "Product")
+                        .WithMany("Reviews")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClientProfile");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("Pets_friends.Models.Service", b =>
                 {
                     b.HasOne("Pets_friends.Models.ShelterProfile", "ShelterProfile")
@@ -974,6 +1077,17 @@ namespace Pets_friends.Migrations
                         .IsRequired();
 
                     b.Navigation("UserAccount");
+                });
+
+            modelBuilder.Entity("Pets_friends.Models.ShoppingCart", b =>
+                {
+                    b.HasOne("Pets_friends.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Pets_friends.Models.VetProfile", b =>
@@ -1029,6 +1143,16 @@ namespace Pets_friends.Migrations
             modelBuilder.Entity("Pets_friends.Models.MerchantProfile", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("Pets_friends.Models.Order", b =>
+                {
+                    b.Navigation("OrderItems");
+                });
+
+            modelBuilder.Entity("Pets_friends.Models.Product", b =>
+                {
+                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("Pets_friends.Models.ShelterProfile", b =>

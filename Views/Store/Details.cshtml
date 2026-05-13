@@ -1,0 +1,412 @@
+﻿@model Pets_friends.Data.ViewModels.ProductDetailsVM
+@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@inject UserManager<UserAccount> UserManager
+
+@{
+    ViewData["Title"] = Model.Product.Name;
+    Layout = "~/Views/Shared/_StoreLayout.cshtml";
+
+    // --- DYNAMIC STOCK & QUANTITY CALCULATIONS ---
+    int currentStock = Model.Product.StockQuantity; 
+    int maxAllowedQty = Math.Min(10, currentStock);
+    bool isOutOfStock = currentStock <= 0;
+
+    // --- ONE-REVIEW-PER-USER DETECTION (Edit Mode Logic) ---
+    var currentUser = await UserManager.GetUserAsync(User);
+    ProductReview? myExistingReview = null;
+    
+    if (currentUser != null && Model.Reviews != null)
+    {
+        // Finds if the active user already has a review in the loaded list
+        myExistingReview = Model.Reviews.FirstOrDefault(r => r.ClientProfile?.UserAccountId == currentUser.Id);
+    }
+    
+    int initialStars = myExistingReview?.Rating ?? 5;
+    string initialComment = myExistingReview?.Comment ?? "";
+    string formTitle = myExistingReview != null ? "Edit Your Verified Review" : "Submit Your Verified Review";
+    string submitBtnText = myExistingReview != null ? "Update Review" : "Publish Review";
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: #5C3D1E;
+            padding-bottom: 60px;
+        }
+
+        .btn-outline-custom {
+            background-color: #fff; color: #5C3D1E; border: 2px solid #EBE0D5; border-radius: 12px;
+            padding: 10px 24px; font-weight: 600; text-decoration: none; transition: all 0.3s;
+            display: inline-flex; align-items: center; cursor: pointer;
+        }
+        .btn-outline-custom:hover { background-color: #FAF6F1; border-color: #5C3D1E; color: #5C3D1E; }
+
+        .product-card {
+            background: #fff; border-radius: 24px; padding: 40px; border: 1px solid #EBE0D5;
+            box-shadow: 0 20px 50px rgba(92, 61, 30, 0.08); margin-bottom: 40px; margin-top: 20px;
+        }
+
+        .product-image-wrapper {
+            background: #FAF6F1; border-radius: 20px; overflow: hidden; border: 1px solid #EBE0D5;
+            height: 100%; display: flex; align-items: center; justify-content: center; min-height: 400px;
+        }
+        .product-image { max-width: 100%; max-height: 450px; object-fit: contain; border-radius: 20px; }
+
+        .product-title { font-size: 2.4rem; font-weight: 700; color: #2D1B0E; margin-bottom: 15px; line-height: 1.2; }
+
+        .rating-badge {
+            display: inline-flex; align-items: center; background: #FFF3CD; color: #856404;
+            padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.95rem;
+            margin-bottom: 20px; border: 1px solid #FFEEBA;
+        }
+
+        .product-price { font-size: 2.2rem; font-weight: 700; color: #2D1B0E; margin-bottom: 10px; }
+
+        .stock-status { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 25px; }
+
+        .product-description {
+            color: #6E5033; font-size: 1.05rem; line-height: 1.6; margin-bottom: 30px;
+            border-bottom: 1px solid #FAF6F1; padding-bottom: 25px;
+        }
+
+        .qty-selector {
+            display: flex; align-items: center; background: #FAF6F1; border: 1px solid #EBE0D5;
+            border-radius: 14px; padding: 4px; width: fit-content;
+        }
+        .qty-btn {
+            width: 40px; height: 40px; border-radius: 10px; border: none; background: #fff;
+            color: #5C3D1E; font-weight: 700; font-size: 1.2rem; display: flex;
+            align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;
+        }
+        .qty-btn:hover { background: #EBE0D5; }
+        .qty-input { width: 50px; border: none; background: transparent; text-align: center; font-weight: 700; font-size: 1.1rem; color: #2D1B0E; outline: none; }
+
+        .btn-add-cart {
+            background-color: #5C3D1E; color: #fff; border: none; border-radius: 14px;
+            padding: 14px 35px; font-weight: 700; font-size: 1.1rem; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+            box-shadow: 0 10px 20px rgba(92, 61, 30, 0.15); cursor: pointer;
+        }
+        .btn-add-cart:hover { background-color: #C8A882; transform: translateY(-2px); color: #fff; }
+
+        /* --- UPGRADED PREMIUM REVIEWS UI --- */
+        .reviews-section {
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
+            border-radius: 24px; padding: 40px; border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .section-title { font-size: 1.8rem; font-weight: 700; color: #2D1B0E; margin-bottom: 0; }
+        
+        .review-form-card {
+            background: #fff; border-radius: 20px; padding: 30px; border: 2px solid #C8A882;
+            box-shadow: 0 10px 30px rgba(200, 168, 130, 0.15); margin-bottom: 40px;
+        }
+
+        .review-card-premium {
+            background: #fff; border-radius: 18px; padding: 25px; border: 1px solid #EBE0D5;
+            margin-bottom: 20px; transition: all 0.2s; display: flex; gap: 18px;
+        }
+        .review-card-premium:hover { border-color: #C8A882; transform: translateY(-2px); }
+
+        .reviewer-avatar {
+            width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+            border: 2px solid #EBE0D5; flex-shrink: 0;
+        }
+
+        .reviewer-name { font-weight: 700; color: #2D1B0E; font-size: 1.1rem; margin-bottom: 2px; }
+        .review-date { font-size: 0.85rem; color: #8C7560; font-weight: 500; }
+        
+        .stars-container { color: #ffc107; letter-spacing: 2px; font-size: 1.05rem; }
+        
+        .review-star { transition: transform 0.2s; cursor: pointer; }
+        .review-star:hover { transform: scale(1.2); }
+        
+        .badge-edit {
+            background: #EBE0D5; color: #5C3D1E; font-size: 0.75rem; font-weight: 700;
+            padding: 2px 8px; border-radius: 8px; margin-left: 10px; vertical-align: middle;
+        }
+    </style>
+}
+
+<div class="container py-5" style="max-width: 1200px;">
+
+    <div class="product-card">
+        <div class="row g-5 align-items-center">
+            
+            <div class="col-lg-6">
+                <div class="product-image-wrapper">
+                    <img src="@Model.Product.ImageUrl" onerror="this.src='https://placehold.co/600x600/FAF6F1/8C7560?text=Product'" class="product-image" alt="@Model.Product.Name" />
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <h1 class="product-title">@Model.Product.Name</h1>
+
+                <div class="rating-badge">
+                    <i class="bi bi-star-fill me-1"></i> @Model.AverageRating.ToString("F1") / 5.0
+                    <span class="text-muted ms-2 fw-normal" style="font-size: 0.85rem;">(@Model.TotalReviews verified reviews)</span>
+                </div>
+
+                <div class="product-price">@Model.Product.Price.ToString("C")</div>
+                
+                <div class="stock-status">
+                    @if (isOutOfStock)
+                    {
+                        <span style="color: #d9534f;"> Out of Stock</span>
+                    }
+                    else
+                    {
+                        <span style="color: #2e7d32;"><i class="bi bi-check2-circle me-1"></i> In Stock (@currentStock available)</span>
+                    }
+                </div>
+
+                <p class="product-description">@Model.Product.Description</p>
+
+                @if (!isOutOfStock)
+                {
+                    <form asp-controller="Store" asp-action="AddToCart" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@Model.Product.Id" />
+
+                        <div class="row g-3 align-items-center">
+                            <div class="col-auto">
+                                <label class="form-label fw-bold mb-1" style="font-size: 0.85rem; color: #8C7560;">
+                                    QUANTITY (Max @maxAllowedQty)
+                                </label>
+                                <div class="qty-selector">
+                                    <button type="button" class="qty-btn" onclick="let input = document.getElementById('qty'); if(input.value > 1) input.value--;">-</button>
+                                    <input type="number" id="qty" name="quantity" class="qty-input" value="1" min="1" max="@maxAllowedQty" readonly />
+                                    <button type="button" class="qty-btn" onclick="let input = document.getElementById('qty'); if(input.value < @maxAllowedQty) input.value++;">+</button>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <label class="form-label d-none d-sm-block mb-1">&nbsp;</label>
+                                <button type="submit" class="btn-add-cart">
+                                    <i class="bi bi-cart-plus"></i> Add to Shopping Cart
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <button class="btn-add-cart w-100" style="background-color: #EBE0D5; color: #8C7560; cursor: not-allowed;" disabled>
+                        Currently Unavailable
+                    </button>
+                }
+
+            </div>
+        </div>
+    </div>
+
+    <div class="reviews-section">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div class="d-flex align-items-center">
+                <h3 class="section-title">Customer Reviews</h3>
+                @if(myExistingReview != null)
+                {
+                    <span class="badge-edit">You Reviewed This</span>
+                }
+            </div>
+            
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                // Button text changes dynamically based on Edit Mode detection
+                string btnDisplay = myExistingReview != null ? "Edit Your Review" : "Write a Review";
+                string btnIcon = myExistingReview != null ? "bi-pencil-fill" : "bi-pencil-square";
+
+                <button class="btn-outline-custom" type="button" data-bs-toggle="collapse" data-bs-target="#reviewFormCollapse" aria-expanded="false" aria-controls="reviewFormCollapse">
+                    <i class="bi @btnIcon me-2"></i> @btnDisplay
+                </button>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" class="btn-outline-custom">
+                    Log in to Review
+                </a>
+            }
+        </div>
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            // Pre-opens the form if they already have a review so they know they can edit it immediately
+            string collapseState = myExistingReview != null ? "collapse show" : "collapse";
+            
+            <div class="@collapseState mb-5" id="reviewFormCollapse">
+                <div class="review-form-card">
+                    <h5 class="fw-bold mb-3" style="color: #2D1B0E;">@formTitle</h5>
+                    
+                    <form asp-controller="Store" asp-action="SubmitReview" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ProductId" value="@Model.Product.Id" />
+                        
+                        <input type="hidden" name="Rating" id="interactiveRating" value="@initialStars" />
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-1" style="font-size: 0.85rem; color: #8C7560;">CLICK STARS TO RATE</label>
+                            <div class="d-flex align-items-center gap-2 fs-3" id="starContainer" style="color: #ffc107;">
+                                @for(int s = 1; s <= 5; s++)
+                                {
+                                    string starClass = s <= initialStars ? "bi-star-fill" : "bi-star";
+                                    <i class="bi @starClass review-star" data-rating="@s"></i>
+                                }
+                                <span class="ms-3 fs-6 fw-bold" id="ratingLabel" style="color: #5C3D1E; background: #FAF6F1; padding: 4px 12px; border-radius: 10px;">
+                                    @(initialStars == 5 ? "Excellent (5/5)" : initialStars == 4 ? "Very Good (4/5)" : initialStars == 3 ? "Good (3/5)" : initialStars == 2 ? "Fair (2/5)" : "Poor (1/5)")
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-1" style="font-size: 0.85rem; color: #8C7560;">YOUR FEEDBACK</label>
+                            <textarea name="Comment" class="form-control p-3 fw-medium" rows="3" placeholder="What did you and your pet think about this product?" required style="border-radius: 14px; border: 2px solid #EBE0D5; outline: none; color: #2D1B0E;">@initialComment</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-light fw-bold px-4" data-bs-toggle="collapse" data-bs-target="#reviewFormCollapse" style="border-radius: 12px;">Close Panel</button>
+                            <button type="submit" class="btn-outline-custom" style="background-color: #5C3D1E; color: #fff; border: none;">
+                                @submitBtnText
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+
+        @if (!Model.Reviews.Any())
+        {
+            <p class="text-muted mb-0 fw-medium">No customer reviews yet. Be the first to share your thoughts!</p>
+        }
+        else
+        {
+            @foreach (var review in Model.Reviews)
+            {
+                string reviewerFullName = review.ClientProfile?.UserAccount?.FullName ?? "Valued Buyer";
+                string avatarUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(reviewerFullName)}&background=FAF6F1&color=5C3D1E&bold=true";
+                
+                // Indicates visually if a specific card in the feed belongs to the logged-in user
+                bool isMyCard = currentUser != null && review.ClientProfile?.UserAccountId == currentUser.Id;
+                string cardOutline = isMyCard ? "border: 2px solid #C8A882; background: #FFFCF9;" : "";
+
+                <div class="review-card-premium" style="@cardOutline">
+                    <img src="@avatarUrl" class="reviewer-avatar" alt="Avatar" />
+                    
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div>
+                                <div class="reviewer-name">
+                                    @reviewerFullName
+                                    @if(isMyCard) { <span class="badge bg-secondary ms-2" style="font-size:0.7rem;">Your Review</span> }
+                                </div>
+                                <div class="review-date">Verified Buyer • @review.ReviewDate.ToString("MMM dd, yyyy")</div>
+                            </div>
+                            
+                            <div class="stars-container">
+                                @for(int i = 1; i <= 5; i++)
+                                {
+                                    if(i <= review.Rating) { <i class="bi bi-star-fill"></i> }
+                                    else { <i class="bi bi-star"></i> }
+                                }
+                            </div>
+                        </div>
+
+                        <p class="mb-0 mt-2 fw-medium" style="color: #5C3D1E; font-size: 1.02rem; line-height: 1.5;">
+                            @review.Comment
+                        </p>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@if (TempData["ShowCartModal"] != null)
+{
+    <div class="modal fade" id="afterAddToCart" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px;">
+                <div class="modal-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-bag-check-fill text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h3 class="fw-bold">Added to Cart!</h3>
+                    <p class="text-muted">"@TempData["LastAddedItem"]" is waiting for you in your cart.</p>
+                    <div class="d-grid gap-2 mt-4">
+                        <a asp-action="Cart" class="btn btn-dark py-3 fw-bold" style="background: #5C3D1E; border-radius: 12px;">Go to Cart & Checkout</a>
+                        <button type="button" class="btn btn-outline-secondary py-3 fw-bold" data-bs-dismiss="modal" style="border-radius: 12px;">Continue Shopping</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (TempData["ReviewConfirmation"] != null)
+{
+    string confirmActionText = TempData["ReviewConfirmation"]?.ToString() == "Updated" ? "updated" : "published";
+
+    <div class="modal fade" id="reviewConfirmedModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: 1px solid #EBE0D5;">
+                <div class="modal-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-star-fill" style="font-size: 4rem; color: #ffc107;"></i>
+                    </div>
+                    <h3 class="fw-bold" style="color: #2D1B0E;">Review @confirmActionText!</h3>
+                    <p class="text-muted mt-2">Your verified feedback has been successfully @confirmActionText and synced to the marketplace feed.</p>
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-dark py-3 px-5 fw-bold" data-bs-dismiss="modal" style="background: #5C3D1E; border-radius: 12px;">
+                            Continue Browsing
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        @if (TempData["ShowCartModal"] != null)
+        {
+            <text>
+            var cartModal = new bootstrap.Modal(document.getElementById('afterAddToCart'));
+            cartModal.show();
+            </text>
+        }
+
+        @if (TempData["ReviewConfirmation"] != null)
+        {
+            <text>
+            var reviewModal = new bootstrap.Modal(document.getElementById('reviewConfirmedModal'));
+            reviewModal.show();
+            </text>
+        }
+
+        // --- INTERACTIVE STAR RATING ENGINE ---
+        document.querySelectorAll('.review-star').forEach(star => {
+            star.addEventListener('click', function() {
+                const selectedVal = parseInt(this.getAttribute('data-rating'));
+                
+                document.getElementById('interactiveRating').value = selectedVal;
+                
+                const labels = ["Poor (1/5)", "Fair (2/5)", "Good (3/5)", "Very Good (4/5)", "Excellent (5/5)"];
+                document.getElementById('ratingLabel').innerText = labels[selectedVal - 1];
+
+                document.querySelectorAll('.review-star').forEach((s, index) => {
+                    if (index < selectedVal) {
+                        s.className = 'bi bi-star-fill review-star';
+                    } else {
+                        s.className = 'bi bi-star review-star';
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -341,12 +341,11 @@ namespace Pets_friends.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> AccessDenied(string returnUrl = null)
         {
+            // Safely assigns the referring page if supplied
             ViewData["ReturnUrl"] = returnUrl;
 
-            // Default fallback
             string dashboardUrl = "~/";
 
-            // If the user is logged in, find out their role and set the correct dashboard path
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 var user = await _userManager.GetUserAsync(User);

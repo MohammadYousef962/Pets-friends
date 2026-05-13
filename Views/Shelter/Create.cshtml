@@ -1,0 +1,497 @@
+﻿@model Pets_friends.Data.ViewModels.ShelterProfileFormVM
+
+@{
+    ViewData["Title"] = "Create Your Shelter Profile";
+    Layout = "~/Views/Shared/_ShelterLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --text-dark: #5C3D1E;
+            --text-muted: #8C7560;
+            --bg-card: #FAF6F1;
+            --tan-accent: #C8A882;
+            --tan-medium: #EDE0D0;
+            --brown-button: #5C3D1E;
+            --border-light: #EBE0D5;
+            --validation-error: #d9534f;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
+            min-height: 100vh;
+        }
+
+        .pfp-upload-container {
+            background-color: var(--bg-card);
+            border-radius: 28px;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid var(--border-light);
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
+        }
+
+        .pfp-preview-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 6px solid #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            margin: 0 auto 20px;
+            overflow: hidden;
+            background-color: var(--tan-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .pfp-preview-circle img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .upload-drop-zone {
+            border: 2px dashed var(--tan-accent);
+            border-radius: 20px;
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+            .upload-drop-zone:hover {
+                background-color: #fff;
+                border-color: var(--brown-button);
+            }
+
+        .glass-card {
+            background-color: var(--bg-card);
+            border-radius: 24px;
+            padding: 35px;
+            border: 1px solid var(--border-light);
+            height: 100%;
+            overflow: hidden;
+        }
+
+        h4.card-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--tan-medium);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid var(--tan-medium);
+            background: #fff;
+            transition: all 0.2s ease;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: var(--tan-accent);
+                box-shadow: 0 0 0 0.25rem rgba(200, 168, 130, 0.15);
+            }
+
+        .time-input {
+            width: 100%;
+            max-width: 140px;
+            text-align: center;
+        }
+
+        .form-switch {
+            padding-left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+            .form-switch .form-check-input {
+                width: 52px;
+                height: 28px;
+                background-color: var(--tan-medium);
+                border: none;
+                border-radius: 50px;
+                position: relative;
+                cursor: pointer;
+                outline: none;
+                box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+                appearance: none;
+                -webkit-appearance: none;
+                background-image: none !important;
+                transition: all 0.3s ease;
+                margin: 0;
+            }
+
+                .form-switch .form-check-input::before {
+                    content: "";
+                    position: absolute;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    top: 2px;
+                    left: 2px;
+                    background-color: #fff;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+                }
+
+                .form-switch .form-check-input:checked {
+                    background-color: var(--brown-button) !important;
+                }
+
+                    .form-switch .form-check-input:checked::before {
+                        transform: translateX(24px);
+                    }
+
+        .tag-input-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--tan-medium);
+            background: #fff;
+            min-height: 50px;
+            cursor: text;
+        }
+
+        .tag-badge {
+            background-color: var(--tan-accent);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+        }
+
+        .tag-input-wrapper input {
+            border: none;
+            outline: none;
+            flex-grow: 1;
+            background: transparent;
+            min-width: 150px;
+        }
+
+        .action-bar {
+            background-color: #F1EAE1;
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            margin-top: 40px;
+        }
+
+        .btn-save, .btn-cancel {
+            flex: 1;
+            border-radius: 12px;
+            font-weight: 700;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            text-decoration: none !important;
+            transition: 0.3s;
+        }
+
+        .btn-save {
+            background-color: var(--brown-button);
+            color: white;
+            flex: 2;
+        }
+
+            .btn-save:hover {
+                background-color: #432b13;
+            }
+
+        .btn-cancel {
+            background-color: #EAE0D5;
+            color: var(--text-dark) !important;
+        }
+
+            .btn-cancel:hover {
+                background-color: #D8C8B8;
+            }
+
+        .text-danger {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: block;
+        }
+    </style>
+}
+
+<div class="container py-5" style="max-width: 1200px;">
+    <div class="text-center mb-5">
+        <h1 style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--text-dark);">Welcome to the Shelter Team!</h1>
+        <p style="color: var(--text-muted); font-size: 1.05rem;">Please complete your shelter profile to unlock your dashboard.</p>
+    </div>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
+        <!-- Existing image path, used if no new file is uploaded -->
+        <input type="hidden" asp-for="ExistingImageUrl" />
+
+        <!-- Image upload area -->
+        <div class="pfp-upload-container">
+            @{
+                var fallbackImg = "https://placehold.co/150x150/C8A882/white?text=Home&font=Playfair+Display";
+                var imgSrc = string.IsNullOrEmpty(Model?.ExistingImageUrl) ? fallbackImg : Model.ExistingImageUrl;
+            }
+
+            <div class="pfp-preview-circle">
+                <img id="imgPreview" src="@imgSrc" onerror="this.onerror=null; this.src='@fallbackImg';" alt="Profile">
+            </div>
+
+            <h3 style="font-family: 'Playfair Display'; font-weight: 700; margin-bottom: 25px;">Upload Shelter Photo</h3>
+
+            <div class="upload-drop-zone" onclick="document.getElementById('fileInput').click()">
+                <i class="bi bi-camera-fill" style="font-size: 3rem; color: var(--tan-accent);"></i>
+                <p class="mb-0 mt-2" style="color: var(--text-muted); font-weight: 500;">Click or drag to upload photo</p>
+                <input asp-for="ImageFile" type="file" id="fileInput" hidden accept="image/*" onchange="handleFileSelect(this)" />
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Shelter details -->
+            <div class="col-lg-6">
+                <div class="glass-card">
+                    <h4 class="card-title">Shelter Details</h4>
+
+                    <div class="mb-3">
+                        <label asp-for="ShelterName" class="form-label">Shelter Name</label>
+                        <input asp-for="ShelterName" class="form-control" maxlength="100" required />
+                        <span asp-validation-for="ShelterName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ShelterAddress" class="form-label">Shelter Address</label>
+                        <input asp-for="ShelterAddress" class="form-control" maxlength="250" required />
+                        <span asp-validation-for="ShelterAddress" class="text-danger"></span>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+
+                            <div style="display: flex; align-items: stretch; border: 1px solid var(--tan-medium); border-radius: 12px; background: #fff; overflow: hidden; box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);">
+                                <div style="background-color: #f8f9fa; border-right: 1px solid #EBE0D5; display: flex;">
+                                    <select id="countryCodeSelect" style="border: none; background: transparent; outline: none; padding: 12px; font-size: 1rem; color: var(--text-dark); cursor: pointer; text-align: center; width: auto; min-width: 90px; appearance: none; -webkit-appearance: none;">
+                                        <option value="+962">JO +962</option>
+                                        <option value="+966">SA +966</option>
+                                        <option value="+971">AE +971</option>
+                                        <option value="+20">EG +20</option>
+                                        <option value="+1">US +1</option>
+                                        <option value="+44">UK +44</option>
+                                    </select>
+                                </div>
+
+                                <input type="tel" id="localPhoneInput" placeholder="791234567" maxlength="12" style="flex-grow: 1; border: none; outline: none; padding: 12px 16px; font-size: 1rem; color: var(--text-dark); background: transparent;" />
+                            </div>
+
+                            <input type="hidden" asp-for="PhoneNumber" id="hiddenPhoneNumber" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">Contact Email</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="shelter@example.com" maxlength="60" required />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Services tags -->
+                    <div class="mb-3">
+                        <label class="form-label">Services Offered</label>
+                        <div class="tag-input-wrapper" onclick="document.getElementById('serviceEntry').focus()">
+                            <div id="tags-container" class="d-flex flex-wrap gap-2"></div>
+                            <input type="text" id="serviceEntry" placeholder="Type and press Enter..." maxlength="40" />
+                        </div>
+                        <input type="hidden" asp-for="Services" id="hiddenServicesInput" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">About The Shelter</label>
+                        <textarea asp-for="Description" class="form-control" rows="5" maxlength="1000" required></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Working hours -->
+            <div class="col-lg-6">
+                <div class="glass-card">
+                    <h4 class="card-title">Working Hours</h4>
+
+                    @if (Model.Schedule != null && Model.Schedule.Count > 0)
+                    {
+                        for (int i = 0; i < Model.Schedule.Count; i++)
+                        {
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom day-row w-100">
+                        <input type="hidden" asp-for="Schedule[i].Id" />
+                        <input type="hidden" asp-for="Schedule[i].Day" />
+
+                        <div class="fw-bold flex-shrink-0" style="width: 90px; font-size: 0.95rem;">
+                            @Model.Schedule[i].Day
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-center gap-2 flex-grow-1 px-3">
+                            <input asp-for="Schedule[i].OpenTime" type="time" class="form-control time-input" />
+                            <span class="text-muted fw-bold">-</span>
+                            <input asp-for="Schedule[i].CloseTime" type="time" class="form-control time-input" />
+                        </div>
+
+                        <div class="form-check form-switch m-0 flex-shrink-0" style="width: 52px;">
+                            <input type="hidden" asp-for="Schedule[i].IsOff" class="hidden-is-off" />
+                            <input class="form-check-input work-toggle" type="checkbox" onchange="toggleWork(this)" @(Model.Schedule[i].IsOff ? "" : "checked")>
+                        </div>
+                    </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="action-bar">
+            <button type="submit" class="btn-save">
+                <i class="bi bi-house-heart-fill me-2"></i>Complete Setup & Start
+            </button>
+
+            <a asp-action="Login" asp-controller="Account" class="btn-cancel">Exit to Login</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        // Services tag input
+        const hiddenServicesInput = document.getElementById('hiddenServicesInput');
+        const tagsContainer = document.getElementById('tags-container');
+        let tags = hiddenServicesInput.value ? hiddenServicesInput.value.split(',').map(t => t.trim()).filter(t => t) : [];
+
+        function renderTags() {
+            tagsContainer.innerHTML = '';
+            tags.forEach((tag, idx) => {
+                tagsContainer.innerHTML += `<span class="tag-badge">${tag} <i class="bi bi-x-circle-fill tag-remove" onclick="removeTag(${idx})"></i></span>`;
+            });
+            hiddenServicesInput.value = tags.join(', ');
+        }
+
+        document.getElementById('serviceEntry').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = this.value.trim().replace(/,/g, '');
+                if (val && !tags.includes(val)) {
+                    tags.push(val);
+                    renderTags();
+                }
+                this.value = '';
+            }
+        });
+
+        window.removeTag = (idx) => {
+            tags.splice(idx, 1);
+            renderTags();
+        };
+
+        renderTags();
+
+        // Smart phone input
+        const hiddenPhone = document.getElementById('hiddenPhoneNumber');
+        const countrySelect = document.getElementById('countryCodeSelect');
+        const localInput = document.getElementById('localPhoneInput');
+
+        function updateHiddenPhone() {
+            hiddenPhone.value = localInput.value.trim() === '' ? '' : countrySelect.value + localInput.value;
+        }
+
+        localInput.addEventListener('input', function () {
+            let cleaned = this.value.replace(/\D/g, '');
+            cleaned = cleaned.replace(/^0+/, '');
+            this.value = cleaned;
+            updateHiddenPhone();
+        });
+
+        countrySelect.addEventListener('change', updateHiddenPhone);
+
+        if (hiddenPhone.value) {
+            let fullNumber = hiddenPhone.value;
+            let matchedCode = "";
+
+            for (let i = 0; i < countrySelect.options.length; i++) {
+                let code = countrySelect.options[i].value;
+                if (fullNumber.startsWith(code) && code.length > matchedCode.length) {
+                    matchedCode = code;
+                }
+            }
+
+            if (matchedCode) {
+                countrySelect.value = matchedCode;
+                localInput.value = fullNumber.substring(matchedCode.length);
+            } else {
+                localInput.value = fullNumber.replace(/\D/g, '');
+            }
+        }
+
+        // Image preview
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => document.getElementById('imgPreview').src = e.target.result;
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Working hours toggle
+        function toggleWork(checkbox) {
+            const row = checkbox.closest('.day-row');
+            const hiddenIsOff = row.querySelector('.hidden-is-off');
+            const inputs = row.querySelectorAll('.time-input');
+
+            hiddenIsOff.value = checkbox.checked ? "false" : "true";
+
+            inputs.forEach((input, index) => {
+                input.disabled = !checkbox.checked;
+                input.style.opacity = checkbox.checked ? "1" : "0.4";
+                input.style.backgroundColor = checkbox.checked ? "#fff" : "#F5F5F5";
+
+                if (!checkbox.checked) {
+                    input.value = "";
+                } else if (input.value === "") {
+                    input.value = index === 0 ? "09:00" : "17:00";
+                }
+            });
+        }
+
+        document.querySelectorAll('.work-toggle').forEach(t => {
+            const row = t.closest('.day-row');
+            const inputs = row.querySelectorAll('.time-input');
+
+            inputs.forEach(input => {
+                input.disabled = !t.checked;
+                input.style.opacity = t.checked ? "1" : "0.4";
+                input.style.backgroundColor = t.checked ? "#fff" : "#F5F5F5";
+            });
+        });
+    </script>
+}

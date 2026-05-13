@@ -11,6 +11,7 @@ namespace Pets_friends.Data
 
         // --- 1. Profiles ---
         public DbSet<ClientProfile> ClientProfiles { get; set; }
+
         public DbSet<VetProfile> VetProfiles { get; set; }
         public DbSet<ShelterProfile> ShelterProfiles { get; set; }
         public DbSet<MerchantProfile> MerchantProfiles { get; set; }
@@ -27,7 +28,12 @@ namespace Pets_friends.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+<<<<<<< HEAD
         public DbSet<ActivityLog> ActivityLogs { get; set; }
+=======
+        public DbSet<ProductReview> ProductReviews { get; set; }
+        public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+>>>>>>> origin/main
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -44,12 +50,26 @@ namespace Pets_friends.Data
             builder.Entity<CartItem>().HasOne(c => c.Product).WithMany().HasForeignKey(c => c.ProductId).OnDelete(DeleteBehavior.NoAction);
             builder.Entity<OrderItem>().HasOne(o => o.Product).WithMany().HasForeignKey(o => o.ProductId).OnDelete(DeleteBehavior.NoAction);
 
+            // ---> NEW: Fixes the Error 1785 crash for Product Reviews <---
+            builder.Entity<ProductReview>()
+                .HasOne(pr => pr.ClientProfile)
+                .WithMany()
+                .HasForeignKey(pr => pr.ClientProfileId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // ── THE ULTIMATE APPOINTMENT FIX ──
             // We must restrict ALL foreign keys on the Appointment table to stop the Diamond Loop.
             builder.Entity<Appointment>()
                 .HasOne(a => a.ClientProfile)
                 .WithMany()
                 .HasForeignKey(a => a.ClientProfileId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // ---> NEW: Fixes the Error 1785 crash for Orders <---
+            builder.Entity<Order>()
+                .HasOne(o => o.MerchantProfile)
+                .WithMany()
+                .HasForeignKey(o => o.MerchantProfileId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<Appointment>()

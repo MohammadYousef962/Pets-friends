@@ -1,0 +1,504 @@
+﻿@model IEnumerable<Pets_friends.Models.Product>
+
+@{
+    ViewData["Title"] = "Storefront";
+    Layout = "~/Views/Shared/_StoreLayout.cshtml";
+
+    // Extract dynamic categories cleanly from your active database inventory
+    var activeCategories = Model.Select(m => m.Category)
+                                .Where(c => !string.IsNullOrEmpty(c))
+                                .Distinct()
+                                .OrderBy(c => c)
+                                .ToList();
+}
+
+@section Styles {
+    <style>
+        /* --- BACKGROUND COLOR RESTORATION --- */
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: #5C3D1E;
+            padding-bottom: 60px;
+        }
+
+        /* --- FILTERS --- */
+        .filter-scroll-container {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            margin-top: 15px;
+            justify-content: center;
+            scrollbar-width: none;
+        }
+
+            .filter-scroll-container::-webkit-scrollbar {
+                display: none;
+            }
+
+        .filter-pill {
+            background: #fff;
+            color: #8C7560;
+            border: 1px solid #EBE0D5;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+            .filter-pill:hover {
+                background: #FAF6F1;
+                color: #5C3D1E;
+                border-color: #C8A882;
+            }
+
+            .filter-pill.active {
+                background: #5C3D1E;
+                color: #fff;
+                border-color: #5C3D1E;
+                box-shadow: 0 4px 15px rgba(92, 61, 30, 0.2);
+            }
+
+        /* --- PRODUCT GRID CARDS --- */
+        .product-grid-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #EBE0D5;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
+            text-decoration: none;
+            position: relative;
+        }
+
+            .product-grid-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 40px rgba(92, 61, 30, 0.12);
+            }
+
+        .card-link-area {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .card-img-container {
+            background: #fff;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-bottom: 1px solid #FAF6F1;
+            position: relative;
+        }
+
+            .card-img-container img {
+                max-height: 100%;
+                max-width: 100%;
+                object-fit: contain;
+                transition: transform 0.3s;
+            }
+
+        .product-grid-card:hover .card-img-container img {
+            transform: scale(1.05);
+        }
+
+        /* --- OUT OF STOCK BADGES --- */
+        .stock-overlay-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background-color: rgba(217, 83, 79, 0.9);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+            z-index: 2;
+            backdrop-filter: blur(4px);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .btn-sold-out {
+            background: #FFF5F5;
+            color: #d9534f;
+            border: 1px solid #F5C6CB;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: not-allowed;
+            user-select: none;
+            z-index: 2;
+        }
+
+        .card-body-custom {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .store-badge {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: #A89582;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .item-title {
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: #2D1B0E;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .item-price-row {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px 20px 20px;
+        }
+
+        .item-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #5C3D1E;
+        }
+
+        .btn-add-quick {
+            background: #FAF6F1;
+            color: #5C3D1E;
+            border: 1px solid #EBE0D5;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+            .btn-add-quick:hover {
+                background: #5C3D1E;
+                color: #fff;
+                border-color: #5C3D1E;
+            }
+
+            .btn-add-quick:active {
+                transform: scale(0.95);
+            }
+
+        /* --- PAGINATION --- */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 50px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #EBE0D5;
+            color: #5C3D1E;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+            .page-btn:hover {
+                background: #FAF6F1;
+                border-color: #C8A882;
+                color: #5C3D1E;
+            }
+
+            .page-btn.active {
+                background: #5C3D1E;
+                color: #fff;
+                border-color: #5C3D1E;
+                pointer-events: none;
+            }
+
+            .page-btn.disabled {
+                opacity: 0.5;
+                pointer-events: none;
+            }
+    </style>
+}
+
+<main class="container py-4" style="max-width: 1200px;">
+
+    <div class="filter-scroll-container">
+        <div class="filter-pill active" data-filter="all">All Categories</div>
+        @foreach (var category in activeCategories)
+        {
+            <div class="filter-pill" data-filter="@category">@category</div>
+        }
+    </div>
+
+    <div class="row g-4" id="inventoryGrid">
+        @foreach (var item in Model)
+        {
+            string safeName = Uri.EscapeDataString(item.Name ?? "");
+            string catSafe = (item.Category ?? "").ToLower();
+            bool isOutOfStock = item.StockQuantity <= 0;
+
+            <div class="col-sm-6 col-md-4 col-lg-3 product-item" data-category="@catSafe" data-title="@((item.Name ?? "").ToLower())">
+                <div class="product-grid-card">
+
+                    <a asp-controller="Store" asp-action="Details" asp-route-id="@item.Id" class="card-link-area">
+                        <div class="card-img-container">
+                            @if (isOutOfStock)
+                            {
+                                <span class="stock-overlay-badge">Out of Stock</span>
+                            }
+                            <img src="@item.ImageUrl" onerror="this.src='https://placehold.co/300x300/FAF6F1/8C7560?text=Product'" alt="@item.Name">
+                        </div>
+
+                        <div class="card-body-custom">
+                            <span class="store-badge"><i class="bi bi-shop me-1"></i> @(item.MerchantProfile?.StoreName ?? "Partner Store")</span>
+                            <div class="item-title">@item.Name</div>
+
+                            @{
+                                int reviewCount = item.Reviews?.Count ?? 0;
+                                double avgRating = reviewCount > 0 ? item.Reviews!.Average(r => r.Rating) : 0;
+                                int fullStars = (int)Math.Round(avgRating, 0, MidpointRounding.AwayFromZero);
+                            }
+                            <div class="d-flex align-items-center gap-1 mb-2" style="color: #ffc107; font-size: 0.95rem;">
+                                @for (int s = 1; s <= 5; s++)
+                                {
+                                    if (s <= fullStars)
+                                    {
+                                        <i class="bi bi-star-fill"></i>
+                                    }
+                                    else
+                                    {
+
+                                        <i class="bi bi-star"></i>
+                                    }
+                                }
+                                <span class="ms-1 fw-bold" style="color: #8C7560; font-size: 0.85rem;">(@reviewCount)</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <div class="item-price-row">
+                        <span class="item-price">@item.Price.ToString("C")</span>
+
+                        @if (isOutOfStock)
+                        {
+                            <div class="btn-sold-out" title="Currently Unavailable">
+                                 Sold Out
+                            </div>
+                        }
+                        else
+                        {
+                            if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <button type="button" class="btn-add-quick" onclick="addToCartAjax(@item.Id, '@safeName')">
+                                    <i class="bi bi-cart-plus"></i> Add
+                                </button>
+                            }
+                            else
+                            {
+                                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" class="btn-add-quick text-decoration-none">
+                                    <i class="bi bi-cart-plus"></i> Add
+                                </a>
+                            }
+                        }
+                    </div>
+
+                </div>
+            </div>
+        }
+    </div>
+
+    <div id="noResultsMsg" class="text-center py-5" style="display: none;">
+        <i class="bi bi-search" style="font-size: 3rem; color: #EBE0D5;"></i>
+        <h4 class="mt-3 fw-bold" style="color: #5C3D1E;">No products found</h4>
+        <p class="text-muted">Try adjusting your search criteria or category filter.</p>
+    </div>
+
+    <div class="pagination-container" id="paginationContainer"></div>
+
+</main>
+
+<div class="modal fade" id="spaCartModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px;">
+            <div class="modal-body text-center p-5">
+                <div class="mb-4">
+                    <i class="bi bi-bag-check-fill text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h3 class="fw-bold">Added to Bag!</h3>
+                <p class="text-muted">"<span id="modalItemName">Item</span>" is waiting for you in your shopping bag.</p>
+                <div class="d-grid gap-2 mt-4">
+                    <a asp-action="Cart" class="btn btn-dark py-3 fw-bold" style="background: #5C3D1E; border-radius: 12px;">Go to Bag & Checkout</a>
+                    <button type="button" class="btn btn-outline-secondary py-3 fw-bold" data-bs-dismiss="modal" style="border-radius: 12px;">Continue Shopping</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // --- Core Variables ---
+        const itemsPerPage = 16;
+        let currentPage = 1;
+        let currentCategory = 'all';
+        let searchQuery = '';
+
+        const allItems = Array.from(document.querySelectorAll('.product-item'));
+        const grid = document.getElementById('inventoryGrid');
+        const paginationContainer = document.getElementById('paginationContainer');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+        const searchInput = document.getElementById('globalSearchInput');
+
+        // --- Core Engine: Filters & matches live ---
+        function updateView() {
+            const filteredItems = allItems.filter(item => {
+                const itemCat = item.getAttribute('data-category');
+                const itemTitle = item.getAttribute('data-title');
+
+                const categoryMatch = currentCategory === 'all' || itemCat === currentCategory;
+                const titleMatch = itemTitle.includes(searchQuery);
+
+                return categoryMatch && titleMatch;
+            });
+
+            const totalPages = Math.ceil(filteredItems.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
+
+            allItems.forEach(item => item.style.display = 'none');
+
+            if (filteredItems.length === 0) {
+                noResultsMsg.style.display = 'block';
+            } else {
+                noResultsMsg.style.display = 'none';
+                paginatedItems.forEach(item => item.style.display = 'block');
+            }
+
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            paginationContainer.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            const prevBtn = document.createElement('div');
+            prevBtn.className = `page-btn ${currentPage === 1 ? 'disabled' : ''}`;
+            prevBtn.innerHTML = '<i class="bi bi-chevron-left"></i>';
+            prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; updateView(); window.scrollTo({top: 0, behavior: 'smooth'}); } };
+            paginationContainer.appendChild(prevBtn);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('div');
+                pageBtn.className = `page-btn ${currentPage === i ? 'active' : ''}`;
+                pageBtn.innerText = i;
+                pageBtn.onclick = () => { currentPage = i; updateView(); window.scrollTo({top: 0, behavior: 'smooth'}); };
+                paginationContainer.appendChild(pageBtn);
+            }
+
+            const nextBtn = document.createElement('div');
+            nextBtn.className = `page-btn ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextBtn.innerHTML = '<i class="bi bi-chevron-right"></i>';
+            nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; updateView(); window.scrollTo({top: 0, behavior: 'smooth'}); } };
+            paginationContainer.appendChild(nextBtn);
+        }
+
+        // --- Event Listeners ---
+        document.querySelectorAll('.filter-pill').forEach(pill => {
+            pill.addEventListener('click', function() {
+                document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                currentCategory = this.getAttribute('data-filter').toLowerCase();
+                currentPage = 1;
+                updateView();
+            });
+        });
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                searchQuery = e.target.value.toLowerCase().trim();
+                currentPage = 1;
+                updateView();
+            });
+
+            const form = searchInput.closest('form');
+            if (form) form.addEventListener('submit', e => e.preventDefault());
+        }
+
+        updateView();
+
+        // --- Background AJAX Add To Cart Processor ---
+        function addToCartAjax(productId, itemNameEncoded) {
+            const itemName = decodeURIComponent(itemNameEncoded);
+
+            fetch(`/Store/AddToCartAjax?productId=${productId}&quantity=1`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Unauthorized");
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const badge = document.getElementById('cartCountBadge');
+                    if (badge) {
+                        badge.innerText = data.cartCount;
+                        badge.classList.add('pop');
+                        setTimeout(() => badge.classList.remove('pop'), 200);
+                    }
+
+                    document.getElementById('modalItemName').innerText = itemName;
+                    const spaModal = new bootstrap.Modal(document.getElementById('spaCartModal'));
+                    spaModal.show();
+                }
+            })
+            .catch(() => {
+                const currentUrl = encodeURIComponent(window.location.pathname + window.location.search);
+                window.location.href = '/Account/Login?returnUrl=' + currentUrl;
+            });
+        }
+    </script>
+}

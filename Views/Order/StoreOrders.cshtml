@@ -1,0 +1,347 @@
+﻿@model IEnumerable<Pets_friends.Models.Order>
+
+@{
+    ViewData["Title"] = "Order Fulfillment";
+    Layout = "~/Views/Shared/_MerchantLayout.cshtml";
+
+    // Dynamic counts for the high-performance filter pills
+    int totalCount = Model.Count();
+    int pendingCount = Model.Count(o => o.Status == "Pending");
+    int shippedCount = Model.Count(o => o.Status == "Shipped");
+    int deliveredCount = Model.Count(o => o.Status == "Delivered");
+    int cancelledCount = Model.Count(o => o.Status == "Cancelled");
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+    <style>
+        /* --- RESTORED PREMIUM BACKGROUND --- */
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: #5C3D1E;
+            padding-bottom: 60px;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #2D1B0E;
+            margin-bottom: 10px;
+        }
+
+        /* --- PREMIUM FILTER BAR --- */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 20px;
+            border: 1px solid #EBE0D5;
+            box-shadow: 0 4px 15px rgba(92, 61, 30, 0.03);
+        }
+
+        .filter-btn {
+            background-color: #FAF6F1;
+            color: #5C3D1E;
+            border: 1px solid #EBE0D5;
+            border-radius: 30px;
+            padding: 10px 24px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .filter-btn:hover {
+                background-color: #fff;
+                border-color: #C8A882;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(92, 61, 30, 0.06);
+            }
+
+            .filter-btn.active {
+                background-color: #5C3D1E;
+                color: #fff;
+                border-color: #5C3D1E;
+                box-shadow: 0 4px 12px rgba(92, 61, 30, 0.15);
+            }
+
+        .badge-count {
+            background: rgba(92, 61, 30, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .filter-btn.active .badge-count {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        /* --- ORDER CARDS --- */
+        .order-card {
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid #EBE0D5;
+            box-shadow: 0 4px 20px rgba(92, 61, 30, 0.03);
+            transition: all 0.2s ease;
+            padding: 25px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+            .order-card:hover {
+                transform: translateX(6px);
+                border-color: #C8A882;
+                box-shadow: 0 8px 30px rgba(92, 61, 30, 0.07);
+            }
+
+        .order-icon-wrapper {
+            width: 65px;
+            height: 65px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* STATUS PALETTES */
+        .pal-Pending { background: #FFF3CD; color: #856404; }
+        .pal-Shipped { background: #E0F2FE; color: #0C5460; }
+        .pal-Delivered { background: #D4EDDA; color: #155724; }
+        .pal-Cancelled { background: #F8D7DA; color: #721C24; }
+
+        .order-main-info {
+            flex-grow: 1;
+        }
+
+        .order-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #2D1B0E;
+            letter-spacing: -0.5px;
+        }
+
+        .client-info {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #5C3D1E;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .item-summary {
+            flex-basis: 30%;
+            border-left: 1px solid #EBE0D5;
+            padding-left: 25px;
+        }
+
+        .item-list-text {
+            font-size: 0.85rem;
+            color: #8C7560;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .price-tag {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #5C3D1E;
+            min-width: 120px;
+            text-align: right;
+        }
+
+        /* --- STATUS SELECTOR --- */
+        .status-update-panel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #FAF6F1;
+            padding: 8px 15px;
+            border-radius: 12px;
+            border: 1px solid #EBE0D5;
+        }
+
+        .status-select-custom {
+            border: none;
+            background: transparent;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #5C3D1E;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn-action-round {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #EBE0D5;
+            background: #FAF6F1;
+            color: #5C3D1E;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+            .btn-action-round:hover {
+                background: #5C3D1E;
+                color: #fff;
+                border-color: #5C3D1E;
+            }
+
+        .empty-state-card {
+            background: #fff;
+            padding: 80px 20px;
+            border-radius: 24px;
+            text-align: center;
+            border: 1px dashed #C8A882;
+            box-shadow: 0 4px 15px rgba(92, 61, 30, 0.02);
+        }
+    </style>
+}
+
+<div class="container py-4" style="max-width: 1300px;">
+
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state-card">
+            <i class="bi bi-inbox" style="font-size: 4.5rem; color: #C8A882;"></i>
+            <h3 class="mt-4 fw-bold">Your order list is clear</h3>
+            <p class="text-muted">When customers purchase your items, they will appear here for processing.</p>
+        </div>
+    }
+    else
+    {
+        <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all">All Orders <span class="badge-count">@totalCount</span></button>
+            <button class="filter-btn" data-filter="Pending">Pending <span class="badge-count">@pendingCount</span></button>
+            <button class="filter-btn" data-filter="Shipped">Shipped <span class="badge-count">@shippedCount</span></button>
+            <button class="filter-btn" data-filter="Delivered">Delivered <span class="badge-count">@deliveredCount</span></button>
+            <button class="filter-btn" data-filter="Cancelled">Cancelled <span class="badge-count">@cancelledCount</span></button>
+        </div>
+
+        <div id="ordersList">
+            @foreach (var item in Model)
+            {
+                string icon = item.Status switch
+                {
+                    "Shipped" => "bi-truck",
+                    "Delivered" => "bi-check-all",
+                    "Cancelled" => "bi-x-octagon",
+                    _ => "bi-hourglass-split"
+                };
+
+                <div class="order-card order-row" data-status="@item.Status">
+
+                    <div class="order-icon-wrapper pal-@item.Status">
+                        <i class="bi @icon"></i>
+                    </div>
+
+                    <div class="order-main-info">
+                        <div class="order-number">ORD-@item.Id.ToString("D5")</div>
+                        <div class="client-info">
+                            <i class="bi bi-person-circle text-muted"></i> @(item.ClientProfile?.UserAccount?.FullName ?? "Marketplace Guest")
+                        </div>
+                        <div class="text-muted small mt-1 device-timestamp" data-utc="@item.OrderDate.ToString("o")">
+                            @item.OrderDate.ToString("MMM dd • hh:mm tt")
+                        </div>
+                    </div>
+
+                    <div class="item-summary d-none d-lg-block">
+                        @{
+                            var names = item.OrderItems?.Select(oi => oi.Product?.Name ?? "Item") ?? Array.Empty<string>();
+                            string list = string.Join(", ", names);
+                            int unitCount = item.OrderItems?.Sum(x => x.Quantity) ?? 0;
+                        }
+                        <div class="fw-bold small text-uppercase mb-1" style="letter-spacing: 0.5px; color: #8C7560;">Contents (@unitCount Units)</div>
+                        <div class="item-list-text" title="@list">@(string.IsNullOrEmpty(list) ? "No item preview available" : list)</div>
+                    </div>
+
+                    <div class="price-tag">@item.TotalAmount.ToString("C")</div>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <form asp-action="UpdateOrderStatus" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="orderId" value="@item.Id" />
+                            <div class="status-update-panel">
+                                <select name="newStatus" class="status-select-custom" onchange="this.form.submit()">
+                                    <option value="Pending" selected="@(item.Status == "Pending")">Pending</option>
+                                    <option value="Shipped" selected="@(item.Status == "Shipped")">Shipped</option>
+                                    <option value="Delivered" selected="@(item.Status == "Delivered")">Delivered</option>
+                                    <option value="Cancelled" selected="@(item.Status == "Cancelled")">Cancelled</option>
+                                </select>
+                            </div>
+                        </form>
+
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-action-round" title="View Full Receipt">
+                            <i class="bi bi-eye-fill"></i>
+                        </a>
+                    </div>
+
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. Device Time Synchronization Engine
+            document.querySelectorAll('.device-timestamp').forEach(elem => {
+                if (elem.dataset.utc) {
+                    const localDate = new Date(elem.dataset.utc);
+
+                    const optionsObj = {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    };
+
+                    elem.innerText = localDate.toLocaleString(undefined, optionsObj).replace(',', ' •');
+                }
+            });
+
+            // 2. High-Performance Client Side Filter Engine
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const filter = this.getAttribute('data-filter');
+                    document.querySelectorAll('.order-row').forEach(row => {
+                        if (filter === 'all' || row.getAttribute('data-status') === filter) {
+                            row.style.display = 'flex';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+}

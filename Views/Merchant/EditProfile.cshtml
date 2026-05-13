@@ -1,0 +1,275 @@
+﻿@model Pets_friends.Data.ViewModels.MerchantProfileFormVM
+
+@{
+    ViewData["Title"] = "Store Settings";
+    Layout = "~/Views/Shared/_MerchantLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --text-dark: #5C3D1E;
+            --text-muted: #8C7560;
+            --bg-card: #FAF6F1;
+            --tan-accent: #C8A882;
+            --tan-medium: #EDE0D0;
+            --brown-button: #5C3D1E;
+            --border-light: #EBE0D5;
+            --validation-error: #d9534f;
+        }
+
+        /* --- RESTORED PREMIUM BACKGROUND ENGINE --- */
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+            padding-bottom: 60px;
+        }
+
+        .setup-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .setup-title {
+            font-family: 'Playfair Display', serif;
+            color: var(--text-dark);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        /* --- PFP UPLOAD --- */
+        .pfp-upload-container {
+            background-color: var(--bg-card);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid var(--border-light);
+            margin-bottom: 30px;
+        }
+
+        .pfp-preview-circle {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: 5px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin: 0 auto 15px;
+            overflow: hidden;
+            background-color: var(--tan-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .pfp-preview-circle img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .upload-drop-zone {
+            border: 2px dashed var(--tan-accent);
+            border-radius: 16px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.6);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+            .upload-drop-zone:hover {
+                background-color: #fff;
+                border-color: var(--brown-button);
+            }
+
+        .form-control {
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid var(--tan-medium);
+            transition: all 0.2s ease;
+        }
+
+            .form-control:focus {
+                border-color: var(--tan-accent);
+                box-shadow: 0 0 0 0.25rem rgba(200, 168, 130, 0.15);
+            }
+
+        .btn-brand {
+            background-color: var(--brown-button);
+            color: #fff;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+            .btn-brand:hover {
+                background-color: var(--tan-accent);
+                transform: translateY(-2px);
+                color: #fff;
+            }
+
+        .btn-brand-outline {
+            background-color: transparent;
+            color: var(--text-dark);
+            border: 2px solid var(--text-dark);
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+            .btn-brand-outline:hover {
+                background-color: var(--text-dark);
+                color: #fff;
+            }
+    </style>
+}
+
+<div class="container py-5">
+    <div class="setup-card">
+        <div class="text-center mb-5">
+            <div style="width: 80px; height: 80px; background: #FAF6F1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #C8A882; font-size: 2rem;">
+                <i class="bi bi-gear"></i>
+            </div>
+            <h1 class="setup-title">Store Settings</h1>
+            <p style="color: #8C7560; font-size: 1.1rem;">Update your public store information and contact details.</p>
+        </div>
+
+        <form asp-action="EditProfile" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="ExistingImageUrl" />
+
+            <div class="pfp-upload-container">
+                @{
+                    var fallbackImg = "https://placehold.co/150x150/C8A882/white?text=Store&font=Playfair+Display";
+                    var imgSrc = string.IsNullOrEmpty(Model.ExistingImageUrl) ? fallbackImg : Model.ExistingImageUrl;
+                }
+                <div class="pfp-preview-circle">
+                    <img id="imgPreview" src="@imgSrc" onerror="this.onerror=null; this.src='@fallbackImg';" alt="Store Logo">
+                </div>
+                <h5 style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--text-dark);">Store Logo / Profile Picture</h5>
+                <div class="upload-drop-zone mt-3" onclick="document.getElementById('fileInput').click()">
+                    <i class="bi bi-camera-fill" style="font-size: 2rem; color: var(--tan-accent);"></i>
+                    <p class="mb-0 mt-1" style="color: var(--text-muted); font-size: 0.9rem;">Click to upload a new logo</p>
+                    <input asp-for="ImageFile" type="file" id="fileInput" hidden accept="image/*" onchange="handleFileSelect(this)" />
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label asp-for="FullName" class="form-label fw-bold" style="color: #5C3D1E;">Owner Full Name</label>
+                    <input asp-for="FullName" class="form-control" required />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="StoreName" class="form-label fw-bold" style="color: #5C3D1E;">Store Name</label>
+                    <input asp-for="StoreName" class="form-control" required />
+                    <span asp-validation-for="StoreName" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="ContactEmail" class="form-label fw-bold" style="color: #5C3D1E;">Store Email</label>
+                    <input asp-for="ContactEmail" class="form-control" type="email" required />
+                    <span asp-validation-for="ContactEmail" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label fw-bold" style="color: #5C3D1E;">Store Phone Number</label>
+                    <div style="display: flex; align-items: stretch; border: 1px solid var(--tan-medium); border-radius: 12px; background: #fff; overflow: hidden;">
+                        <div style="background-color: #f8f9fa; border-right: 1px solid #EBE0D5; display: flex;">
+                            <select id="countryCodeSelect" style="border: none; background: transparent; outline: none; padding: 12px; font-size: 1rem; color: var(--text-dark); cursor: pointer; text-align: center; width: auto; min-width: 90px; appearance: none; -webkit-appearance: none;">
+                                <option value="+962">JO +962</option>
+                                <option value="+966">SA +966</option>
+                                <option value="+971">AE +971</option>
+                                <option value="+20">EG +20</option>
+                                <option value="+1">US +1</option>
+                                <option value="+44">UK +44</option>
+                            </select>
+                        </div>
+                        <input type="tel" id="localPhoneInput" placeholder="791234567" maxlength="12" style="flex-grow: 1; border: none; outline: none; padding: 12px 16px; font-size: 1rem; color: var(--text-dark); background: transparent;" required />
+                    </div>
+                    <input type="hidden" asp-for="PhoneNumber" id="hiddenPhoneNumber" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="StoreAddress" class="form-label fw-bold" style="color: #5C3D1E;">Physical Store Address</label>
+                    <input asp-for="StoreAddress" class="form-control" required />
+                    <span asp-validation-for="StoreAddress" class="text-danger small"></span>
+                </div>
+
+                <div class="col-12 mt-4 d-flex justify-content-end gap-3">
+                    <a asp-action="Dashboard" class="btn-brand-outline">Cancel</a>
+                    <button type="submit" class="btn-brand">Save Changes</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        // SMART PHONE INPUT LOGIC
+        const hiddenPhone = document.getElementById('hiddenPhoneNumber');
+        const countrySelect = document.getElementById('countryCodeSelect');
+        const localInput = document.getElementById('localPhoneInput');
+
+        function updateHiddenPhone() {
+            if (localInput.value.trim() === '') {
+                hiddenPhone.value = '';
+            } else {
+                hiddenPhone.value = countrySelect.value + localInput.value;
+            }
+        }
+
+        localInput.addEventListener('input', function (e) {
+            let cleaned = this.value.replace(/\D/g, ''); // Digits only
+            cleaned = cleaned.replace(/^0+/, ''); // Block leading zeros
+            this.value = cleaned;
+            updateHiddenPhone();
+        });
+
+        countrySelect.addEventListener('change', updateHiddenPhone);
+
+        // POPULATE EXISTING PHONE DATA ON LOAD
+        if (hiddenPhone.value) {
+            let fullNumber = hiddenPhone.value;
+            let matchedCode = "";
+            for (let i = 0; i < countrySelect.options.length; i++) {
+                let code = countrySelect.options[i].value;
+                if (fullNumber.startsWith(code) && code.length > matchedCode.length) {
+                    matchedCode = code;
+                }
+            }
+            if (matchedCode) {
+                countrySelect.value = matchedCode;
+                localInput.value = fullNumber.substring(matchedCode.length);
+            } else {
+                localInput.value = fullNumber.replace(/\D/g, '');
+            }
+        }
+
+        // PFP PREVIEW LOGIC
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => document.getElementById('imgPreview').src = e.target.result;
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}

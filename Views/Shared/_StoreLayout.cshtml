@@ -1,0 +1,293 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - PetFriends Market</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .store-navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #EBE0D5;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(92, 61, 30, 0.05);
+        }
+
+        .store-brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: #5C3D1E;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .store-brand i {
+                color: #C8A882;
+            }
+
+        .search-container {
+            flex-grow: 1;
+            max-width: 500px;
+            margin: 0 30px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border-radius: 30px;
+            border: 2px solid #EBE0D5;
+            background: #FAF6F1;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+            .search-input:focus {
+                border-color: #C8A882;
+                background: #fff;
+                box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.1);
+            }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8C7560;
+            font-size: 1.1rem;
+        }
+
+        /* --- UI UPGRADE: Flex gap spaces elements out and aligns them far right --- */
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .nav-action-btn {
+            color: #5C3D1E;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+            position: relative;
+            font-size: 0.95rem;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+            .nav-action-btn:hover {
+                color: #C8A882;
+            }
+
+        /* --- UI UPGRADE: Adjusted to attach directly to the icon container --- */
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background-color: #d9534f;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 2px solid #fff;
+            transition: transform 0.2s;
+            z-index: 2;
+        }
+
+            .cart-badge.pop {
+                transform: scale(1.3);
+            }
+
+        /* --- PREMIUM RIGHT-ALIGNED DROPDOWN --- */
+        .dropdown-menu-custom {
+            border-radius: 16px;
+            border: 1px solid #EBE0D5;
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.08);
+            padding: 10px 0;
+            margin-top: 15px !important;
+        }
+
+        .dropdown-item-custom {
+            padding: 10px 24px;
+            font-weight: 600;
+            color: #5C3D1E;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .dropdown-item-custom:hover {
+                background-color: #FAF6F1;
+                color: #C8A882;
+            }
+
+            .dropdown-item-custom i {
+                color: #8C7560;
+                font-size: 1.1rem;
+            }
+
+            .dropdown-item-custom:hover i {
+                color: #C8A882;
+            }
+
+        .dropdown-divider-custom {
+            border-top: 1px solid #EBE0D5;
+            margin: 8px 0;
+        }
+
+        .logout-text {
+            color: #d9534f !important;
+        }
+
+            .logout-text i {
+                color: #d9534f !important;
+            }
+
+            .logout-text:hover {
+                background-color: #FFF5F5 !important;
+                color: #c9302c !important;
+            }
+
+                .logout-text:hover i {
+                    color: #c9302c !important;
+                }
+    </style>
+
+    @if (IsSectionDefined("Styles"))
+    {
+        @RenderSection("Styles", required: false)
+    }
+</head>
+<body>
+
+    @using Microsoft.AspNetCore.Identity
+    @using Pets_friends.Models
+    @inject UserManager<UserAccount> UserManager
+    @{
+        string dashController = "Client";
+        string dashAction = "Dashboard";
+        string firstName = "Member";
+        string avatarUrl = "";
+
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            // Parse First Name safely
+            var currentUser = await UserManager.GetUserAsync(User);
+            var fullName = currentUser?.FullName ?? "Member";
+            firstName = fullName.Split(' ')[0];
+            avatarUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(firstName)}&background=FAF6F1&color=5C3D1E&bold=true";
+
+            if (User.IsInRole("Merchant")) { dashController = "Merchant"; dashAction = "Dashboard"; }
+            else if (User.IsInRole("Vet")) { dashController = "Vet"; dashAction = "Dashboard"; }
+            else if (User.IsInRole("Shelter")) { dashController = "Shelter"; dashAction = "Dashboard"; }
+            else { dashController = "Client"; dashAction = "Dashboard"; }
+        }
+    }
+
+    <nav class="store-navbar">
+        <div class="container d-flex align-items-center justify-content-between">
+
+            <a asp-controller="Store" asp-action="Home" class="store-brand">
+                <i class="bi bi-shop"></i> PetFriends Market
+            </a>
+
+            <form class="search-container d-none d-lg-block" asp-controller="Store" asp-action="Home" method="get">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="globalSearchInput" autocomplete="off" class="search-input" placeholder="Search for food, toys, meds, and more...">
+            </form>
+
+            <div class="nav-actions">
+
+                <a asp-controller="Store" asp-action="Cart" class="nav-action-btn" title="View Shopping Cart">
+                    <span class="position-relative d-inline-flex align-items-center">
+                        <i class="bi bi-cart3 fs-5"></i>
+                        <span class="cart-badge" id="cartCountBadge">0</span>
+                    </span>
+                    <span class="d-none d-sm-inline ms-2">Cart</span>
+                </a>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="dropdown">
+                        <a class="nav-action-btn dropdown-toggle align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="@avatarUrl" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #EBE0D5;" alt="User">
+                            <span class="d-none d-sm-inline ms-2 fw-bold">@firstName</span>
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom">
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom" asp-controller="@dashController" asp-action="@dashAction">
+                                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom" asp-controller="Order" asp-action="MyOrders">
+                                    <i class="bi bi-box-seam"></i> My Orders
+                                </a>
+                            </li>
+
+                            <li><hr class="dropdown-divider dropdown-divider-custom"></li>
+
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 p-0 w-100">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item dropdown-item-custom logout-text w-100">
+                                        <i class="bi bi-box-arrow-right"></i> Sign Out
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" class="nav-action-btn">
+                        <i class="bi bi-box-arrow-in-right fs-5"></i> <span class="d-none d-sm-inline ms-2">Login</span>
+                    </a>
+                }
+
+            </div>
+        </div>
+    </nav>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch('/Store/GetCartCount')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('cartCountBadge');
+                    if (badge) badge.innerText = data;
+                })
+                .catch(error => console.log('Error fetching cart count:', error));
+        });
+    </script>
+
+    @if (IsSectionDefined("Scripts"))
+    {
+        @RenderSection("Scripts", required: false)
+    }
+</body>
+</html>
