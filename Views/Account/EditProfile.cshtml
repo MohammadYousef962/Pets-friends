@@ -290,6 +290,14 @@ body {
 
     <div class="avatar-block fade-up">
         <div class="avatar-circle">@initials</div>
+        
+        <div class="mt-3 mb-4 d-flex justify-content-center">
+            <div style="max-width: 250px;">
+                <label for="ProfilePhoto" class="pf-label" style="font-size: 0.8rem;">Change Profile Photo</label>
+                <input type="file" name="ProfilePhoto" id="ProfilePhoto" class="pf-input" style="padding: 8px;" accept="image/jpeg, image/png, image/jpg" />
+            </div>
+        </div>
+
         <h1>Edit Profile</h1>
         <p>Keep your details up to date</p>
     </div>
@@ -304,7 +312,7 @@ body {
             </div>
         }
 
-        <form asp-action="EditProfile" asp-controller="Account" method="post">
+        <form asp-action="EditProfile" asp-controller="Account" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
 
             <div asp-validation-summary="ModelOnly" class="error-banner" style="display:@(ViewData.ModelState.IsValid ? "none" : "flex");">
@@ -317,9 +325,7 @@ body {
             <div class="mb-4">
                 <label asp-for="FullName" class="pf-label">Full Name</label>
                 <input asp-for="FullName" class="pf-input" placeholder="e.g. Sarah Al-Khalidi" required />
-                <span asp-validation-for="FullName" class="field-error">
-                    <i class="bi bi-exclamation-circle"> hi</i>
-                </span>
+                <span asp-validation-for="FullName" class="field-error"></span>
             </div>
 
             <div class="mb-4">
@@ -335,9 +341,7 @@ body {
                     </select>
                     <input asp-for="PhoneNumber" class="pf-input" placeholder="7x xxx xxxx" />
                 </div>
-                <span asp-validation-for="PhoneNumber" class="field-error">
-                    <i class="bi bi-exclamation-circle"></i>
-                </span>
+                <span asp-validation-for="PhoneNumber" class="field-error"></span>
             </div>
 
             <hr class="pf-divider" />
@@ -355,16 +359,13 @@ body {
                         <input type="radio" id="genderFemale" asp-for="Gender" value="Female" />
                         <label for="genderFemale">♀ Female</label>
                     </div>
-                    
                 </div>
             </div>
 
             <div class="mb-2">
                 <label asp-for="City" class="pf-label">City</label>
                 <input asp-for="City" class="pf-input" placeholder="e.g. Amman, Zarqa, Irbid" />
-                <span asp-validation-for="City" class="field-error">
-                    <i class="bi bi-exclamation-circle"></i>
-                </span>
+                <span asp-validation-for="City" class="field-error"></span>
             </div>
 
             <hr class="pf-divider" />

@@ -307,9 +307,19 @@ namespace Pets_friends.Controllers
         }
 
         // GET: /Client/Profile
-        public IActionResult Profile()
+        [HttpGet]
+        public async Task<IActionResult> Profile()
         {
-            return RedirectToAction("EditProfile", "Account");
+            // Fetch the currently logged-in user's details
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Send the user data directly to the new View
+            return View(user);
         }
         // GET: /Client/FindVet
         [HttpGet]
@@ -317,6 +327,33 @@ namespace Pets_friends.Controllers
         {
             // Reroute them to the public directory inside the VetController
             return RedirectToAction("Index", "Vet");
+        }
+
+        // ════════════════════════════════════════════════════════════════════════
+        // MEDICAL RECORDS PAGE (Client View)
+        // ════════════════════════════════════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> MedicalRecords()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login", "Account");
+
+            // Fetch the profile and their pets. 
+            // Note: Once you build the actual MedicalRecords database table, 
+            // you will add `.ThenInclude(p => p.MedicalRecords)` right below the Include line!
+            var profile = await _context.ClientProfiles
+                .Include(cp => cp.Pets)
+                .FirstOrDefaultAsync(cp => cp.UserAccountId == user.Id);
+
+            if (profile == null)
+            {
+                profile = new ClientProfile { UserAccountId = user.Id };
+                _context.ClientProfiles.Add(profile);
+                await _context.SaveChangesAsync();
+            }
+
+            // Pass the list of the user's pets to the view
+            return View(profile.Pets ?? new List<Pet>());
         }
     }
 }

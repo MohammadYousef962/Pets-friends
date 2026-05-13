@@ -14,6 +14,8 @@ namespace Pets_friends.Data.ViewModels
 
         public string? Gender { get; set; }
 
+        public IFormFile? ProfilePhoto { get; set; }
+
         public string? City { get; set; }
     }
 }

@@ -1,0 +1,93 @@
+﻿@model IEnumerable<Pets_friends.Models.Pet>
+@{
+    ViewData["Title"] = "Medical Records";
+    Layout = "_ClientLayout";
+}
+
+<div class="container mt-4 mb-5">
+    
+    <div class="d-flex align-items-center gap-3 mb-4 fade-up">
+        <div class="rounded p-3 d-flex align-items-center justify-content-center" style="background-color: rgba(200,168,130,0.15); color: var(--tan);">
+            <i class="bi bi-file-earmark-medical fs-3"></i>
+        </div>
+        <div>
+            <h2 style="color: var(--brown-deep); font-weight: 700; margin: 0;">Medical Records</h2>
+            <p class="text-muted mb-0">View health history, vaccination logs, and vet notes for your pets.</p>
+        </div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="accordion shadow-sm fade-up" id="medicalRecordsAccordion" style="border-radius: 16px; overflow: hidden; border: 1px solid var(--tan-light);">
+            
+            @{
+                int index = 0;
+            }
+            @foreach (var pet in Model)
+            {
+                var headingId = $"heading{index}";
+                var collapseId = $"collapse{index}";
+                var isFirst = index == 0;
+
+                <div class="accordion-item border-0 border-bottom">
+                    <h2 class="accordion-header" id="@headingId">
+                        <button class="accordion-button @(isFirst ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="@(isFirst ? "true" : "false")" aria-controls="@collapseId" style="background-color: #fff; color: var(--brown-deep); font-weight: 600; font-size: 1.1rem; padding: 20px;">
+                            <i class="bi bi-heart-fill me-2" style="color: var(--tan);"></i> @pet.Name's Records
+                            <span class="badge ms-3" style="background-color: var(--cream-warm); color: var(--tan); border: 1px solid var(--tan-light);">@pet.Species</span>
+                        </button>
+                    </h2>
+                    
+                    <div id="@collapseId" class="accordion-collapse collapse @(isFirst ? "show" : "")" aria-labelledby="@headingId" data-bs-parent="#medicalRecordsAccordion">
+                        <div class="accordion-body" style="background-color: #fdfaf7; padding: 30px;">
+                            
+                            <div class="text-center py-4">
+                                <i class="bi bi-folder2-open" style="font-size: 3rem; color: var(--tan-light);"></i>
+                                <h5 class="mt-3" style="color: var(--brown-mid);">No records found</h5>
+                                <p class="text-muted">Once a veterinarian completes an appointment for @pet.Name, their notes and prescriptions will appear here.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                index++;
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5 fade-up" style="background: #fff; border-radius: 16px; border: 1px dashed var(--tan);">
+            <i class="bi bi-journal-x" style="font-size: 3rem; color: var(--tan-light);"></i>
+            <h4 class="mt-3" style="color: var(--brown-mid);">No Pets Found</h4>
+            <p class="text-muted">You need to add a pet to your profile before you can view medical records.</p>
+            <a asp-action="AddPet" class="btn mt-2" style="background-color: var(--brown-deep); color: white; border-radius: 50px; padding: 10px 24px;">Add a Pet</a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <style>
+        .accordion-button:not(.collapsed) {
+            background-color: #fdfaf7 !important;
+            color: var(--brown-deep) !important;
+            box-shadow: inset 0 -1px 0 rgba(200,168,130,.2);
+        }
+
+        .accordion-button:focus {
+            border-color: var(--tan);
+            box-shadow: 0 0 0 0.25rem rgba(200,168,130,.25);
+        }
+
+        .fade-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.5s ease forwards;
+        }
+
+        @@keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+}

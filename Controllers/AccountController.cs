@@ -1,29 +1,35 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Pets_friends.Data;
 using Pets_friends.Data.ViewModels;
 using Pets_friends.Models;
 using System.Net;
 using System.Net.Mail;
-using Microsoft.Extensions.Configuration; // <-- Added this
+using Microsoft.Extensions.Configuration;
+
 
 namespace Pets_friends.Controllers
 {
     public class AccountController : Controller
     {
+        private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment; // ADD THIS
         private readonly UserManager<UserAccount> _userManager;
         private readonly SignInManager<UserAccount> _signInManager;
         private readonly IConfiguration _configuration; // <-- Added this
 
-        // Inject IConfiguration into the constructor
+        // Inject IConfiguration AND IWebHostEnvironment into the constructor
         public AccountController(
             UserManager<UserAccount> userManager,
             SignInManager<UserAccount> signInManager,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IWebHostEnvironment webHostEnvironment) // <-- Added this parameter!
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
+            _webHostEnvironment = webHostEnvironment; // <-- Assigned it here!
         }
 
         #region --- REGISTRATION & AUTHENTICATION ---
@@ -282,17 +288,45 @@ namespace Pets_friends.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Login");
 
+            // 1. Update text fields
             user.FullName = model.FullName;
             user.PhoneNumber = model.PhoneNumber;
             user.Gender = model.Gender;
             user.City = model.City;
+
+            // 2. 📸 HANDLE THE PHOTO UPLOAD
+            if (model.ProfilePhoto != null && model.ProfilePhoto.Length > 0)
+            {
+                // Navigate to wwwroot/images/profiles
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "profiles");
+
+                // Create the folder if it doesn't exist yet
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                // Create a unique file name (e.g., "b4a3c1_photo.jpg")
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(model.ProfilePhoto.FileName);
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                // Save the physical file to the server
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.ProfilePhoto.CopyToAsync(fileStream);
+                }
+
+                // Save the URL path to the database
+                user.AvatarUrl = "/images/profiles/" + uniqueFileName;
+            }
 
             var result = await _userManager.UpdateAsync(user);
 
             if (result.Succeeded)
             {
                 TempData["SuccessMessage"] = "Profile updated successfully!";
-                return RedirectToAction("Index", "Home");
+                // Bounce them back to their Dashboard so they can instantly see their new photo!
+                return RedirectToAction("Dashboard", "Client");
             }
 
             foreach (var error in result.Errors)

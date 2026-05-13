@@ -5,7 +5,12 @@
     ViewData["AvatarUrl"]  = Model.AvatarUrl;
     ViewData["Initials"]   = $"{Model.FirstName?.FirstOrDefault()}{Model.LastName?.FirstOrDefault()}".ToUpper();
     Layout = "_ClientLayout";
+
+
 }
+@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@inject UserManager<UserAccount> UserManager
 
 @section Styles {
 <style>
@@ -693,49 +698,72 @@
                 </p>
             </div>
         }
-    </div><div class="right-col">
+    </div>
+   <div class="right-col">
 
-        <div class="glass-card profile-card fade-up">
-            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
-            {
-                <img src="@Model.AvatarUrl" alt="Profile photo" class="profile-avatar" />
-            }
-            else
-            {
-                <div class="profile-avatar-placeholder">
-                    @(Model.FirstName?.FirstOrDefault().ToString().ToUpper())@(Model.LastName?.FirstOrDefault().ToString().ToUpper())
-                </div>
-            }
+@{
+    // 1. Fetch the REAL user data directly from the database
+    var dbUser = await UserManager.GetUserAsync(User);
+    var realName = dbUser?.FullName;
+    var email = User.Identity?.Name ?? "No email provided";
 
-            <div class="profile-name">@Model?.FullName</div>
-            <div class="profile-since">Member since @Model?.MemberSince</div>
+    // 2. Extract initials and display name safely
+    var initials = string.IsNullOrWhiteSpace(realName) ? "?" : realName.Substring(0, 1).ToUpper();
+    var displayName = string.IsNullOrWhiteSpace(realName) ? "Valued Member" : realName;
+}
 
-            @if (Model?.IsPremium == true)
-            {
-                <div>
-                    <span class="premium-badge"><i class="bi bi-stars"></i> Premium Member</span>
-                </div>
-            }
+<div class="glass-card profile-card fade-up">
+    
+    @if (!string.IsNullOrEmpty(Model?.AvatarUrl))
+    {
+        <img src="@Model.AvatarUrl" alt="Profile photo" class="profile-avatar" />
+    }
+    else
+    {
+        <div class="profile-avatar-placeholder">
+            @initials
+        </div>
+    }
 
-            <hr class="profile-divider" />
+    <div class="profile-name" style="margin-bottom: 2px;">
+        @displayName
+    </div>
+    
+    <div style="color: var(--brown-mid, #8a6f58); font-size: 0.85rem; margin-bottom: 16px;">
+        @email
+    </div>
 
-            <div class="profile-stat-row">
-                <div class="profile-stat">
-                    <div class="profile-stat-val">@(Model?.Pets.Count ?? 0)</div>
-                    <div class="profile-stat-lbl">Pets</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="profile-stat-val">@(Model?.UpcomingAppointments.Count ?? 0)</div>
-                    <div class="profile-stat-lbl">Upcoming</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="profile-stat-val">
-                        @(Model?.QuickStats.FirstOrDefault(s => s.Label == "Total Visits")?.Value ?? "0")
-                    </div>
-                    <div class="profile-stat-lbl">Visits</div>
-                </div>
+    @if (Model?.IsPremium == true)
+    {
+        <div style="margin-bottom: 16px;">
+            <span class="premium-badge"><i class="bi bi-stars"></i> Premium Member</span>
+        </div>
+    }
+
+    <hr class="profile-divider" />
+
+    <div class="profile-stat-row">
+        <div class="profile-stat">
+            <div class="profile-stat-val">@(Model?.Pets?.Count ?? 0)</div>
+            <div class="profile-stat-lbl">Pets</div>
+        </div>
+        <div class="profile-stat">
+            <div class="profile-stat-val">@(Model?.UpcomingAppointments?.Count ?? 0)</div>
+            <div class="profile-stat-lbl">Upcoming</div>
+        </div>
+        <div class="profile-stat">
+            <div class="profile-stat-val">
+                @(Model?.QuickStats?.FirstOrDefault(s => s.Label == "Total Visits")?.Value ?? "0")
             </div>
+            <div class="profile-stat-lbl">Visits</div>
+        </div>
+    </div>
+    
+    <a asp-controller="Account" asp-action="EditProfile" class="btn w-100 mt-3" style="background-color: #fff; color: var(--brown-deep); border: 1px solid var(--tan); border-radius: 50px; font-weight: 600;">
+        <i class="bi bi-pencil-square me-2"></i> Edit Profile
+    </a>
 
+</div>
             <hr class="profile-divider" />
             <a asp-action="Profile" asp-controller="Client" class="btn-secondary-pf w-100 justify-content-center mt-1">
                 <i class="bi bi-pencil-square"></i> Edit Profile

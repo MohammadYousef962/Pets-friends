@@ -175,7 +175,6 @@
     max-width: 200px;
 }
 
-/* ─── Services section fixes ──────────────────────────────── */
 /* Each card gets a unique accent via nth-child */
 .service-card:nth-child(1) .service-icon-wrap { background: rgba(224,123,84,.12);  color: #e07b54; }
 .service-card:nth-child(2) .service-icon-wrap { background: rgba(92,61,30,.1);     color: #5C3D1E; }
@@ -367,9 +366,6 @@
 </style>
 }
 
-{{!-- ══════════════════════════════════════════════════════════
-     HERO
-══════════════════════════════════════════════════════════ --}}
 <section class="hero-section">
     <div class="hero-container">
 
@@ -387,20 +383,11 @@
                 all in one place built for your furry family.
             </p>
 
-            {{!-- ✅ WORKING SEARCH BAR — routes to Vet/Index?q=... --}}
-            <div class="hero-search-wrap">
-                <form action="/Vet/Index" method="get" class="hero-search">
-                    <input type="text" name="q"
-                           placeholder="Search for a vet, service, or specialization…"
-                           autocomplete="off" />
-                    <button type="submit">
-                        <i class="bi bi-search"></i> Search
-                    </button>
-                </form>
+            <div class="mt-4">
+                <a asp-controller="Account" asp-action="Register" class="btn shadow-sm" style="background-color: #5C3D1E; color: white; padding: 14px 36px; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 1rem; text-decoration: none; display: inline-block;">
+                    Create a Free Account <i class="bi bi-arrow-right ms-2"></i>
+                </a>
             </div>
-            <p class="hero-search-hint">
-                Or <a asp-controller="Account" asp-action="Register">create a free account</a> to get started
-            </p>
         </div>
 
         <div class="hero-pet-container hero-pet-right-wrap">
@@ -429,10 +416,6 @@
     </svg>
 </div>
 
-
-{{!-- ══════════════════════════════════════════════════════════
-     HOW IT WORKS  (was missing — this is what made the page feel flat)
-══════════════════════════════════════════════════════════ --}}
 <section class="how-section">
     <div class="how-eyebrow reveal">Simple as 1 – 2 – 3</div>
     <h2 class="how-heading reveal">How Pet Friends Works</h2>
@@ -455,10 +438,6 @@
     </div>
 </section>
 
-
-{{!-- ══════════════════════════════════════════════════════════
-     SERVICES
-══════════════════════════════════════════════════════════ --}}
 <section class="services-section" id="services" style="background:#F5F1EB;">
     <h2 class="services-heading reveal">Our Pet Care Solutions</h2>
 
@@ -500,9 +479,6 @@
 </section>
 
 
-{{!-- ══════════════════════════════════════════════════════════
-     DEDICATED SECTION  (stats removed — they're in stats-bar below)
-══════════════════════════════════════════════════════════ --}}
 <section class="dedicated-section" style="background:#fff;">
     <div class="ded-text reveal">
         <p class="ded-eyebrow">Our Mission</p>
@@ -526,9 +502,6 @@
 </section>
 
 
-{{!-- ══════════════════════════════════════════════════════════
-     STATS BAR  (only here now — removed duplicate from dedicated section)
-══════════════════════════════════════════════════════════ --}}
 <section class="stats-bar">
     <div class="stat-item reveal">
         <div class="stat-item-val" data-target="10000">0</div>
@@ -553,9 +526,6 @@
 </section>
 
 
-{{!-- ══════════════════════════════════════════════════════════
-     TESTIMONIALS
-══════════════════════════════════════════════════════════ --}}
 <section class="testimonials-section">
     <div class="how-eyebrow reveal">From Our Community</div>
     <h2 class="how-heading reveal">What Pet Parents Say</h2>
@@ -597,9 +567,6 @@
 </section>
 
 
-{{!-- ══════════════════════════════════════════════════════════
-     CTA BANNER
-══════════════════════════════════════════════════════════ --}}
 <section class="cta-section reveal">
     <h2>Ready to give your pet the best care?</h2>
     <p>Join thousands of happy pet owners on Pet Friends today — it's free.</p>

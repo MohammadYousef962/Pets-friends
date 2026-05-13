@@ -246,7 +246,6 @@
         <form asp-action="AddPet" asp-controller="Client" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
 
-            {{!-- Pet Photo --}}
             <div class="mb-4">
                 <span class="form-section-label">Pet Photo (Optional)</span>
                 <div class="photo-drop-zone" id="dropZone">
@@ -258,7 +257,6 @@
                 </div>
             </div>
 
-            {{!-- Pet Name --}}
             <div class="mb-4">
                 <span class="form-section-label">Basic Info</span>
                 <label for="petName" class="pf-label">Pet's Name</label>
@@ -266,7 +264,6 @@
                        placeholder="e.g. Max, Bella, Luna" />
             </div>
 
-            {{!-- Species chips --}}
             <div class="mb-4">
                 <label class="pf-label">Species</label>
                 <div class="species-chips">
@@ -289,7 +286,6 @@
                 </div>
             </div>
 
-            {{!-- Breed + Age side by side --}}
             <div class="row g-3 mb-4">
                 <div class="col-md-7">
                     <label for="breed" class="pf-label">Breed <span style="color:#bbb; font-weight:400;">(optional)</span></label>

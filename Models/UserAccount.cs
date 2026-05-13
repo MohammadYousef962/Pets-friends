@@ -16,5 +16,6 @@ namespace Pets_friends.Models
         public virtual VetProfile? VetProfile { get; set; }
         public virtual MerchantProfile? MerchantProfile { get; set; }
         public virtual ShelterProfile? ShelterProfile { get; set; }
+        public string? AvatarUrl { get; set; }
     }
 }

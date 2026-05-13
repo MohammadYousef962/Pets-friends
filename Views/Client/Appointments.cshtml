@@ -298,7 +298,7 @@
     </div>
 }
 
-{{!-- Tabs --}}
+
 <div class="appt-tabs fade-up">
     <button class="appt-tab active" onclick="switchTab('upcoming', this)">
         Upcoming
@@ -310,7 +310,6 @@
     </button>
 </div>
 
-{{!-- Upcoming tab --}}
 <div id="tab-upcoming" class="tab-panel active">
     @if (upcoming.Any())
     {
@@ -388,7 +387,6 @@
     }
 </div>
 
-{{!-- Past tab --}}
 <div id="tab-past" class="tab-panel">
     @if (past.Any())
     {

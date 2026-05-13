@@ -1,7 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@inject UserManager<UserAccount> UserManager
-
-@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
 @inject UserManager<UserAccount> UserManager
 
 <!DOCTYPE html>
@@ -9,125 +7,173 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Pets_friends</title>
+    <title>@ViewData["Title"] - Pets Friends</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/topbar.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Pets_friends.styles.css" asp-append-version="true" />
-    <!-- Optional: Bootstrap Icons for the internal dashboard too -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
     @RenderSection("Styles", required: false)
 </head>
 <body>
-    <header class="topbar-header">
-        <nav class="topbar-nav">
-            <div class="topbar-container">
-                <!-- Brand Logo -->
-                <a class="topbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <span class="brand-icon">🐾</span>
-                    <span class="brand-text">Pets Friends</span>
-                </a>
 
-                <!-- Center Navigation Links -->
-                <div class="topbar-menu">
-                    <ul class="topbar-nav-list">
-                        <li class="topbar-nav-item">
-                            <a class="topbar-nav-link" asp-area="" asp-controller="Home" asp-action="Index">About</a>
-                        </li>
-                        <li class="topbar-nav-item">
-                            <a class="topbar-nav-link" href="#services">Pet Care</a>
-                        </li>
-                        <li class="topbar-nav-item">
-                            <a class="topbar-nav-link" href="#services">Pet Medical</a>
-                        </li>
-                        <li class="topbar-nav-item">
-                            <a class="topbar-nav-link" href="#services">Pet Accessories</a>
-                        </li>
-                    </ul>
+    <header class="pf-topbar" id="pfTopbar">
+        <div class="pf-topbar-inner">
+
+            <a class="pf-brand" asp-controller="Home" asp-action="Index">
+                <span class="pf-brand-icon">🐾</span>
+                <span class="pf-brand-text">Pets Friends</span>
+            </a>
+         
+            <div class="pf-topbar-right" style="margin-left: auto;">
+                <div class="pf-auth">
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        var dashController = GetDashboardController();
+                        <span class="pf-greeting">
+                            <i class="bi bi-person-circle"></i>
+                            <span class="pf-greeting-name">@User.Identity.Name</span>
+                        </span>
+                        <a class="pf-btn pf-btn-primary"
+                               asp-controller="@dashController"
+                               asp-action="Dashboard">
+                            <i class="bi bi-grid-1x2-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <form method="post" asp-controller="Account" asp-action="Logout" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="pf-btn pf-btn-ghost">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Logout</span>
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a class="pf-link" asp-controller="Account" asp-action="Login">Login</a>
+                        <a class="pf-btn pf-btn-primary" asp-controller="Account" asp-action="Register">
+                            Get Started
+                        </a>
+                    }
                 </div>
 
-                <!-- Search & Auth Links -->
-                <div class="topbar-right">
-                    <!-- Search Box (visible on desktop) -->
-                    <div class="topbar-search d-none d-lg-flex">
-                        <input type="text" class="search-input" placeholder="Search vets, services, records..." autocomplete="off" id="searchInput">
-                        <button class="search-btn" type="button">
-                            <i class="bi bi-search"></i>
-                        </button>
-                        <!-- Dropdown for search results -->
-                        <div class="search-dropdown" id="searchDropdown" style="display: none;">
-                            <div id="searchResults"></div>
-                        </div>
-                    </div>
-
-                    <!-- Authentication Links -->
-                    <div class="topbar-auth">
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
-                        {
-                            <span class="auth-text d-none d-sm-inline">Hello, @User.Identity.Name!</span>
-
-                            <a class="auth-btn auth-btn-primary" asp-controller="@GetDashboardController()" asp-action="Dashboard">
-                                <i class="bi bi-grid-1x2-fill"></i>
-                                <span class="d-none d-sm-inline">Dashboard</span>
-                            </a>
-                            <form method="post" asp-controller="Account" asp-action="Logout" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="auth-btn auth-btn-danger">Logout</button>
-                            </form>
-                        }
-                        else
-                        {
-                            <a class="auth-link" asp-controller="Account" asp-action="Register">Register</a>
-                            <a class="auth-btn auth-btn-primary" asp-controller="Account" asp-action="Login">Login</a>
-                        }
-                    </div>
-                </div>
-
-                <!-- Mobile Menu Toggle -->
-                <button class="sticky-top bg-white shadow-sm" type="button" aria-label="Toggle navigation">
-                    <span class="toggle-icon"></span>
+                <button class="pf-hamburger" id="pfHamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="pfMobileMenu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </button>
             </div>
-        </nav>
-    </header>
+        </div>
 
-    <main class="main-content" role="main">
+        <div class="pf-mobile-menu" id="pfMobileMenu" aria-hidden="true">
+            <div class="pf-mobile-auth">
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <a class="pf-btn pf-btn-primary w-100"
+                           asp-controller="@GetDashboardController()"
+                           asp-action="Dashboard">
+                        <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                    </a>
+                    <form method="post" asp-controller="Account" asp-action="Logout">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="pf-btn pf-btn-ghost w-100">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a class="pf-btn pf-btn-ghost w-100" asp-controller="Account" asp-action="Login">Login</a>
+                    <a class="pf-btn pf-btn-primary w-100" asp-controller="Account" asp-action="Register">Get Started</a>
+                }
+            </div>
+        </div>
+    </header>
+    <main role="main">
         @RenderBody()
     </main>
 
-    <footer class="footer-section">
-        <div class="footer-container">
-            <p>&copy; 2026 - Pets Friends | All Rights Reserved</p>
-            <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
+    <footer class="pf-footer">
+        <div class="pf-footer-inner">
+            <div class="pf-footer-brand">
+                <span>🐾</span>
+                <span>Pets Friends</span>
+            </div>
+            <div class="pf-footer-links">
+                <a asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
+            </div>
+            <p class="pf-footer-copy">&copy; @DateTime.Now.Year Pets Friends — All Rights Reserved</p>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="~/js/topbar.js" asp-append-version="true"></script>
+
+    <script>
+            (function () {
+                const hamburger  = document.getElementById('pfHamburger');
+                const mobileMenu = document.getElementById('pfMobileMenu');
+                const topbar     = document.getElementById('pfTopbar');
+
+                hamburger.addEventListener('click', function () {
+                    const open = mobileMenu.classList.toggle('open');
+                    hamburger.classList.toggle('open', open);
+                    hamburger.setAttribute('aria-expanded', open);
+                    mobileMenu.setAttribute('aria-hidden', !open);
+                });
+
+                document.addEventListener('click', function (e) {
+                    if (!topbar.contains(e.target)) {
+                        mobileMenu.classList.remove('open');
+                        hamburger.classList.remove('open');
+                        hamburger.setAttribute('aria-expanded', false);
+                    }
+                });
+
+                window.addEventListener('scroll', function () {
+                    topbar.classList.toggle('scrolled', window.scrollY > 10);
+                }, { passive: true });
+
+                document.querySelectorAll('.pf-nav-dropdown').forEach(function (item) {
+                    const trigger  = item.querySelector('.pf-dropdown-trigger');
+                    const dropdown = item.querySelector('.pf-dropdown');
+
+                    trigger.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        const open = item.classList.toggle('open');
+                        trigger.setAttribute('aria-expanded', open);
+                    });
+
+                    document.addEventListener('click', function () {
+                        item.classList.remove('open');
+                        trigger.setAttribute('aria-expanded', false);
+                    });
+                });
+            })();
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
-    @section Scripts {
-    <script src="~/js/search.js"></script>
-}
+
 </body>
 </html>
 
 @functions {
     private string GetDashboardController()
     {
-        var user = User;
-        if (user?.Identity?.IsAuthenticated == true)
+        if (User?.Identity?.IsAuthenticated == true)
         {
-            var userRoles = ViewContext.HttpContext.User.Claims
+            var roles = ViewContext.HttpContext.User.Claims
                 .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
                 .Select(c => c.Value)
                 .ToList();
 
-            if (userRoles.Contains("Admin")) return "Admin";
-            if (userRoles.Contains("Vet")) return "Vet";
-            if (userRoles.Contains("Merchant")) return "Merchant";
-            if (userRoles.Contains("Shelter")) return "Shelter";
+            if (roles.Contains("Admin")) return "Admin";
+            if (roles.Contains("Vet")) return "Vet";
+            if (roles.Contains("Merchant")) return "Merchant";
+            if (roles.Contains("Shelter")) return "Shelter";
         }
         return "Client";
     }
