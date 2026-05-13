@@ -1,0 +1,482 @@
+﻿@{
+    ViewData["Title"]      = "Book Appointment";
+    ViewData["ActivePage"] = "Appointments";
+    Layout = "_ClientLayout";
+
+    var pets     = ViewBag.Pets as List<Pets_friends.Models.Pet>;
+    var services = ViewBag.Services as IEnumerable<Pets_friends.Models.Service>;
+}
+
+@section Styles {
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   BOOK APPOINTMENT — PAGE STYLES
+═══════════════════════════════════════════════════════════════ */
+
+.book-wrapper {
+    max-width: 640px;
+    margin: 0 auto;
+    padding-bottom: 60px;
+}
+
+/* ─── Vet banner ──────────────────────────────────────────── */
+.vet-banner {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 22px 28px;
+    margin-bottom: 24px;
+}
+
+.vet-banner-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--tan-light);
+    border: 3px solid var(--tan);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.vet-banner-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.vet-banner-eyebrow {
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    color: var(--tan);
+    margin-bottom: 2px;
+}
+
+.vet-banner-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--brown-deep);
+    margin: 0;
+}
+
+/* ─── Form card ───────────────────────────────────────────── */
+.form-card { padding: 36px 40px; }
+
+.form-section-label {
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--tan);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--glass-border);
+}
+
+.pf-label {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--brown-deep);
+    margin-bottom: 6px;
+    display: block;
+}
+
+.pf-input,
+.pf-select,
+.pf-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--tan-light);
+    background: #fdfbf7;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    color: var(--brown-deep);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    appearance: none;
+}
+
+.pf-input:focus,
+.pf-select:focus,
+.pf-textarea:focus {
+    border-color: var(--tan);
+    box-shadow: 0 0 0 3px rgba(200,168,130,.2);
+}
+
+.pf-input::placeholder,
+.pf-textarea::placeholder { color: #bbb; }
+
+.pf-textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+/* ─── Date input group ─────────────────────────────────────── */
+.date-input-group {
+    position: relative;
+}
+
+.date-input-group .cal-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--tan);
+    font-size: .95rem;
+    pointer-events: none;
+}
+
+.date-input-group .pf-input {
+    padding-left: 40px;
+}
+
+/* ─── Service option with price ───────────────────────────── */
+.service-option-hint {
+    font-size: .78rem;
+    color: var(--brown-mid);
+    margin-top: 6px;
+    display: none;
+}
+
+/* ─── Summary card ────────────────────────────────────────── */
+.booking-summary {
+    background: rgba(200,168,130,.08);
+    border: 1px solid var(--tan-light);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    font-size: .85rem;
+    color: var(--brown-mid);
+    display: none;
+}
+
+.booking-summary.visible { display: block; }
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.summary-row:last-child { margin-bottom: 0; }
+.summary-row .label { font-weight: 500; }
+.summary-row .value { font-weight: 700; color: var(--brown-deep); }
+
+/* ─── Form footer ─────────────────────────────────────────── */
+.form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--brown-mid);
+    text-decoration: none;
+    font-size: .88rem;
+    font-weight: 500;
+    transition: color .15s;
+}
+
+.btn-back:hover { color: var(--brown-deep); }
+
+.btn-primary-pf {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brown-deep);
+    color: #fff;
+    border: none;
+    padding: 13px 28px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, transform .15s;
+}
+
+.btn-primary-pf:hover {
+    background: #7a5229;
+    transform: translateY(-1px);
+}
+
+/* Flatpickr theme override to match design */
+.flatpickr-calendar {
+    border-radius: 14px !important;
+    box-shadow: 0 12px 40px rgba(92,61,30,.15) !important;
+    border: 1px solid var(--tan-light) !important;
+    font-family: 'DM Sans', sans-serif !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+    background: var(--brown-deep) !important;
+    border-color: var(--brown-deep) !important;
+}
+
+.flatpickr-day:hover {
+    background: var(--tan-light) !important;
+}
+</style>
+}
+
+<div class="book-wrapper">
+
+    {{!-- Vet Banner --}}
+    <div class="glass-card vet-banner fade-up">
+        <div class="vet-banner-avatar">
+            @if (!string.IsNullOrEmpty(ViewBag.VetImageUrl as string))
+            {
+                <img src="@ViewBag.VetImageUrl" alt="@ViewBag.VetName" />
+            }
+            else
+            {
+                <span>🩺</span>
+            }
+        </div>
+        <div>
+            <div class="vet-banner-eyebrow">Booking with</div>
+            <h2 class="vet-banner-name">@ViewBag.VetName</h2>
+        </div>
+    </div>
+
+    {{!-- Form Card --}}
+    <div class="glass-card form-card fade-up">
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert d-flex align-items-center gap-2 mb-4"
+                 style="border-radius:10px; border:none; background:rgba(229,57,53,.08); color:#c62828;">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <span>@TempData["ErrorMessage"]</span>
+            </div>
+        }
+
+        <form asp-action="BookAppointment" asp-controller="Client" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="vetId" value="@ViewBag.VetId" />
+
+            {{!-- Section: Choose pet & service --}}
+            <div class="form-section-label">Details</div>
+
+            <div class="mb-4">
+                <label for="petId" class="pf-label">Which pet?</label>
+                <select id="petId" name="petId" class="pf-select" required onchange="updateSummary()">
+                    <option value="">— Select your pet —</option>
+                    @if (pets != null)
+                    {
+                        foreach (var pet in pets)
+                        {
+                            <option value="@pet.PetId">
+                                @(pet.Species == "Dog" ? "🐶" : pet.Species == "Cat" ? "🐱" : "🐾") @pet.Name (@pet.Species)
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label for="serviceId" class="pf-label">Service needed</label>
+                <select id="serviceId" name="serviceId" class="pf-select" required onchange="updateServiceHint(); updateSummary();">
+                    <option value="">— Select a service —</option>
+                    @if (services != null)
+                    {
+                        foreach (var srv in services)
+                        {
+                            <option value="@srv.Id" data-price="@srv.Price" data-name="@srv.Name">
+                                @srv.Name
+                                @if (srv.Price > 0) { <text>· @srv.Price.ToString("C")</text> }
+                            </option>
+                        }
+                    }
+                </select>
+                <div class="service-option-hint" id="serviceHint">
+                    <i class="bi bi-tag me-1"></i><span id="servicePrice"></span>
+                </div>
+            </div>
+
+            {{!-- Section: Date & time --}}
+            <div class="form-section-label" style="margin-top:24px;">Date &amp; Time</div>
+
+            <div class="mb-4">
+                <label for="appointmentDateTimePicker" class="pf-label">When?</label>
+                <div class="date-input-group">
+                    <i class="bi bi-calendar-event cal-icon"></i>
+                    <input type="text" id="appointmentDateTimePicker" name="appointmentDate"
+                           class="pf-input" placeholder="Click to pick a date &amp; time..." required
+                           onchange="updateSummary()" readonly />
+                </div>
+            </div>
+
+            {{!-- Section: Notes --}}
+            <div class="form-section-label" style="margin-top:24px;">Notes <span style="font-weight:400; text-transform:none; letter-spacing:0; color:var(--brown-mid);">(optional)</span></div>
+
+            <div class="mb-2">
+                <label for="notes" class="pf-label">Anything the vet should know?</label>
+                <textarea id="notes" name="notes" class="pf-textarea"
+                          placeholder="e.g. Max has been limping since Tuesday, or Luna needs her annual vaccine..."></textarea>
+            </div>
+
+            {{!-- Live summary --}}
+            <div class="booking-summary" id="bookingSummary">
+                <div class="summary-row">
+                    <span class="label">Pet</span>
+                    <span class="value" id="sumPet">—</span>
+                </div>
+                <div class="summary-row">
+                    <span class="label">Service</span>
+                    <span class="value" id="sumService">—</span>
+                </div>
+                <div class="summary-row">
+                    <span class="label">Date &amp; Time</span>
+                    <span class="value" id="sumDate">—</span>
+                </div>
+                <div class="summary-row" id="sumPriceRow" style="display:none;">
+                    <span class="label">Estimated Cost</span>
+                    <span class="value" id="sumPrice">—</span>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <a asp-action="Profile" asp-controller="Vet"
+                   asp-route-id="@ViewBag.VetId" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                <button type="submit" class="btn-primary-pf">
+                    <i class="bi bi-calendar-check"></i> Confirm Booking
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Load vet schedule from backend
+    const vetSchedule = @Html.Raw(ViewBag.VetSchedule ?? "[]");
+    const scheduleMap = {};
+    vetSchedule.forEach(s => { scheduleMap[s.day] = s; });
+
+    // Init Flatpickr
+    flatpickr("#appointmentDateTimePicker", {
+        enableTime:      true,
+        dateFormat:      "Y-m-d H:i",
+        minDate:         "today",
+        time_24hr:       false,
+        minuteIncrement: 30,
+        disableMobile:   true,
+
+        disable: [
+            function (date) {
+                const day = date.getDay();
+                return scheduleMap[day] ? scheduleMap[day].isOff : false;
+            }
+        ],
+
+        onChange: function (selectedDates, dateStr, instance) {
+            if (selectedDates.length > 0) {
+                const day = selectedDates[0].getDay();
+                const s   = scheduleMap[day];
+                if (s && !s.isOff) {
+                    instance.set('minTime', s.open);
+                    instance.set('maxTime', s.close);
+                }
+            }
+            updateSummary();
+        }
+    });
+});
+
+// Show price hint below service select
+function updateServiceHint() {
+    const sel   = document.getElementById('serviceId');
+    const opt   = sel.options[sel.selectedIndex];
+    const hint  = document.getElementById('serviceHint');
+    const price = opt?.dataset?.price;
+
+    if (price && parseFloat(price) > 0) {
+        document.getElementById('servicePrice').textContent =
+            'Estimated cost: ' + parseFloat(price).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        hint.style.display = 'block';
+    } else {
+        hint.style.display = 'none';
+    }
+}
+
+// Live booking summary
+function updateSummary() {
+    const petSel     = document.getElementById('petId');
+    const srvSel     = document.getElementById('serviceId');
+    const dateInput  = document.getElementById('appointmentDateTimePicker');
+    const summary    = document.getElementById('bookingSummary');
+
+    const petText    = petSel.options[petSel.selectedIndex]?.text?.trim();
+    const srvOpt     = srvSel.options[srvSel.selectedIndex];
+    const srvText    = srvOpt?.text?.trim();
+    const srvPrice   = srvOpt?.dataset?.price;
+    const dateText   = dateInput.value;
+
+    if (!petText || petSel.value === '' || !srvText || srvSel.value === '' || !dateText) {
+        summary.classList.remove('visible');
+        return;
+    }
+
+    document.getElementById('sumPet').textContent     = petText;
+    document.getElementById('sumService').textContent = srvOpt.dataset.name ?? srvText;
+    document.getElementById('sumDate').textContent    = dateText;
+
+    const priceRow = document.getElementById('sumPriceRow');
+    if (srvPrice && parseFloat(srvPrice) > 0) {
+        document.getElementById('sumPrice').textContent =
+            parseFloat(srvPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        priceRow.style.display = 'flex';
+    } else {
+        priceRow.style.display = 'none';
+    }
+
+    summary.classList.add('visible');
+}
+
+// Fade-up
+const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            e.target.style.animationPlayState = 'running';
+            obs.unobserve(e.target);
+        }
+    });
+}, { threshold: 0.05 });
+
+document.querySelectorAll('.fade-up').forEach((el, i) => {
+    el.style.animationPlayState = 'paused';
+    el.style.animationDelay = (i * 0.1) + 's';
+    obs.observe(el);
+});
+</script>
+}

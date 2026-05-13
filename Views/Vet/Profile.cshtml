@@ -120,9 +120,10 @@
                         }
                         else
                         {
-                            <button class="btn" style="background: #C8A882; color: #fff; font-weight: 600; border-radius: 12px; padding: 8px 20px;">
+                            <a asp-action="BookAppointment" asp-controller="Client" asp-route-vetId="@Model.Id" class="btn" style="background: #C8A882; color: #fff; font-weight: 600; border-radius: 12px; padding: 8px 20px; text-decoration: none;">
                                 <i class="bi bi-calendar-check me-1"></i>Book Appointment
-                            </button>
+                            </a>
+        
                             <button class="btn" style="border: 2px solid #C8A882; color: #C8A882; font-weight: 600; border-radius: 12px; padding: 6px 20px; background: transparent;">
                                 <i class="bi bi-chat-dots me-1"></i>Message
                             </button>

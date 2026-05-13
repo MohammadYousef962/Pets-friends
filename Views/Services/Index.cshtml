@@ -1,0 +1,120 @@
+﻿@model Pets_friends.Data.ViewModels.VetListViewModel
+@{
+    ViewData["Title"] = "Find a Veterinarian";
+    // Assuming your clients navigate this while logged in, use their layout
+    Layout = "_ClientLayout"; 
+}
+
+<div class="container py-4">
+    <div class="mb-5 text-center fade-up">
+        <h1 style="color: var(--brown-deep); font-family: 'Playfair Display', serif; font-weight: 700;">Our Specialists</h1>
+        <p class="text-muted mx-auto" style="max-width: 600px;">
+            Browse our network of trusted, verified veterinarians. Click on any profile to view their services, working hours, and to book an appointment.
+        </p>
+        
+        <div class="mt-4 mx-auto" style="max-width: 500px;">
+            <div class="input-group shadow-sm" style="border-radius: 50px; overflow: hidden; border: 1px solid var(--tan-light);">
+                <span class="input-group-text bg-white border-0" style="color: var(--tan); padding-left: 20px;">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" class="form-control border-0 py-3" placeholder="Search by name, clinic, or specialty..." style="box-shadow: none;">
+            </div>
+        </div>
+    </div>
+
+    @if (Model != null && Model.Vets != null && Model.Vets.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var vet in Model.Vets)
+            {
+                <div class="col fade-up">
+                    <a asp-controller="Vet" asp-action="Profile" asp-route-id="@vet.Id" class="text-decoration-none d-block vet-card-hover">
+                        <div class="card h-100 shadow-sm border-0 bg-white" style="border-radius: 16px; overflow: hidden;">
+                            
+                            <div class="position-relative" style="background-color: #f6f6f6; height: 160px;">
+                                <div style="position: absolute; bottom: -40px; left: 20px;">
+                                    <div style="width: 80px; height: 80px; border-radius: 50%; border: 4px solid white; background: var(--cream-warm); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                                        @if(!string.IsNullOrEmpty(vet.ImageUrl))
+                                        {
+                                            <img src="@vet.ImageUrl" class="w-100 h-100 transition-zoom" style="object-fit: cover;" alt="Vet Avatar" />
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-person-heart" style="font-size: 2rem; color: var(--tan);"></i>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-body" style="padding: 50px 20px 20px 20px;">
+                                <h5 class="mb-1" style="color: var(--brown-deep); font-weight: 700;">
+                                    @(vet.UserAccount?.FullName ?? "Unknown Vet")
+                                </h5>
+                                <p class="mb-2" style="color: var(--tan); font-weight: 600; font-size: 0.9rem;">
+                                    @vet.Specialization
+                                </p>
+                                
+                                <p class="text-muted mb-3" style="font-size: 0.85rem; line-height: 1.5;">
+                                    <i class="bi bi-building me-1"></i> @vet.ClinicName<br />
+                                    <i class="bi bi-geo-alt me-1"></i> @vet.ClinicAddress
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                    <span style="font-size: 0.85rem; color: #555; font-weight: 600;">
+                                        @vet.YearsOfExperience+ Yrs Exp.
+                                    </span>
+                                    <span class="btn btn-sm" style="background-color: var(--brown-deep); color: white; border-radius: 50px; padding: 4px 16px;">
+                                        View Profile
+                                    </span>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5 fade-up">
+            <div style="font-size: 3rem; color: var(--tan-light); margin-bottom: 16px;">
+                <i class="bi bi-search"></i>
+            </div>
+            <h3 style="color: var(--brown-deep);">No Veterinarians Found</h3>
+            <p class="text-muted">It looks like our specialists haven't set up their profiles yet.</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<style>
+    .vet-card-hover {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .vet-card-hover:hover {
+        transform: translateY(-5px);
+    }
+    .vet-card-hover .transition-zoom {
+        transition: transform 0.4s ease;
+    }
+    .vet-card-hover:hover .transition-zoom {
+        transform: scale(1.1);
+    }
+    
+    /* Staggered Fade Up Animation */
+    .fade-up {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeUp 0.6s ease forwards;
+    }
+    .col:nth-child(1) .fade-up { animation-delay: 0.1s; }
+    .col:nth-child(2) .fade-up { animation-delay: 0.2s; }
+    .col:nth-child(3) .fade-up { animation-delay: 0.3s; }
+    .col:nth-child(4) .fade-up { animation-delay: 0.4s; }
+    
+    @@keyframes fadeUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+}

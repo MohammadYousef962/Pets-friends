@@ -1,4 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<UserAccount> UserManager
+
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<UserAccount> UserManager
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -6,45 +12,123 @@
     <title>@ViewData["Title"] - Pets_friends</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/topbar.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Pets_friends.styles.css" asp-append-version="true" />
+    <!-- Optional: Bootstrap Icons for the internal dashboard too -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     @RenderSection("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Pets_friends</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+    <header class="topbar-header">
+        <nav class="topbar-nav">
+            <div class="topbar-container">
+                <!-- Brand Logo -->
+                <a class="topbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="brand-icon">🐾</span>
+                    <span class="brand-text">Pets Friends</span>
+                </a>
+
+                <!-- Center Navigation Links -->
+                <div class="topbar-menu">
+                    <ul class="topbar-nav-list">
+                        <li class="topbar-nav-item">
+                            <a class="topbar-nav-link" asp-area="" asp-controller="Home" asp-action="Index">About</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        <li class="topbar-nav-item">
+                            <a class="topbar-nav-link" href="#services">Pet Care</a>
+                        </li>
+                        <li class="topbar-nav-item">
+                            <a class="topbar-nav-link" href="#services">Pet Medical</a>
+                        </li>
+                        <li class="topbar-nav-item">
+                            <a class="topbar-nav-link" href="#services">Pet Accessories</a>
                         </li>
                     </ul>
                 </div>
+
+                <!-- Search & Auth Links -->
+                <div class="topbar-right">
+                    <!-- Search Box (visible on desktop) -->
+                    <div class="topbar-search d-none d-lg-flex">
+                        <input type="text" class="search-input" placeholder="Search vets, services, records..." autocomplete="off" id="searchInput">
+                        <button class="search-btn" type="button">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        <!-- Dropdown for search results -->
+                        <div class="search-dropdown" id="searchDropdown" style="display: none;">
+                            <div id="searchResults"></div>
+                        </div>
+                    </div>
+
+                    <!-- Authentication Links -->
+                    <div class="topbar-auth">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <span class="auth-text d-none d-sm-inline">Hello, @User.Identity.Name!</span>
+
+                            <a class="auth-btn auth-btn-primary" asp-controller="@GetDashboardController()" asp-action="Dashboard">
+                                <i class="bi bi-grid-1x2-fill"></i>
+                                <span class="d-none d-sm-inline">Dashboard</span>
+                            </a>
+                            <form method="post" asp-controller="Account" asp-action="Logout" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="auth-btn auth-btn-danger">Logout</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a class="auth-link" asp-controller="Account" asp-action="Register">Register</a>
+                            <a class="auth-btn auth-btn-primary" asp-controller="Account" asp-action="Login">Login</a>
+                        }
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="sticky-top bg-white shadow-sm" type="button" aria-label="Toggle navigation">
+                    <span class="toggle-icon"></span>
+                </button>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Pets_friends - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <main class="main-content" role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="footer-section">
+        <div class="footer-container">
+            <p>&copy; 2026 - Pets Friends | All Rights Reserved</p>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/topbar.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    @section Scripts {
+    <script src="~/js/search.js"></script>
+}
 </body>
 </html>
+
+@functions {
+    private string GetDashboardController()
+    {
+        var user = User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            var userRoles = ViewContext.HttpContext.User.Claims
+                .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList();
+
+            if (userRoles.Contains("Admin")) return "Admin";
+            if (userRoles.Contains("Vet")) return "Vet";
+            if (userRoles.Contains("Merchant")) return "Merchant";
+            if (userRoles.Contains("Shelter")) return "Shelter";
+        }
+        return "Client";
+    }
+}

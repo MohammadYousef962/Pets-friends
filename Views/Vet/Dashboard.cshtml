@@ -55,8 +55,6 @@
 <div class="admin-wrapper">
     <div class="container">
 
-
-
         @if (TempData["SuccessMessage"] != null)
         {
             <div class="alert alert-success rounded-4" style="background: #d4edda; color: #155724; border:none;">
@@ -177,30 +175,137 @@
         </div>
 
         <div class="row g-4">
-            <div class="col-md-6">
-                <div class="action-card">
+            <!-- Card 1: Public Profile -->
+            <div class="col-md-4">
+                <div class="action-card h-100 d-flex flex-column justify-content-between" style="background: #fff; padding: 25px; border-radius: 15px; border: 1px solid #EDE0D0;">
                     <div>
                         <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Public Profile</h3>
-                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">View how clients see your page.</p>
+                        <p style="color: #8C7560; margin: 0 0 15px 0; font-size: 0.95rem;">View how clients see your page.</p>
                     </div>
-                    <a asp-action="Profile" class="btn-admin" style="background-color: #EDE0D0; color: #5C3D1E;">
+                    <a asp-action="Profile" class="btn btn-outline-secondary w-100" style="color: #5C3D1E; border-color: #EDE0D0;">
                         View Page <i class="bi bi-box-arrow-up-right ms-2"></i>
                     </a>
                 </div>
             </div>
 
-            <div class="col-md-6">
-                <div class="action-card">
+            <!-- Card 2: Edit Details -->
+            <div class="col-md-4">
+                <div class="action-card h-100 d-flex flex-column justify-content-between" style="background: #fff; padding: 25px; border-radius: 15px; border: 1px solid #EDE0D0;">
                     <div>
                         <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Edit Details</h3>
-                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">Update your clinic info, services, and photo.</p>
+                        <p style="color: #8C7560; margin: 0 0 15px 0; font-size: 0.95rem;">Update your clinic info and services.</p>
                     </div>
-                    <a asp-action="Edit" class="btn-admin">
+                    <a asp-action="Edit" class="btn btn-outline-secondary w-100" style="color: #5C3D1E; border-color: #EDE0D0;">
                         Edit Profile <i class="bi bi-pencil-square ms-2"></i>
                     </a>
+                </div>
+            </div>
+
+            <!-- Card 3: NEW! Verify Walk-In Pet (Modal Trigger) -->
+            <div class="col-md-4">
+                <div class="action-card h-100 d-flex flex-column justify-content-between" style="background: #fdfaf7; padding: 25px; border-radius: 15px; border: 1px solid #C8A882;">
+                    <div>
+                        <h3 style="font-family: 'Playfair Display'; color: #3a8a4f; font-weight: 700; margin: 0 0 5px 0;">
+                            <i class="bi bi-shield-check"></i> Verify Pet
+                        </h3>
+                        <p style="color: #8C7560; margin: 0 0 15px 0; font-size: 0.95rem;">Look up a client to verify their pet's health status.</p>
+                    </div>
+                    
+                    <button type="button" class="btn w-100 mt-3" data-bs-toggle="modal" data-bs-target="#searchModal" style="background: #3a8a4f; color: white;">
+                        <i class="bi bi-search me-2"></i> Open Client Search
+                    </button>
                 </div>
             </div>
         </div>
 
     </div>
 </div>
+
+<!-- ==========================================
+     THE SEARCH MODAL (Hidden by default)
+     ========================================== -->
+<div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 15px; border: none; background-color: #fdfaf7;">
+            <div class="modal-header" style="border-bottom: 1px solid #EDE0D0;">
+                <h5 class="modal-title" style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700;">Client Search</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                <!-- The Search Input -->
+                <div class="input-group mb-4">
+                    <span class="input-group-text" style="background: #fff; border-right: none; border-color: #C8A882;">
+                        <i class="bi bi-search" style="color: #8C7560;"></i>
+                    </span>
+                    <input type="text" id="clientSearchInput" class="form-control form-control-lg"
+                           placeholder="Search client by phone or email..."
+                           style="border-left: none; box-shadow: none; border-color: #C8A882;">
+                </div>
+
+                <!-- The Results Container (Starts Empty) -->
+                <div id="searchResultsContainer">
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-person-bounding-box fs-1 mb-2 d-block" style="color: #EDE0D0;"></i>
+                        Type a phone number or email to find a client.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     AJAX SCRIPT TO POWER THE SEARCH
+     ========================================== -->
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('clientSearchInput');
+            const resultsContainer = document.getElementById('searchResultsContainer');
+            
+            // We use a small timeout so we don't spam the server on every single keystroke
+            let timeoutId;
+
+            searchInput.addEventListener('input', function () {
+                clearTimeout(timeoutId);
+                const query = this.value;
+
+                if (query.length < 3) {
+                    resultsContainer.innerHTML = `
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-person-bounding-box fs-1 mb-2 d-block" style="color: #EDE0D0;"></i>
+                            Type a phone number or email to find a client.
+                        </div>`;
+                    return;
+                }
+
+                // Show a loading spinner while waiting for the server
+                resultsContainer.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-secondary" role="status"></div></div>';
+
+                timeoutId = setTimeout(() => {
+                    // Call the SearchClientAjax method we wrote in the VetController
+                    fetch(`/Vet/SearchClientAjax?searchTerm=${encodeURIComponent(query)}`)
+                        .then(response => response.text())
+                        .then(html => {
+                            if(html.trim() !== "") {
+                                resultsContainer.innerHTML = html;
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Search failed', err);
+                            resultsContainer.innerHTML = '<div class="alert alert-danger">An error occurred while searching.</div>';
+                        });
+                }, 300); // Wait 300ms after they stop typing
+            });
+            
+            // Clear the input when the modal is closed so it's fresh for next time
+            const searchModal = document.getElementById('searchModal');
+            searchModal.addEventListener('hidden.bs.modal', function () {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input')); // Reset the view
+            });
+        });
+    </script>
+}

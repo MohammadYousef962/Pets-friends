@@ -1,0 +1,354 @@
+﻿@{
+    ViewData["Title"]      = "Add a Pet";
+    ViewData["ActivePage"] = "MyPets";
+    Layout = "_ClientLayout";
+}
+
+@section Styles {
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   ADD PET — PAGE STYLES
+═══════════════════════════════════════════════════════════════ */
+
+.addpet-wrapper {
+    max-width: 620px;
+    margin: 0 auto;
+    padding-bottom: 60px;
+}
+
+.page-hero {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.page-hero .hero-icon {
+    font-size: 3.2rem;
+    display: block;
+    margin-bottom: 12px;
+    animation: bounce 1.2s ease infinite alternate;
+}
+
+@@keyframes bounce {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-6px); }
+}
+
+.page-hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--brown-deep);
+    margin-bottom: 6px;
+}
+
+.page-hero p {
+    color: var(--brown-mid);
+    font-size: .9rem;
+}
+
+/* ─── Form card ───────────────────────────────────────────── */
+.form-card {
+    padding: 40px;
+}
+
+.form-section-label {
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--tan);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 18px;
+    display: block;
+}
+
+.pf-label {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--brown-deep);
+    margin-bottom: 6px;
+    display: block;
+}
+
+.pf-input,
+.pf-select {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--tan-light);
+    background: #fdfbf7;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    color: var(--brown-deep);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    appearance: none;
+}
+
+.pf-input:focus,
+.pf-select:focus {
+    border-color: var(--tan);
+    box-shadow: 0 0 0 3px rgba(200,168,130,.2);
+}
+
+.pf-input::placeholder { color: #bbb; }
+
+/* ─── Photo upload zone ───────────────────────────────────── */
+.photo-drop-zone {
+    border: 2px dashed var(--tan-light);
+    border-radius: 12px;
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.photo-drop-zone:hover,
+.photo-drop-zone.drag-over {
+    border-color: var(--tan);
+    background: rgba(200,168,130,.06);
+}
+
+.photo-drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+.photo-drop-zone .drop-icon {
+    font-size: 2rem;
+    color: var(--tan);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.photo-drop-zone .drop-label {
+    font-size: .85rem;
+    color: var(--brown-mid);
+    font-weight: 500;
+}
+
+.photo-drop-zone .drop-sub {
+    font-size: .75rem;
+    color: #bbb;
+    margin-top: 4px;
+}
+
+#photoPreview {
+    display: none;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--tan);
+    margin: 0 auto 8px;
+}
+
+/* ─── Species chips ───────────────────────────────────────── */
+.species-chips {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.species-chip input[type="radio"] { display: none; }
+
+.species-chip label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 50px;
+    border: 1.5px solid var(--tan-light);
+    background: #fdfbf7;
+    color: var(--brown-mid);
+    font-size: .85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+}
+
+.species-chip input[type="radio"]:checked + label {
+    background: var(--brown-deep);
+    border-color: var(--brown-deep);
+    color: #fff;
+}
+
+/* ─── Form footer ─────────────────────────────────────────── */
+.form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--brown-mid);
+    text-decoration: none;
+    font-size: .88rem;
+    font-weight: 500;
+    transition: color .15s;
+}
+
+.btn-back:hover { color: var(--brown-deep); }
+
+.btn-primary-pf {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brown-deep);
+    color: #fff;
+    border: none;
+    padding: 13px 28px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, transform .15s;
+}
+
+.btn-primary-pf:hover {
+    background: #7a5229;
+    transform: translateY(-1px);
+}
+</style>
+}
+
+<div class="addpet-wrapper fade-up">
+
+    <div class="page-hero">
+        <span class="hero-icon">🐾</span>
+        <h1>Add a New Furry Friend</h1>
+        <p>Tell us a little about your pet so we can provide the best care.</p>
+    </div>
+
+    <div class="glass-card form-card fade-up">
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success d-flex align-items-center gap-2 mb-4" role="alert"
+                 style="border-radius:10px; border:none; background:rgba(76,175,80,.1); color:#2e7d32;">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>@TempData["SuccessMessage"]</span>
+            </div>
+        }
+
+        <form asp-action="AddPet" asp-controller="Client" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            {{!-- Pet Photo --}}
+            <div class="mb-4">
+                <span class="form-section-label">Pet Photo (Optional)</span>
+                <div class="photo-drop-zone" id="dropZone">
+                    <input type="file" name="photoFile" id="photoFile" accept="image/*" />
+                    <img id="photoPreview" alt="Preview" />
+                    <i class="bi bi-camera drop-icon" id="dropIcon"></i>
+                    <div class="drop-label" id="dropLabel">Click or drag to upload a photo</div>
+                    <div class="drop-sub">JPG, PNG, WebP — max 5 MB</div>
+                </div>
+            </div>
+
+            {{!-- Pet Name --}}
+            <div class="mb-4">
+                <span class="form-section-label">Basic Info</span>
+                <label for="petName" class="pf-label">Pet's Name</label>
+                <input type="text" class="pf-input" id="petName" name="petName" required
+                       placeholder="e.g. Max, Bella, Luna" />
+            </div>
+
+            {{!-- Species chips --}}
+            <div class="mb-4">
+                <label class="pf-label">Species</label>
+                <div class="species-chips">
+                    <div class="species-chip">
+                        <input type="radio" id="dog" name="species" value="Dog" required />
+                        <label for="dog">🐶 Dog</label>
+                    </div>
+                    <div class="species-chip">
+                        <input type="radio" id="cat" name="species" value="Cat" />
+                        <label for="cat">🐱 Cat</label>
+                    </div>
+                    <div class="species-chip">
+                        <input type="radio" id="bird" name="species" value="Bird" />
+                        <label for="bird">🐦 Bird</label>
+                    </div>
+                    <div class="species-chip">
+                        <input type="radio" id="other" name="species" value="Other" />
+                        <label for="other">🐾 Other</label>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Breed + Age side by side --}}
+            <div class="row g-3 mb-4">
+                <div class="col-md-7">
+                    <label for="breed" class="pf-label">Breed <span style="color:#bbb; font-weight:400;">(optional)</span></label>
+                    <input type="text" class="pf-input" id="breed" name="breed"
+                           placeholder="e.g. Golden Retriever, Siamese" />
+                </div>
+                <div class="col-md-5">
+                    <label for="age" class="pf-label">Age (Years)</label>
+                    <input type="number" class="pf-input" id="age" name="age"
+                           min="0" max="30" required placeholder="e.g. 3" />
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <a asp-action="Dashboard" asp-controller="Client" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn-primary-pf">
+                    Save Pet <i class="bi bi-check2"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Photo preview
+    const input    = document.getElementById('photoFile');
+    const preview  = document.getElementById('photoPreview');
+    const icon     = document.getElementById('dropIcon');
+    const label    = document.getElementById('dropLabel');
+
+    input.addEventListener('change', function () {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                icon.style.display    = 'none';
+                label.textContent     = this.files[0].name;
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    // Stagger fade-up
+    document.querySelectorAll('.fade-up').forEach((el, i) => {
+        el.style.animationPlayState = 'paused';
+        el.style.animationDelay = (i * 0.1) + 's';
+    });
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.style.animationPlayState = 'running';
+                obs.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.05 });
+    document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+</script>
+}

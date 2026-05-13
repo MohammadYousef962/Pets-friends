@@ -136,7 +136,7 @@ namespace Pets_friends.Controllers
         }
 
         // ====================================================================
-        // 4. DELETE ACCOUNT (Updated with Profile Cascade Deletion)
+        // 4. DELETE ACCOUNT (Secured with DB Transactions)
         // ====================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -152,29 +152,28 @@ namespace Pets_friends.Controllers
                 return RedirectToAction(nameof(ManageUsers));
             }
 
+            // START TRANSACTION: Protects against partial deletions
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // 1. WIPE CLIENT DATA (Pets, Appointments, Reviews)
+                // 1. WIPE CLIENT DATA
                 var clientProfile = await _context.ClientProfiles
-                    .Include(c => c.Pets) // Assuming a client has Pets
+                    .Include(c => c.Pets)
                     .FirstOrDefaultAsync(c => c.UserAccountId == userId);
 
                 if (clientProfile != null)
                 {
-                    // Find and delete all appointments for this client
                     var appointments = await _context.Appointments.Where(a => a.ClientProfileId == clientProfile.Id).ToListAsync();
                     _context.Appointments.RemoveRange(appointments);
 
-                    // Find and delete all reviews left by this client
                     var reviews = await _context.VetReviews.Where(r => r.ReviewerId == userId).ToListAsync();
                     _context.VetReviews.RemoveRange(reviews);
 
-                    // Remove the pets and the profile
                     if (clientProfile.Pets != null) _context.RemoveRange(clientProfile.Pets);
                     _context.ClientProfiles.Remove(clientProfile);
                 }
 
-                // 2. WIPE VET DATA (Schedule, Appointments attached to Vet)
+                // 2. WIPE VET DATA
                 var vetProfile = await _context.VetProfiles
                     .Include(v => v.Schedule)
                     .FirstOrDefaultAsync(v => v.UserAccountId == userId);
@@ -188,31 +187,37 @@ namespace Pets_friends.Controllers
                     _context.VetProfiles.Remove(vetProfile);
                 }
 
-                // WIPE MERCHANT/SHELTER PROFILES
+                // 3. WIPE MERCHANT/SHELTER PROFILES
                 var merchantProfile = await _context.MerchantProfiles.FirstOrDefaultAsync(m => m.UserAccountId == userId);
                 if (merchantProfile != null) _context.MerchantProfiles.Remove(merchantProfile);
 
                 var shelterProfile = await _context.ShelterProfiles.FirstOrDefaultAsync(s => s.UserAccountId == userId);
                 if (shelterProfile != null) _context.ShelterProfiles.Remove(shelterProfile);
 
-                // Save all the deep deletions
+                // Save EF core tracked changes
                 await _context.SaveChangesAsync();
 
-                // 3. FINALLY, DELETE THE LOGIN ACCOUNT
+                // 4. FINALLY, DELETE THE LOGIN ACCOUNT
                 var result = await _userManager.DeleteAsync(user);
 
                 if (result.Succeeded)
                 {
+                    // IF EVERYTHING WORKED, COMMIT THE TRANSACTION
+                    await transaction.CommitAsync();
                     TempData["SuccessMessage"] = $"{user.FullName}'s entire account and data was permanently wiped.";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Data cleared, but failed to delete Identity account.";
+                    // IF IDENTITY FAILS, CANCEL THE DB DELETIONS
+                    await transaction.RollbackAsync();
+                    TempData["ErrorMessage"] = "Data cleared, but failed to delete Identity account. Action aborted.";
                 }
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"Deep clean failed. Details: {ex.InnerException?.Message ?? ex.Message}";
+                // IF ANYTHING CRASHES, CANCEL THE DB DELETIONS
+                await transaction.RollbackAsync();
+                TempData["ErrorMessage"] = $"Deep clean failed. Action safely aborted. Details: {ex.InnerException?.Message ?? ex.Message}";
             }
 
             return RedirectToAction(nameof(ManageUsers));

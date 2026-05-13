@@ -1,0 +1,797 @@
+﻿@model PetFriends.ViewModels.Client.ClientDashboard
+@{
+    ViewData["Title"]      = "Dashboard";
+    ViewData["ActivePage"] = "Dashboard";
+    ViewData["AvatarUrl"]  = Model.AvatarUrl;
+    ViewData["Initials"]   = $"{Model.FirstName?.FirstOrDefault()}{Model.LastName?.FirstOrDefault()}".ToUpper();
+    Layout = "_ClientLayout";
+}
+
+@section Styles {
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD — PAGE-LEVEL STYLES
+═══════════════════════════════════════════════════════════════ */
+
+/* ─── Page header ─────────────────────────────────────────── */
+.dash-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.dash-greeting {
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--brown-mid);
+    letter-spacing: .4px;
+    margin-bottom: 4px;
+}
+
+.dash-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--brown-deep);
+    line-height: 1.15;
+}
+
+.dash-subtitle {
+    font-size: .875rem;
+    color: var(--brown-mid);
+    margin-top: 4px;
+}
+
+.btn-primary-pf {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brown-deep);
+    color: #fff;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s, transform .15s;
+}
+
+.btn-primary-pf:hover {
+    background: #7a5229;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-secondary-pf {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--glass-bg);
+    color: var(--brown-deep);
+    border: 1px solid var(--glass-border);
+    padding: 11px 20px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    transition: background .2s;
+}
+
+.btn-secondary-pf:hover {
+    background: var(--tan-light);
+    color: var(--brown-deep);
+}
+
+/* ─── Quick Stats ─────────────────────────────────────────── */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.stat-card {
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stat-icon {
+    width: 50px; height: 50px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.stat-coral  .stat-icon { background: rgba(224,123,84,.15);  color: #e07b54; }
+.stat-tan    .stat-icon { background: rgba(200,168,130,.2);  color: var(--tan); }
+.stat-brown  .stat-icon { background: rgba(92,61,30,.12);    color: var(--brown-deep); }
+.stat-gold   .stat-icon { background: rgba(198,155,50,.15);  color: #c69b32; }
+
+.stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--brown-deep);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--brown-mid);
+    margin-top: 3px;
+    letter-spacing: .3px;
+}
+
+/* ─── Two-column body ─────────────────────────────────────── */
+.dash-body {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
+}
+
+/* ─── Section header ──────────────────────────────────────── */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.section-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--brown-deep);
+}
+
+.section-link {
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--tan);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+}
+
+.section-link:hover { color: var(--brown-deep); }
+
+/* ─── Pet Cards ───────────────────────────────────────────── */
+.pets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.pet-card {
+    padding: 20px 16px;
+    text-align: center;
+    transition: transform .2s, box-shadow .2s;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.pet-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 36px rgba(92,61,30,0.14);
+}
+
+.pet-avatar-wrap {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    overflow: hidden;
+    border: 3px solid var(--tan-light);
+    background: var(--cream-warm);
+    display: flex; align-items: center; justify-content: center;
+}
+
+.pet-avatar-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+}
+
+.pet-avatar-placeholder {
+    font-size: 1.8rem;
+}
+
+.pet-name {
+    font-family: 'Playfair Display', serif;
+    font-size: .98rem;
+    font-weight: 700;
+    color: var(--brown-deep);
+    margin-bottom: 2px;
+}
+
+.pet-meta {
+    font-size: .75rem;
+    color: var(--brown-mid);
+}
+
+.health-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .3px;
+}
+
+/* ─── Pet Verification Badge ──────────────────── */
+.pet-avatar-wrap {
+    position: relative;
+}
+
+.pet-verified-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 28px;
+    height: 28px;
+    background: #4CAF50;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.badge-healthy   { background: rgba(76,175,80,.15);  color: #2e7d32; }
+.badge-attention { background: rgba(255,152,0,.15);  color: #e65100; }
+.badge-critical  { background: rgba(244,67,54,.12);  color: #c62828; }
+
+.add-pet-card {
+    border: 2px dashed var(--glass-border);
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 28px 16px;
+    border-radius: var(--radius-lg);
+    color: var(--brown-mid);
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color .2s, color .2s;
+    font-size: .82rem;
+    font-weight: 500;
+}
+
+.add-pet-card:hover { border-color: var(--tan); color: var(--brown-deep); }
+.add-pet-card i { font-size: 1.5rem; }
+
+/* ─── Appointments ────────────────────────────────────────── */
+.appt-list { display: flex; flex-direction: column; gap: 12px; }
+
+.appt-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+}
+
+.appt-date-block {
+    min-width: 50px;
+    text-align: center;
+    background: var(--tan);
+    border-radius: var(--radius-sm);
+    padding: 8px 6px;
+    flex-shrink: 0;
+}
+
+.appt-date-block .appt-day {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--brown-deep);
+    line-height: 1;
+}
+
+.appt-date-block .appt-month {
+    font-size: .65rem;
+    font-weight: 600;
+    color: var(--brown-deep);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+}
+
+.appt-info { flex: 1; min-width: 0; }
+
+.appt-service {
+    font-weight: 600;
+    font-size: .88rem;
+    color: var(--brown-deep);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.appt-provider {
+    font-size: .78rem;
+    color: var(--brown-mid);
+    margin-top: 2px;
+}
+
+.appt-time {
+    font-size: .75rem;
+    color: var(--brown-mid);
+    margin-top: 2px;
+    display: flex; align-items: center; gap: 4px;
+}
+
+.status-pill {
+    padding: 4px 11px;
+    border-radius: 50px;
+    font-size: .7rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.status-confirmed { background: rgba(76,175,80,.13);  color: #2e7d32; }
+.status-pending   { background: rgba(255,152,0,.14);  color: #e65100; }
+.status-cancelled { background: rgba(244,67,54,.12);  color: #c62828; }
+
+/* ─── Right Column ────────────────────────────────────────── */
+.right-col { display: flex; flex-direction: column; gap: 24px; }
+
+/* ─── Profile Card ────────────────────────────────────────── */
+.profile-card {
+    padding: 28px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-card::before {
+    content: '';
+    position: absolute;
+    top: -30px; left: 50%;
+    transform: translateX(-50%);
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(200,168,130,0.25) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.profile-avatar {
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    object-fit: cover;
+    border: 3px solid var(--tan);
+    display: block;
+}
+
+.profile-avatar-placeholder {
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--tan), var(--tan-light));
+    margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--brown-deep);
+    border: 3px solid rgba(255,255,255,0.6);
+}
+
+.profile-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--brown-deep);
+    margin-bottom: 4px;
+}
+
+.profile-since {
+    font-size: .78rem;
+    color: var(--brown-mid);
+    margin-bottom: 14px;
+}
+
+.premium-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #c69b32, #e8c55a);
+    color: #5c3a00;
+    padding: 4px 14px;
+    border-radius: 50px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .4px;
+    margin-bottom: 20px;
+}
+
+.profile-divider {
+    border: none;
+    border-top: 1px solid var(--glass-border);
+    margin: 16px 0;
+}
+
+.profile-stat-row {
+    display: flex;
+    justify-content: space-around;
+    gap: 8px;
+}
+
+.profile-stat { text-align: center; }
+
+.profile-stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--brown-deep);
+}
+
+.profile-stat-lbl {
+    font-size: .72rem;
+    color: var(--brown-mid);
+    margin-top: 1px;
+}
+
+/* ─── Activity Feed ───────────────────────────────────────── */
+.activity-card { padding: 22px 20px; }
+
+.activity-list { display: flex; flex-direction: column; gap: 0; }
+
+.activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    position: relative;
+}
+
+.activity-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 42px;
+    bottom: -12px;
+    width: 1px;
+    background: var(--glass-border);
+}
+
+.activity-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--cream-warm);
+    border: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem;
+    color: var(--brown-mid);
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+.activity-body { flex: 1; min-width: 0; }
+
+.activity-title {
+    font-size: .83rem;
+    font-weight: 600;
+    color: var(--brown-deep);
+}
+
+.activity-desc {
+    font-size: .76rem;
+    color: var(--brown-mid);
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.activity-time {
+    font-size: .7rem;
+    color: var(--tan);
+    margin-top: 3px;
+}
+
+/* ─── Empty state ─────────────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--brown-mid);
+}
+
+.empty-state i { font-size: 2.5rem; opacity: .4; margin-bottom: 12px; display: block; }
+.empty-state p { font-size: .85rem; }
+
+/* ─── Responsive ──────────────────────────────────────────── */
+@@media (max-width: 1100px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .dash-body  { grid-template-columns: 1fr; }
+    .right-col  { flex-direction: row; flex-wrap: wrap; }
+    .right-col > * { flex: 1; min-width: 280px; }
+}
+
+@@media (max-width: 768px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ─── Fade-in animation ────────────────────────────────────── */
+.fade-up {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: fadeUp .5s ease forwards;
+}
+
+@@keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up:nth-child(1) { animation-delay: .05s; }
+.fade-up:nth-child(2) { animation-delay: .10s; }
+.fade-up:nth-child(3) { animation-delay: .15s; }
+.fade-up:nth-child(4) { animation-delay: .20s; }
+.fade-up:nth-child(5) { animation-delay: .25s; }
+.fade-up:nth-child(6) { animation-delay: .30s; }
+</style>
+}
+
+<div class="dash-header fade-up">
+    <div>
+        <p class="dash-greeting">@Model.Greeting, @Model.FirstName 👋</p>
+        <h1 class="dash-title">Welcome back!</h1>
+        <p class="dash-subtitle">Here's everything happening with your furry family today.</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <a asp-action="AddPet" asp-controller="Client" class="btn-secondary-pf">
+            <i class="bi bi-plus-lg"></i> Add Pet
+        </a>
+        <a asp-action="Index" asp-controller="Vet" class="btn-primary-pf">
+    <i class="bi bi-calendar2-plus"></i> Book Appointment
+</a>
+    </div>
+</div>
+
+<div class="stats-row">
+    @foreach (var stat in Model.QuickStats)
+    {
+        <div class="glass-card stat-card @stat.ColorClass fade-up">
+            <div class="stat-icon">
+                <i class="bi @stat.Icon"></i>
+            </div>
+            <div>
+                <div class="stat-value">@stat.Value</div>
+                <div class="stat-label">@stat.Label</div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="dash-body">
+
+    <div class="left-col">
+
+        <div class="section-header fade-up">
+            <h2 class="section-title">My Pets</h2>
+            <a asp-action="MyPets" asp-controller="Client" class="section-link">
+                View all <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="pets-grid">
+            @if (Model.Pets.Any())
+            {
+                @foreach (var pet in Model.Pets)
+                {
+                    <a asp-action="PetDetail" asp-controller="Client"
+                       asp-route-id="@pet.PetId"
+                       class="glass-card pet-card fade-up">
+
+                        <div class="pet-avatar-wrap">
+                            @if (!string.IsNullOrEmpty(pet.PhotoUrl))
+                            {
+                                <img src="@pet.PhotoUrl" alt="@pet.Name photo" />
+                            }
+                            else
+                            {
+                                <span class="pet-avatar-placeholder">
+                                    @(pet.Species == "Cat" ? "🐱" : pet.Species == "Dog" ? "🐶" : "🐾")
+                                </span>
+                            }
+                            @if (pet.IsVerified)
+                            {
+                                <div class="pet-verified-badge" title="Verified by @pet.VerifiedByVetName">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="pet-name">@pet.Name</div>
+                        <div class="pet-meta">@pet.Breed · @pet.AgeYears yr@(pet.AgeYears == 1 ? "" : "s")</div>
+
+                        @{
+                            var badgeClass = pet.HealthBadge switch {
+                                "Needs Attention" => "badge-attention",
+                                "Critical"        => "badge-critical",
+                                _                 => "badge-healthy"
+                            };
+                        }
+                        <span class="health-badge @badgeClass">@pet.HealthBadge</span>
+                    </a>
+                }
+            }
+
+            <a asp-action="AddPet" asp-controller="Client" class="add-pet-card fade-up">
+                <i class="bi bi-plus-circle"></i>
+                <span>Add a Pet</span>
+            </a>
+        </div>
+
+        <div class="section-header fade-up">
+            <h2 class="section-title">Upcoming Appointments</h2>
+            <a asp-action="Appointments" asp-controller="Client" class="section-link">
+                View all <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        @if (Model.UpcomingAppointments.Any())
+        {
+            <div class="appt-list">
+                @foreach (var appt in Model.UpcomingAppointments)
+                {
+                    <div class="glass-card appt-card fade-up">
+                        <div class="appt-date-block">
+                            <div class="appt-day">@appt.AppointmentDate.Day</div>
+                            <div class="appt-month">@appt.AppointmentDate.ToString("MMM")</div>
+                        </div>
+                        <div class="appt-info">
+                            <div class="appt-service">
+                                @appt.ServiceType
+                                @if (!string.IsNullOrEmpty(appt.PetName) && appt.PetName != "—")
+                                {
+                                    <span style="color:var(--brown-mid); font-weight:400;"> — @appt.PetName</span>
+                                }
+                            </div>
+                            <div class="appt-provider">
+                                <i class="bi bi-person-circle" style="font-size:.7rem;"></i>
+                                @appt.ProviderName
+                                @if (!string.IsNullOrEmpty(appt.LocationName))
+                                {
+                                    <span> · @appt.LocationName</span>
+                                }
+                            </div>
+                            <div class="appt-time">
+                                <i class="bi bi-clock"></i>
+                                @appt.AppointmentDate.ToString("h:mm tt")
+                            </div>
+                        </div>
+                        @if (appt.StatusBadge != null)
+                        {
+                            <span class="status-pill 
+                            @((appt.StatusBadge == "Pending") ? "status-pending" : 
+                              (appt.StatusBadge == "Cancelled") ? "status-cancelled" : 
+                              "status-confirmed")">@appt.StatusBadge</span>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="glass-card empty-state fade-up">
+                <i class="bi bi-calendar2-x"></i>
+                <p>No upcoming appointments.<br />
+                   <a asp-action="Index" asp-controller="Vet"
+   style="color:var(--tan); text-decoration:none;">Book one now →</a>
+                </p>
+            </div>
+        }
+    </div><div class="right-col">
+
+        <div class="glass-card profile-card fade-up">
+            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+            {
+                <img src="@Model.AvatarUrl" alt="Profile photo" class="profile-avatar" />
+            }
+            else
+            {
+                <div class="profile-avatar-placeholder">
+                    @(Model.FirstName?.FirstOrDefault().ToString().ToUpper())@(Model.LastName?.FirstOrDefault().ToString().ToUpper())
+                </div>
+            }
+
+            <div class="profile-name">@Model?.FullName</div>
+            <div class="profile-since">Member since @Model?.MemberSince</div>
+
+            @if (Model?.IsPremium == true)
+            {
+                <div>
+                    <span class="premium-badge"><i class="bi bi-stars"></i> Premium Member</span>
+                </div>
+            }
+
+            <hr class="profile-divider" />
+
+            <div class="profile-stat-row">
+                <div class="profile-stat">
+                    <div class="profile-stat-val">@(Model?.Pets.Count ?? 0)</div>
+                    <div class="profile-stat-lbl">Pets</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-val">@(Model?.UpcomingAppointments.Count ?? 0)</div>
+                    <div class="profile-stat-lbl">Upcoming</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-val">
+                        @(Model?.QuickStats.FirstOrDefault(s => s.Label == "Total Visits")?.Value ?? "0")
+                    </div>
+                    <div class="profile-stat-lbl">Visits</div>
+                </div>
+            </div>
+
+            <hr class="profile-divider" />
+            <a asp-action="Profile" asp-controller="Client" class="btn-secondary-pf w-100 justify-content-center mt-1">
+                <i class="bi bi-pencil-square"></i> Edit Profile
+            </a>
+        </div>
+
+        <div class="glass-card activity-card fade-up">
+            <div class="section-header" style="margin-bottom:14px;">
+                <h2 class="section-title">Recent Activity</h2>
+            </div>
+
+            @if (Model?.RecentActivities.Any() == true)
+            {
+                <div class="activity-list">
+                    @foreach (var activity in Model.RecentActivities)
+                    {
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="bi @activity.Icon"></i>
+                            </div>
+                            <div class="activity-body">
+                                <div class="activity-title">@activity.Title</div>
+                                <div class="activity-desc">@activity.Description</div>
+                                <div class="activity-time">
+                                    @activity.Timestamp.ToString("MMM d · h:mm tt")
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state" style="padding:24px 0 8px;">
+                    <i class="bi bi-clock-history"></i>
+                    <p>No recent activity yet.</p>
+                </div>
+            }
+        </div>
+
+    </div></div>
+@section Scripts {
+<script>
+    // Stagger animation trigger via IntersectionObserver for below-fold cards
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.style.animationPlayState = 'running';
+                observer.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-up').forEach(el => {
+        el.style.animationPlayState = 'paused';
+        observer.observe(el);
+    });
+</script>
+}

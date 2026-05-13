@@ -1,9 +1,9 @@
-﻿using Pets_friends.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Pets_friends.Models
 {
-    public class ClientProfile
+    public class ActivityLog
     {
         [Key]
         public int Id { get; set; }
@@ -13,11 +13,9 @@ namespace Pets_friends.Models
         [ForeignKey("UserAccountId")]
         public virtual UserAccount UserAccount { get; set; } = null!;
 
-        public string? AvatarUrl { get; set; }
-        public bool IsPremiumMember { get; set; } = false;
-        public int TotalVisits { get; set; } = 0;
-        public int LoyaltyPoints { get; set; } = 0;
-
-        public virtual ICollection<Pet> Pets { get; set; } = new List<Pet>();
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string IconClass { get; set; } = "bi-activity";
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     }
 }

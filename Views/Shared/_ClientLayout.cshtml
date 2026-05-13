@@ -1,0 +1,380 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Pet Friends</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    <!-- Bootstrap (grid utility only – visuals overridden entirely) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+
+    @RenderSection("Styles", required: false)
+
+    <style>
+            /* ═══════════════════════════════════════════════════════
+               DESIGN TOKENS
+            ═══════════════════════════════════════════════════════ */
+            :root {
+                --brown-deep:   #5C3D1E;
+                --brown-mid:    #8C7560;
+                --tan:          #C8A882;
+                --tan-light:    #E2CEBA;
+                --cream:        #F5F1EB;
+                --cream-warm:   #EDE0D0;
+                --bg-gradient:  linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 100%);
+                --glass-bg:     rgba(255,255,255,0.55);
+                --glass-border: rgba(200,168,130,0.30);
+                --shadow-soft:  0 8px 32px rgba(92,61,30,0.10);
+                --shadow-card:  0 4px 24px rgba(92,61,30,0.08);
+                --radius-sm:    12px;
+                --radius-md:    18px;
+                --radius-lg:    24px;
+                --sidebar-w:    260px;
+                --topbar-h:     70px;
+            }
+
+            /* ═══════════════════════════════════════════════════════
+               RESET & BASE
+            ═══════════════════════════════════════════════════════ */
+            *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+            body {
+                font-family: 'DM Sans', sans-serif;
+                background: var(--bg-gradient);
+                min-height: 100vh;
+                color: var(--brown-deep);
+            }
+
+            h1, h2, h3, h4, h5 { font-family: 'Playfair Display', serif; }
+
+            /* ═══════════════════════════════════════════════════════
+               LAYOUT SHELL
+            ═══════════════════════════════════════════════════════ */
+            .app-shell {
+                display: flex;
+                min-height: 100vh;
+            }
+
+            /* ─── Sidebar ─────────────────────────────────────── */
+            .sidebar {
+                width: var(--sidebar-w);
+                min-height: 100vh;
+                position: fixed;
+                top: 0; left: 0;
+                background: rgba(92,61,30,0.88);
+                backdrop-filter: blur(18px);
+                -webkit-backdrop-filter: blur(18px);
+                border-right: 1px solid rgba(200,168,130,0.20);
+                display: flex;
+                flex-direction: column;
+                padding: 0 0 24px 0;
+                z-index: 200;
+                transition: transform .3s ease;
+            }
+
+            .sidebar-brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 28px 24px 22px;
+                border-bottom: 1px solid rgba(255,255,255,0.10);
+            }
+
+            .sidebar-brand .brand-paw {
+                font-size: 1.6rem;
+            }
+
+            .sidebar-brand .brand-name {
+                font-family: 'Playfair Display', serif;
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #fff;
+                letter-spacing: .4px;
+            }
+
+            .sidebar-nav {
+                flex: 1;
+                padding: 18px 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .nav-section-label {
+                font-size: .68rem;
+                font-weight: 600;
+                letter-spacing: 1.4px;
+                text-transform: uppercase;
+                color: rgba(255,255,255,0.40);
+                padding: 16px 10px 6px;
+            }
+
+            .nav-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 11px 14px;
+                border-radius: var(--radius-sm);
+                color: rgba(255,255,255,0.75);
+                text-decoration: none;
+                font-size: .88rem;
+                font-weight: 500;
+                transition: background .2s, color .2s;
+            }
+
+            .nav-item i { font-size: 1.05rem; width: 20px; text-align: center; }
+
+            .nav-item:hover {
+                background: rgba(255,255,255,0.12);
+                color: #fff;
+            }
+
+            .nav-item.active {
+                background: var(--tan);
+                color: var(--brown-deep);
+                font-weight: 600;
+            }
+
+            .nav-item.active i { color: var(--brown-deep); }
+
+            .sidebar-footer {
+                padding: 0 14px;
+            }
+
+            .sidebar-footer .nav-item {
+                color: rgba(255,255,255,0.50);
+            }
+
+            /* ─── Top Bar ──────────────────────────────────────── */
+            .topbar {
+                position: fixed;
+                top: 0;
+                left: var(--sidebar-w);
+                right: 0;
+                height: var(--topbar-h);
+                background: rgba(245,241,235,0.75);
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+                border-bottom: 1px solid var(--glass-border);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 32px;
+                z-index: 100;
+            }
+
+            .topbar-search {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                background: var(--glass-bg);
+                border: 1px solid var(--glass-border);
+                border-radius: 50px;
+                padding: 8px 18px;
+                width: 260px;
+            }
+
+            .topbar-search input {
+                border: none;
+                background: transparent;
+                outline: none;
+                font-family: 'DM Sans', sans-serif;
+                font-size: .85rem;
+                color: var(--brown-deep);
+                width: 100%;
+            }
+
+            .topbar-search input::placeholder { color: var(--brown-mid); }
+            .topbar-search i { color: var(--brown-mid); }
+
+            .topbar-actions {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .topbar-icon-btn {
+                width: 38px; height: 38px;
+                border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                background: var(--glass-bg);
+                border: 1px solid var(--glass-border);
+                color: var(--brown-mid);
+                cursor: pointer;
+                transition: all .2s;
+                text-decoration: none;
+                position: relative;
+            }
+
+            .topbar-icon-btn:hover { background: var(--tan-light); color: var(--brown-deep); }
+
+            .notif-dot {
+                position: absolute; top: 7px; right: 8px;
+                width: 7px; height: 7px;
+                background: #e07b54;
+                border-radius: 50%;
+                border: 2px solid var(--cream);
+            }
+
+            .topbar-avatar {
+                width: 38px; height: 38px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid var(--tan);
+                cursor: pointer;
+            }
+
+            .topbar-avatar-placeholder {
+                width: 38px; height: 38px;
+                border-radius: 50%;
+                background: var(--tan);
+                display: flex; align-items: center; justify-content: center;
+                font-weight: 700;
+                color: var(--brown-deep);
+                font-size: .9rem;
+                border: 2px solid var(--tan-light);
+                cursor: pointer;
+            }
+
+            /* ─── Main Content ─────────────────────────────────── */
+            .main-content {
+                margin-left: var(--sidebar-w);
+                margin-top: var(--topbar-h);
+                flex: 1;
+                padding: 36px 36px 48px;
+                min-height: calc(100vh - var(--topbar-h));
+            }
+
+            /* ─── Glass Card ───────────────────────────────────── */
+            .glass-card {
+                background: var(--glass-bg);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid var(--glass-border);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-card);
+            }
+
+            /* ═══════════════════════════════════════════════════════
+               SCROLLBAR
+            ═══════════════════════════════════════════════════════ */
+            ::-webkit-scrollbar { width: 6px; }
+            ::-webkit-scrollbar-track { background: transparent; }
+            ::-webkit-scrollbar-thumb { background: var(--tan-light); border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+
+        <!-- ═══ SIDEBAR ═══════════════════════════════════════════ -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-paw">🐾</span>
+                <span class="brand-name">Pet Friends</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <span class="nav-section-label">Main</span>
+
+                <a href="@Url.Action("Dashboard", "Client")"
+                       class="nav-item @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                </a>
+
+                <a href="@Url.Action("MyPets", "Client")"
+                       class="nav-item @(ViewData["ActivePage"]?.ToString() == "MyPets" ? "active" : "")">
+                    <i class="bi bi-heart-fill"></i> My Pets
+                </a>
+
+                <a href="@Url.Action("Appointments", "Client")"
+                       class="nav-item @(ViewData["ActivePage"]?.ToString() == "Appointments" ? "active" : "")">
+                    <i class="bi bi-calendar2-check"></i> Appointments
+                </a>
+
+                <a href="@Url.Action("FindVet", "Client")"
+                       class="nav-item @(ViewData["ActivePage"]?.ToString() == "FindVet" ? "active" : "")">
+                    <i class="bi bi-hospital"></i> Find a Vet
+                </a>
+
+                <a href="@Url.Action("Shop", "Client")"
+                       class="nav-item @(ViewData["ActivePage"]?.ToString() == "Shop" ? "active" : "")">
+                    <i class="bi bi-bag-heart"></i> Pet Shop
+                </a>
+
+                <a href="@Url.Action("Shelters", "Client")"
+                       class="nav-item @(ViewData["ActivePage"]?.ToString() == "Shelters" ? "active" : "")">
+                    <i class="bi bi-house-heart"></i> Shelters
+                </a>
+
+                <span class="nav-section-label">Account</span>
+
+                <a href="@Url.Action("Profile", "Client")"
+                       class="nav-item @(ViewData["ActivePage"]?.ToString() == "Profile" ? "active" : "")">
+                    <i class="bi bi-person-circle"></i> My Profile
+                </a>
+
+                <a href="@Url.Action("MedicalRecords", "Client")"
+                       class="nav-item @(ViewData["ActivePage"]?.ToString() == "Records" ? "active" : "")">
+                    <i class="bi bi-clipboard2-pulse"></i> Medical Records
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <form method="post" asp-action="Logout" asp-controller="Account">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="nav-item w-100 border-0 text-start"
+                            style="cursor:pointer; background:transparent;">
+                        <i class="bi bi-box-arrow-left"></i> Sign Out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- ═══ TOP BAR ═══════════════════════════════════════════ -->
+        <header class="topbar">
+            <div class="topbar-search">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Search vets, services, records…" />
+            </div>
+            <div class="topbar-actions">
+                <a href="#" class="topbar-icon-btn">
+                    <i class="bi bi-bell"></i>
+                    <span class="notif-dot"></span>
+                </a>
+                <a href="#" class="topbar-icon-btn">
+                    <i class="bi bi-chat-dots"></i>
+                </a>
+                @{
+                    var avatarUrl = ViewData["AvatarUrl"] as string;
+                    var initials = ViewData["Initials"] as string ?? "?";
+                }
+                @if (!string.IsNullOrEmpty(avatarUrl))
+                {
+                    <img src="@avatarUrl" alt="avatar" class="topbar-avatar" />
+                }
+                else
+                {
+                    <div class="topbar-avatar-placeholder">@initials</div>
+                }
+            </div>
+        </header>
+
+        <!-- ═══ PAGE BODY ══════════════════════════════════════════ -->
+        <main class="main-content">
+            @RenderBody()
+        </main>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

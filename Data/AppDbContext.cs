@@ -27,6 +27,7 @@ namespace Pets_friends.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -64,7 +65,7 @@ namespace Pets_friends.Data
                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<Appointment>()
-                .HasOne(a => a.VetProfile)
+                .HasOne(a => a.Provider)
                 .WithMany(v => v.Appointments)
                 .HasForeignKey(a => a.VetProfileId)
                 .OnDelete(DeleteBehavior.NoAction);

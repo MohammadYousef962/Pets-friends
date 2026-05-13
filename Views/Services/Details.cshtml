@@ -1,0 +1,140 @@
+﻿@model Pets_friends.Models.Service
+@{
+    ViewData["Title"] = Model.Name;
+    // Assuming this uses your public layout. Change to "_ClientLayout" if needed.
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-8 fade-up">
+            
+            <a asp-controller="Home" asp-action="Index" class="text-decoration-none mb-3 d-inline-block" style="color: var(--tan); font-weight: 600;">
+                <i class="bi bi-arrow-left"></i> Back to Services
+            </a>
+
+            <div class="card shadow-sm" style="border-radius: 16px; border: 1px solid var(--tan-light); background: #fff;">
+                <div class="card-body p-4 p-md-5">
+                    
+                    <div class="d-flex align-items-center gap-4 mb-4">
+                        <div class="rounded p-4 d-flex align-items-center justify-content-center" style="background-color: rgba(200,168,130,0.15); color: var(--tan);">
+                            <i class="bi bi-heart-pulse" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <div>
+                            <h1 style="color: var(--brown-deep); font-family: 'Playfair Display', serif; font-weight: 700; margin: 0;">
+                                @Model.Name
+                            </h1>
+                            <span class="badge mt-2" style="background-color: var(--tan-light); color: var(--brown-deep);">Pet Care Service</span>
+                        </div>
+                    </div>
+
+                    <hr style="border-color: var(--glass-border);" />
+
+                    <div class="mt-4">
+                        <h4 style="color: var(--brown-mid); font-weight: 600; margin-bottom: 16px;">Overview</h4>
+                        <p style="font-size: 1.1rem; line-height: 1.7; color: #555;">
+                            @Model.Description
+                        </p>
+                    </div>
+
+                    <div class="mt-5 p-4 rounded d-flex justify-content-between align-items-center flex-wrap gap-3" style="background-color: #fdfaf7; border-left: 4px solid var(--tan);">
+                        <div>
+                            <p class="mb-0 text-muted" style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Starting Price</p>
+                            <h3 style="color: var(--brown-deep); font-weight: 700; margin: 0;">
+                                $@Model.Price.ToString("0.00")
+                            </h3>
+                        </div>
+                        
+                        <a asp-controller="Vet" asp-action="Index" class="btn" style="background-color: var(--brown-deep); color: white; border-radius: 50px; padding: 12px 28px; font-weight: 600;">
+                            Find a Vet <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <div class="mt-5 pt-4 border-top">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 style="color: var(--brown-deep); font-weight: 700; margin: 0;">Specialists Offering This Service</h3>
+            <div class="d-none d-md-flex gap-2">
+                <button class="btn btn-sm rounded-circle" style="background: #f1f1f1; width: 36px; height: 36px;"><i class="bi bi-chevron-left"></i></button>
+                <button class="btn btn-sm rounded-circle" style="background: #e5e5e5; width: 36px; height: 36px;"><i class="bi bi-chevron-right"></i></button>
+            </div>
+        </div>
+                        
+        @if (ViewBag.MatchingVets != null && ((IEnumerable<dynamic>)ViewBag.MatchingVets).Any())
+        {
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                @foreach (var vet in ViewBag.MatchingVets)
+                {
+                    <div class="col">
+                        <a asp-controller="Vet" asp-action="Profile" asp-route-id="@vet.Id" class="text-decoration-none d-block vet-card-hover">
+                            <div class="card h-100 border-0 bg-transparent">
+                                                
+                                <div class="position-relative mb-3 rounded" style="background-color: #f6f6f6; padding-top: 100%; overflow: hidden;">
+                                    @if (!string.IsNullOrEmpty(vet.ImageUrl))
+                                    {
+                                        <img src="@vet.ImageUrl" class="position-absolute top-0 start-0 w-100 h-100 transition-zoom" style="object-fit: cover;" alt="@vet.UserAccount?.FullName" />
+                                    }
+                                    else
+                                    {
+                                        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-person" style="font-size: 5rem; color: #ccc;"></i>
+                                        </div>
+                                    }
+                                </div>
+                                                
+                                <div class="card-body p-0">
+                                    <h5 class="mb-1" style="color: #111; font-weight: 600; font-size: 1.1rem;">
+                                        @(vet.UserAccount?.FullName ?? "Unknown Vet")
+                                    </h5>
+                                    <p class="text-muted mb-2" style="font-size: 0.95rem;">
+                                        @vet.ClinicName
+                                    </p>
+                                    <p style="color: var(--brown-deep); font-weight: 600; font-size: 0.95rem;">
+                                        @vet.YearsOfExperience+ Years Experience
+                                    </p>
+                                </div>
+                                                
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="p-4 rounded text-center" style="background: #f6f6f6;">
+                <h5 style="color: var(--brown-deep); font-weight: 600;">No specialists found yet</h5>
+                <p class="text-muted mb-0">Any of our general care veterinarians can assist you. Click "Find a Vet" to browse.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .fade-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.6s ease forwards;
+        }
+
+        @@keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .vet-card-hover .transition-zoom {
+            transition: transform 0.4s ease;
+        }
+
+        .vet-card-hover:hover .transition-zoom {
+            transform: scale(1.05);
+        }
+    </style>
+}

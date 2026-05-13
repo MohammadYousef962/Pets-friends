@@ -1,0 +1,411 @@
+﻿@model Pets_friends.Data.ViewModels.EditProfileVM
+@{
+    ViewData["Title"] = "Edit Profile";
+    // Shared layout — used by Clients, Vets, and Admins alike
+    Layout = "_Layout";
+
+    // Build initials for the avatar placeholder
+    var initials = string.Concat(
+        Model?.FullName?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+              .Take(2)
+              .Select(w => w[0])
+    ).ToUpper();
+}
+
+@section Styles {
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   EDIT PROFILE — PAGE STYLES
+═══════════════════════════════════════════════════════════════ */
+
+body {
+    background: var(--cream-warm, #f9f5f0);
+    min-height: 100vh;
+}
+
+.editprofile-wrapper {
+    max-width: 640px;
+    margin: 48px auto 80px;
+    padding: 0 16px;
+}
+
+/* ─── Avatar block ────────────────────────────────────────── */
+.avatar-block {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.avatar-circle {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--tan, #C8A882), var(--brown-deep, #5C3D1E));
+    color: #fff;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    box-shadow: 0 8px 24px rgba(92,61,30,.2);
+    letter-spacing: 1px;
+}
+
+.avatar-block h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--brown-deep, #5C3D1E);
+    margin-bottom: 4px;
+}
+
+.avatar-block p {
+    font-size: .85rem;
+    color: var(--brown-mid, #8a6f58);
+}
+
+/* ─── Glass card ──────────────────────────────────────────── */
+.glass-card {
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(200,168,130,.25);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(92,61,30,.07);
+}
+
+.form-card { padding: 40px; }
+
+/* ─── Section labels ──────────────────────────────────────── */
+.form-section-label {
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--tan, #C8A882);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(200,168,130,.25);
+}
+
+/* ─── Inputs ──────────────────────────────────────────────── */
+.pf-label {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--brown-deep, #5C3D1E);
+    margin-bottom: 6px;
+    display: block;
+}
+
+.pf-input,
+.pf-select {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(200,168,130,.4);
+    background: #fdfbf7;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    color: var(--brown-deep, #5C3D1E);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    appearance: none;
+}
+
+.pf-input:focus,
+.pf-select:focus {
+    border-color: var(--tan, #C8A882);
+    box-shadow: 0 0 0 3px rgba(200,168,130,.2);
+}
+
+.pf-input::placeholder { color: #c0b5ab; }
+
+.pf-input.input-error,
+.pf-select.input-error {
+    border-color: #e53935;
+    box-shadow: 0 0 0 3px rgba(229,57,53,.1);
+}
+
+.field-error {
+    font-size: .78rem;
+    color: #c62828;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ─── Phone prefix group ──────────────────────────────────── */
+.phone-group {
+    display: flex;
+    gap: 8px;
+}
+
+.phone-prefix {
+    flex-shrink: 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(200,168,130,.4);
+    background: #fdfbf7;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    color: var(--brown-mid, #8a6f58);
+    font-weight: 600;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color .2s;
+}
+
+.phone-prefix:focus {
+    border-color: var(--tan, #C8A882);
+    box-shadow: 0 0 0 3px rgba(200,168,130,.2);
+}
+
+/* ─── Gender chips ────────────────────────────────────────── */
+.gender-chips { display: flex; gap: 10px; }
+
+.gender-chip input[type="radio"] { display: none; }
+
+.gender-chip label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 22px;
+    border-radius: 50px;
+    border: 1.5px solid rgba(200,168,130,.4);
+    background: #fdfbf7;
+    color: var(--brown-mid, #8a6f58);
+    font-size: .85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+}
+
+.gender-chip input[type="radio"]:checked + label {
+    background: var(--brown-deep, #5C3D1E);
+    border-color: var(--brown-deep, #5C3D1E);
+    color: #fff;
+}
+
+/* ─── Divider ─────────────────────────────────────────────── */
+.pf-divider {
+    border: none;
+    border-top: 1px solid rgba(200,168,130,.2);
+    margin: 28px 0;
+}
+
+/* ─── Footer ──────────────────────────────────────────────── */
+.form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--brown-mid, #8a6f58);
+    text-decoration: none;
+    font-size: .88rem;
+    font-weight: 500;
+    transition: color .15s;
+}
+
+.btn-back:hover { color: var(--brown-deep, #5C3D1E); }
+
+.btn-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brown-deep, #5C3D1E);
+    color: #fff;
+    border: none;
+    padding: 13px 30px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, transform .15s;
+}
+
+.btn-save:hover {
+    background: #7a5229;
+    transform: translateY(-1px);
+}
+
+.btn-save:active { transform: translateY(0); }
+
+/* ─── Success banner ──────────────────────────────────────── */
+.success-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(76,175,80,.1);
+    border: 1px solid rgba(76,175,80,.25);
+    border-radius: 10px;
+    padding: 13px 18px;
+    margin-bottom: 24px;
+    color: #2e7d32;
+    font-size: .88rem;
+    font-weight: 500;
+}
+
+.error-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(229,57,53,.07);
+    border: 1px solid rgba(229,57,53,.2);
+    border-radius: 10px;
+    padding: 13px 18px;
+    margin-bottom: 24px;
+    color: #c62828;
+    font-size: .88rem;
+}
+
+/* ─── Fade-up animation ───────────────────────────────────── */
+@@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+    animation: fadeUp .45s ease both;
+}
+</style>
+}
+
+<div class="editprofile-wrapper">
+
+    <div class="avatar-block fade-up">
+        <div class="avatar-circle">@initials</div>
+        <h1>Edit Profile</h1>
+        <p>Keep your details up to date</p>
+    </div>
+
+    <div class="glass-card form-card fade-up" style="animation-delay:.08s;">
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="success-banner">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>@TempData["SuccessMessage"]</span>
+            </div>
+        }
+
+        <form asp-action="EditProfile" asp-controller="Account" method="post">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="error-banner" style="display:@(ViewData.ModelState.IsValid ? "none" : "flex");">
+                <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
+                <span></span>
+            </div>
+
+            <div class="form-section-label">Personal Info</div>
+
+            <div class="mb-4">
+                <label asp-for="FullName" class="pf-label">Full Name</label>
+                <input asp-for="FullName" class="pf-input" placeholder="e.g. Sarah Al-Khalidi" required />
+                <span asp-validation-for="FullName" class="field-error">
+                    <i class="bi bi-exclamation-circle"> hi</i>
+                </span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="PhoneNumber" class="pf-label">Phone Number</label>
+                <div class="phone-group">
+                    <select class="phone-prefix" id="phonePrefix">
+                        <option value="+962">🇯🇴 +962</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+966">🇸🇦 +966</option>
+                        <option value="+20">🇪🇬 +20</option>
+                    </select>
+                    <input asp-for="PhoneNumber" class="pf-input" placeholder="7x xxx xxxx" />
+                </div>
+                <span asp-validation-for="PhoneNumber" class="field-error">
+                    <i class="bi bi-exclamation-circle"></i>
+                </span>
+            </div>
+
+            <hr class="pf-divider" />
+
+            <div class="form-section-label">About You</div>
+
+            <div class="mb-4">
+                <label class="pf-label">Gender</label>
+                <div class="gender-chips">
+                    <div class="gender-chip">
+                        <input type="radio" id="genderMale" asp-for="Gender" value="Male" />
+                        <label for="genderMale">♂ Male</label>
+                    </div>
+                    <div class="gender-chip">
+                        <input type="radio" id="genderFemale" asp-for="Gender" value="Female" />
+                        <label for="genderFemale">♀ Female</label>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <label asp-for="City" class="pf-label">City</label>
+                <input asp-for="City" class="pf-input" placeholder="e.g. Amman, Zarqa, Irbid" />
+                <span asp-validation-for="City" class="field-error">
+                    <i class="bi bi-exclamation-circle"></i>
+                </span>
+            </div>
+
+            <hr class="pf-divider" />
+
+            <div class="form-footer">
+                <a href="javascript:history.back()" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn-save">
+                    <i class="bi bi-check2"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+@section Scripts {
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    // Pre-select the matching prefix from the stored phone number
+    (function () {
+        const field  = document.querySelector('input[name="PhoneNumber"]');
+        const prefix = document.getElementById('phonePrefix');
+        if (!field || !prefix || !field.value) return;
+
+        const val = field.value.trim();
+        const opt = [...prefix.options].find(o => val.startsWith(o.value));
+        if (opt) {
+            prefix.value  = opt.value;
+            field.value   = val.slice(opt.value.length).trim();
+        }
+    })();
+
+    // On submit, stitch prefix + number back together
+    document.querySelector('form').addEventListener('submit', function () {
+        const field  = document.querySelector('input[name="PhoneNumber"]');
+        const prefix = document.getElementById('phonePrefix');
+        if (field && prefix && field.value && !field.value.startsWith('+')) {
+            field.value = prefix.value + field.value.trim();
+        }
+    });
+</script>
+}

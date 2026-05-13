@@ -1,0 +1,658 @@
+﻿@model Pets_friends.Data.ViewModels.LandingPageViewModel
+@using Pets_friends.Models
+@{
+    ViewData["Title"] = "Best Pals for Your Paw Pals";
+    Layout = "_Layout";
+}
+
+@section Styles {
+<link rel="stylesheet" href="~/css/landing.css" />
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   LANDING PAGE — INLINE ADDITIONS
+   (move to landing.css once confirmed working)
+═══════════════════════════════════════════════════════════════ */
+
+/* ─── Hero search bar ─────────────────────────────────────── */
+.hero-search-wrap {
+    margin-top: 28px;
+    display: flex;
+    justify-content: center;
+}
+
+.hero-search {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 50px;
+    box-shadow: 0 8px 32px rgba(92,61,30,.15);
+    overflow: hidden;
+    width: 100%;
+    max-width: 480px;
+    border: 1.5px solid rgba(200,168,130,.3);
+    transition: box-shadow .2s;
+}
+
+.hero-search:focus-within {
+    box-shadow: 0 8px 40px rgba(92,61,30,.22);
+    border-color: rgba(200,168,130,.6);
+}
+
+.hero-search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 14px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .92rem;
+    color: #4A3B32;
+    background: transparent;
+}
+
+.hero-search input::placeholder { color: #b8a89a; }
+
+.hero-search button {
+    background: #5C3D1E;
+    color: #fff;
+    border: none;
+    padding: 12px 22px;
+    margin: 5px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: background .2s, transform .15s;
+    white-space: nowrap;
+}
+
+.hero-search button:hover {
+    background: #7a5229;
+    transform: scale(1.03);
+}
+
+.hero-search-hint {
+    text-align: center;
+    margin-top: 10px;
+    font-size: .78rem;
+    color: rgba(255,255,255,.6);
+}
+
+.hero-search-hint a {
+    color: rgba(255,255,255,.85);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* ─── How It Works ────────────────────────────────────────── */
+.how-section {
+    padding: 80px 24px;
+    background: #fff;
+    text-align: center;
+}
+
+.how-eyebrow {
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #C8A882;
+    margin-bottom: 10px;
+}
+
+.how-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #5C3D1E;
+    margin-bottom: 56px;
+}
+
+.how-steps {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0;
+    max-width: 860px;
+    margin: 0 auto;
+    position: relative;
+}
+
+/* Connecting line between steps */
+.how-steps::before {
+    content: '';
+    position: absolute;
+    top: 36px;
+    left: calc(16.6% + 36px);
+    right: calc(16.6% + 36px);
+    height: 2px;
+    background: linear-gradient(90deg, #C8A882 0%, #5C3D1E 50%, #C8A882 100%);
+    opacity: .25;
+    pointer-events: none;
+}
+
+.how-step {
+    flex: 1;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.how-step-num {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C8A882, #5C3D1E);
+    color: #fff;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(92,61,30,.2);
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+.how-step-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #5C3D1E;
+}
+
+.how-step-desc {
+    font-size: .83rem;
+    color: #8a6f58;
+    line-height: 1.6;
+    max-width: 200px;
+}
+
+/* ─── Services section fixes ──────────────────────────────── */
+/* Each card gets a unique accent via nth-child */
+.service-card:nth-child(1) .service-icon-wrap { background: rgba(224,123,84,.12);  color: #e07b54; }
+.service-card:nth-child(2) .service-icon-wrap { background: rgba(92,61,30,.1);     color: #5C3D1E; }
+.service-card:nth-child(3) .service-icon-wrap { background: rgba(200,168,130,.2);  color: #9a7a55; }
+.service-card:nth-child(4) .service-icon-wrap { background: rgba(76,175,80,.1);    color: #388e3c; }
+.service-card:nth-child(5) .service-icon-wrap { background: rgba(33,150,243,.1);   color: #1976d2; }
+.service-card:nth-child(6) .service-icon-wrap { background: rgba(156,39,176,.1);   color: #7b1fa2; }
+
+/* View all services link */
+.services-footer {
+    text-align: center;
+    margin-top: 36px;
+}
+
+.btn-outline-pf {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 50px;
+    border: 2px solid #5C3D1E;
+    color: #5C3D1E;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .2s, color .2s;
+}
+
+.btn-outline-pf:hover {
+    background: #5C3D1E;
+    color: #fff;
+}
+
+/* ─── Testimonials ────────────────────────────────────────── */
+.testimonials-section {
+    padding: 80px 24px;
+    background: #F5F1EB;
+    text-align: center;
+}
+
+.testimonials-section .how-eyebrow { color: #C8A882; }
+.testimonials-section .how-heading { margin-bottom: 40px; }
+
+.testi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.testi-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 28px 24px;
+    text-align: left;
+    box-shadow: 0 4px 20px rgba(92,61,30,.07);
+    border: 1px solid rgba(200,168,130,.2);
+    transition: transform .2s, box-shadow .2s;
+}
+
+.testi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(92,61,30,.12);
+}
+
+.testi-stars {
+    color: #C8A882;
+    font-size: .95rem;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+}
+
+.testi-text {
+    font-size: .88rem;
+    color: #6C5B51;
+    line-height: 1.7;
+    margin-bottom: 18px;
+    font-style: italic;
+}
+
+.testi-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.testi-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C8A882, #5C3D1E);
+    color: #fff;
+    font-family: 'Playfair Display', serif;
+    font-size: .95rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.testi-name {
+    font-size: .85rem;
+    font-weight: 700;
+    color: #5C3D1E;
+}
+
+.testi-pet {
+    font-size: .75rem;
+    color: #9a7a55;
+}
+
+/* ─── Vet spotlight strip ─────────────────────────────────── */
+.vet-strip {
+    padding: 56px 24px;
+    background: #fff;
+    text-align: center;
+}
+
+.vet-strip .how-heading { margin-bottom: 36px; }
+
+.vet-strip-inner {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    max-width: 900px;
+    margin: 0 auto 32px;
+}
+
+.vet-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    border-radius: 50px;
+    background: #F5F1EB;
+    border: 1.5px solid rgba(200,168,130,.3);
+    font-size: .85rem;
+    color: #5C3D1E;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background .15s, border-color .15s;
+}
+
+.vet-chip:hover {
+    background: rgba(200,168,130,.2);
+    border-color: #C8A882;
+    color: #5C3D1E;
+}
+
+.vet-chip-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C8A882, #5C3D1E);
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ─── Staggered reveal animation ──────────────────────────── */
+.reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .55s ease, transform .55s ease;
+}
+
+.reveal.visible {
+    opacity: 1;
+    transform: none;
+}
+
+.reveal-delay-1 { transition-delay: .1s; }
+.reveal-delay-2 { transition-delay: .2s; }
+.reveal-delay-3 { transition-delay: .3s; }
+
+@@media (max-width: 640px) {
+    .how-steps::before { display: none; }
+    .how-steps { flex-direction: column; align-items: center; gap: 32px; }
+    .hero-search { max-width: 100%; }
+}
+</style>
+}
+
+{{!-- ══════════════════════════════════════════════════════════
+     HERO
+══════════════════════════════════════════════════════════ --}}
+<section class="hero-section">
+    <div class="hero-container">
+
+        <div class="hero-pet-container hero-pet-left-wrap">
+            <img class="hero-pet hero-pet-left"
+                 src="~/images/hero-cat-removebg-1.png"
+                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22250%22%3E%3Crect fill=%22%23e8e8e8%22 width=%22200%22 height=%22250%22/%3E%3C/svg%3E'"
+                 alt="Happy cat" />
+        </div>
+
+        <div class="hero-content">
+            <h1 class="hero-title">Best Pals for<br><span class="highlight">Your Paw Pals</span></h1>
+            <p class="hero-subtitle">
+                Your trusted partner in pet care — vets, grooming, boarding, and more,
+                all in one place built for your furry family.
+            </p>
+
+            {{!-- ✅ WORKING SEARCH BAR — routes to Vet/Index?q=... --}}
+            <div class="hero-search-wrap">
+                <form action="/Vet/Index" method="get" class="hero-search">
+                    <input type="text" name="q"
+                           placeholder="Search for a vet, service, or specialization…"
+                           autocomplete="off" />
+                    <button type="submit">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </form>
+            </div>
+            <p class="hero-search-hint">
+                Or <a asp-controller="Account" asp-action="Register">create a free account</a> to get started
+            </p>
+        </div>
+
+        <div class="hero-pet-container hero-pet-right-wrap">
+            <img class="hero-pet hero-pet-right"
+                 src="~/images/hero-dog-removebg-preview.png"
+                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22250%22/%3E%3C/svg%3E'"
+                 alt="Happy dog" />
+        </div>
+
+        <span class="paw-decor paw-1" aria-hidden="true">🐾</span>
+        <span class="paw-decor paw-2" aria-hidden="true">🐾</span>
+        <span class="paw-decor paw-3" aria-hidden="true">🐾</span>
+        <span class="paw-decor paw-4" aria-hidden="true">🐾</span>
+    </div>
+
+    <div class="hero-wave-bg" aria-hidden="true">
+        <svg viewBox="0 0 1440 320" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#F5F1EB" d="M0,160 C240,260 480,60 720,140 C960,220 1200,80 1440,160 L1440,320 L0,320 Z"/>
+        </svg>
+    </div>
+</section>
+
+<div class="wave-divider" aria-hidden="true">
+    <svg viewBox="0 0 1440 56" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:56px;background:#fff;">
+        <path fill="#F5F1EB" d="M0,28 C360,56 1080,0 1440,28 L1440,56 L0,56 Z"/>
+    </svg>
+</div>
+
+
+{{!-- ══════════════════════════════════════════════════════════
+     HOW IT WORKS  (was missing — this is what made the page feel flat)
+══════════════════════════════════════════════════════════ --}}
+<section class="how-section">
+    <div class="how-eyebrow reveal">Simple as 1 – 2 – 3</div>
+    <h2 class="how-heading reveal">How Pet Friends Works</h2>
+    <div class="how-steps">
+        <div class="how-step reveal reveal-delay-1">
+            <div class="how-step-num">1</div>
+            <div class="how-step-title">Create Your Account</div>
+            <div class="how-step-desc">Sign up in seconds and add your pets' profiles with photos, breed, and health info.</div>
+        </div>
+        <div class="how-step reveal reveal-delay-2">
+            <div class="how-step-num">2</div>
+            <div class="how-step-title">Find & Book</div>
+            <div class="how-step-desc">Browse verified vets and services, check availability, and book in one tap.</div>
+        </div>
+        <div class="how-step reveal reveal-delay-3">
+            <div class="how-step-num">3</div>
+            <div class="how-step-title">Relax & Track</div>
+            <div class="how-step-desc">Get reminders, track visit history, and manage everything from your dashboard.</div>
+        </div>
+    </div>
+</section>
+
+
+{{!-- ══════════════════════════════════════════════════════════
+     SERVICES
+══════════════════════════════════════════════════════════ --}}
+<section class="services-section" id="services" style="background:#F5F1EB;">
+    <h2 class="services-heading reveal">Our Pet Care Solutions</h2>
+
+    <div class="services-grid">
+        @if (Model.FeaturedServices != null && Model.FeaturedServices.Any())
+        {
+            int idx = 0;
+            @foreach (var svc in Model.FeaturedServices)
+            {
+                <a href="@Url.Action("Details", "Services", new { id = svc.Id })"
+                   class="service-card-link" style="text-decoration:none; color:inherit; display:block;">
+                   <div class="service-card reveal" style="transition-delay: @(idx * 0.07)s">
+    <div class="service-icon-wrap" aria-hidden="true">
+        <i class="bi bi-heart-pulse"></i>
+    </div>
+    <div class="service-body">
+        <div class="service-title">@svc.Name</div>
+        <div class="service-desc">@svc.Description</div>
+    </div>
+</div>
+                </a>
+                idx++;
+            }
+        }
+        else
+        {
+            <div style="text-align:center; width:100%; color:#8a6f58; grid-column:1/-1; padding:40px 0;">
+                <i class="bi bi-heart" style="font-size:2rem; display:block; margin-bottom:10px; color:#C8A882;"></i>
+                Services coming soon.
+            </div>
+        }
+    </div>
+
+    <div class="services-footer reveal">
+        <a asp-controller="Services" asp-action="Index" class="btn-outline-pf">
+            View All Services <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+</section>
+
+
+{{!-- ══════════════════════════════════════════════════════════
+     DEDICATED SECTION  (stats removed — they're in stats-bar below)
+══════════════════════════════════════════════════════════ --}}
+<section class="dedicated-section" style="background:#fff;">
+    <div class="ded-text reveal">
+        <p class="ded-eyebrow">Our Mission</p>
+        <h2 class="ded-title">Dedicated to Your Pet's Well-Being</h2>
+        <p class="ded-body">
+            At Pet Friends, every animal is family. Our team of veterinarians, trainers,
+            groomers, and caretakers work together to give your companions the love and
+            professional care they deserve — every single day.
+        </p>
+        <a asp-controller="Account" asp-action="Register" class="btn-book-now">
+            Get Started <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+    <div class="ded-image-wrap reveal">
+        <div class="ded-image-bg-circle" aria-hidden="true"></div>
+        <img class="ded-pet-img"
+             src="~/images/dedicated-cat.png"
+             onerror="this.style.display='none'"
+             alt="A content cat receiving care" />
+    </div>
+</section>
+
+
+{{!-- ══════════════════════════════════════════════════════════
+     STATS BAR  (only here now — removed duplicate from dedicated section)
+══════════════════════════════════════════════════════════ --}}
+<section class="stats-bar">
+    <div class="stat-item reveal">
+        <div class="stat-item-val" data-target="10000">0</div>
+        <div class="stat-item-lbl">Happy Pets</div>
+        <div class="stat-item-desc">And counting every single day.</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-1">
+        <div class="stat-item-val" data-target="99" data-suffix="%">0</div>
+        <div class="stat-item-lbl">Satisfaction Rate</div>
+        <div class="stat-item-desc">A testament to our commitment.</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-2">
+        <div class="stat-item-val" data-target="25">0</div>
+        <div class="stat-item-lbl">Years of Care</div>
+        <div class="stat-item-desc">Trusted by generations of pet owners.</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-3">
+        <div class="stat-item-val" data-target="50" data-suffix="+">0</div>
+        <div class="stat-item-lbl">Expert Team Members</div>
+        <div class="stat-item-desc">Vets, trainers, groomers, and more.</div>
+    </div>
+</section>
+
+
+{{!-- ══════════════════════════════════════════════════════════
+     TESTIMONIALS
+══════════════════════════════════════════════════════════ --}}
+<section class="testimonials-section">
+    <div class="how-eyebrow reveal">From Our Community</div>
+    <h2 class="how-heading reveal">What Pet Parents Say</h2>
+    <div class="testi-grid">
+        <div class="testi-card reveal reveal-delay-1">
+            <div class="testi-stars">★★★★★</div>
+            <p class="testi-text">"Booking Max's appointment took less than a minute. The vet was fantastic and the whole process was so smooth. This app is a lifesaver for busy pet parents."</p>
+            <div class="testi-author">
+                <div class="testi-avatar">SA</div>
+                <div>
+                    <div class="testi-name">Sarah A.</div>
+                    <div class="testi-pet">Golden Retriever owner</div>
+                </div>
+            </div>
+        </div>
+        <div class="testi-card reveal reveal-delay-2">
+            <div class="testi-stars">★★★★★</div>
+            <p class="testi-text">"My cat Luna had an emergency and I found a verified vet within minutes. The pet health tracking feature is something I didn't know I needed until now."</p>
+            <div class="testi-author">
+                <div class="testi-avatar">KM</div>
+                <div>
+                    <div class="testi-name">Khalid M.</div>
+                    <div class="testi-pet">Cat owner</div>
+                </div>
+            </div>
+        </div>
+        <div class="testi-card reveal reveal-delay-3">
+            <div class="testi-stars">★★★★★</div>
+            <p class="testi-text">"The grooming booking and reminders are just perfect. My dog Biscuit has never looked better. Highly recommend to every pet owner in the city."</p>
+            <div class="testi-author">
+                <div class="testi-avatar">RH</div>
+                <div>
+                    <div class="testi-name">Rima H.</div>
+                    <div class="testi-pet">Poodle owner</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{{!-- ══════════════════════════════════════════════════════════
+     CTA BANNER
+══════════════════════════════════════════════════════════ --}}
+<section class="cta-section reveal">
+    <h2>Ready to give your pet the best care?</h2>
+    <p>Join thousands of happy pet owners on Pet Friends today — it's free.</p>
+    <div style="display:flex; justify-content:center; gap:14px; flex-wrap:wrap;">
+        <a asp-controller="Account" asp-action="Register" class="btn-cta-white">
+            Create a Free Account <i class="bi bi-arrow-right"></i>
+        </a>
+        <a asp-controller="Vet" asp-action="Index"
+           style="display:inline-flex; align-items:center; gap:8px; padding:14px 28px; border-radius:50px; border:2px solid rgba(255,255,255,.5); color:#fff; font-family:'DM Sans',sans-serif; font-weight:600; font-size:.9rem; text-decoration:none; transition:background .2s;"
+           onmouseover="this.style.background='rgba(255,255,255,.1)'"
+           onmouseout="this.style.background='transparent'">
+            <i class="bi bi-search"></i> Browse Vets
+        </a>
+    </div>
+</section>
+
+
+@section Scripts {
+<script>
+// ── Scroll-reveal ──────────────────────────────────────────
+const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            io.unobserve(e.target);
+        }
+    });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// ── Count-up animation for stats ──────────────────────────
+const countObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el     = entry.target;
+        const target = parseInt(el.dataset.target, 10);
+        const suffix = el.dataset.suffix ?? (target >= 1000 ? '+' : '');
+        const display = target >= 1000 ? (target / 1000).toFixed(0) + 'K' : target.toString();
+        let start     = 0;
+        const step    = Math.ceil(target / 60);
+
+        const tick = () => {
+            start = Math.min(start + step, target);
+            const disp = start >= 1000 ? (start / 1000).toFixed(0) + 'K' : start.toString();
+            el.textContent = disp + suffix;
+            if (start < target) requestAnimationFrame(tick);
+            else el.textContent = display + suffix;
+        };
+        requestAnimationFrame(tick);
+        countObserver.unobserve(el);
+    });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('.stat-item-val[data-target]').forEach(el => countObserver.observe(el));
+</script>
+}

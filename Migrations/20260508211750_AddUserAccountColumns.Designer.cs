@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Pets_friends.Data;
 
@@ -11,9 +12,11 @@ using Pets_friends.Data;
 namespace Pets_friends.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260508211750_AddUserAccountColumns")]
+    partial class AddUserAccountColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -410,9 +413,6 @@ namespace Pets_friends.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsVerified")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -424,14 +424,9 @@ namespace Pets_friends.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("VerifiedByVetId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ClientProfileId");
-
-                    b.HasIndex("VerifiedByVetId");
 
                     b.ToTable("Pets");
                 });
@@ -927,13 +922,7 @@ namespace Pets_friends.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Pets_friends.Models.VetProfile", "VerifiedByVet")
-                        .WithMany()
-                        .HasForeignKey("VerifiedByVetId");
-
                     b.Navigation("ClientProfile");
-
-                    b.Navigation("VerifiedByVet");
                 });
 
             modelBuilder.Entity("Pets_friends.Models.Product", b =>

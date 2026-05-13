@@ -74,7 +74,8 @@ namespace Pets_friends.Controllers
 
             if (result.Succeeded)
             {
-                var roleResult = await _userManager.AddToRoleAsync(user, "User");
+                // Change from "User" to "Client" - this role actually exists
+                var roleResult = await _userManager.AddToRoleAsync(user, "Client");
                 if (!roleResult.Succeeded)
                 {
                     foreach (var error in roleResult.Errors)

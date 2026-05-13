@@ -64,6 +64,23 @@ namespace Pets_friends.Controllers
             return View(vm);
         }
 
+
+        [AllowAnonymous] // Anyone can see the list of doctors!
+        public async Task<IActionResult> Index()
+        {
+            // Fetch all vets to show the Client
+            var vets = await _context.VetProfiles
+                .Include(v => v.UserAccount)
+                .ToListAsync();
+
+            var model = new VetListViewModel
+            {
+                Vets = vets
+            };
+
+            return View(model);
+        }
+
         // --------------------------------------------------------
         // PUBLIC PROFILE VIEW
         // --------------------------------------------------------
@@ -233,6 +250,31 @@ namespace Pets_friends.Controllers
 
             return View(vm);
         }
+        [HttpGet]
+        [Authorize(Roles = "Vet")]
+        public async Task<IActionResult> SearchClientAjax(string searchTerm)
+        {
+            // 1. If they searched nothing, return nothing.
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return Content("");
+
+            searchTerm = searchTerm.Trim().ToLower();
+
+            // 2. Search the database for the client AND include their pets
+            var client = await _context.ClientProfiles
+                .Include(c => c.UserAccount)
+                .Include(c => c.Pets)
+                .FirstOrDefaultAsync(c =>
+                    c.UserAccount.Email.ToLower().Contains(searchTerm) ||
+                    c.UserAccount.PhoneNumber.Contains(searchTerm));
+
+            // 3. If no client is found, send back a warning message
+            if (client == null)
+                return Content("<div class='alert alert-warning' style='border-color: #C8A882; color: #8C7560; background: #fdfaf7;'>No client found with that information.</div>");
+
+            // 4. If found, send the data to the Partial View!
+            return PartialView("_ClientSearchPartial", client);
+        }
 
         [HttpPost]
         [Authorize(Roles = "Vet")]
@@ -335,18 +377,98 @@ namespace Pets_friends.Controllers
             // Send them straight back to the Create page
             return RedirectToAction("Create", "Vet");
         }
+        [HttpPost]
+        [HttpGet]
+        [Authorize(Roles = "Vet")]
+        public async Task<IActionResult> SearchClient(string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                TempData["ErrorMessage"] = "Please enter a phone number or email.";
+                return RedirectToAction("Dashboard");
+            }
 
-        // --------------------------------------------------------
-        // HELPER: FILE UPLOAD
-        // --------------------------------------------------------
+            searchTerm = searchTerm.Trim().ToLower();
+
+            // Search by Email or Phone, and grab their Pets
+            var client = await _context.ClientProfiles
+                .Include(c => c.UserAccount)
+                .Include(c => c.Pets)
+                .FirstOrDefaultAsync(c =>
+                    c.UserAccount.Email.ToLower() == searchTerm ||
+                    c.UserAccount.PhoneNumber == searchTerm);
+
+            if (client == null)
+            {
+                TempData["ErrorMessage"] = "No client found with that information.";
+                return RedirectToAction("Dashboard");
+            }
+
+            // Send the found client to the results page
+            return View("ClientLookup", client);
+        }
+
+        // ════════════════════════════════════════════════════════════════════════
+        // VERIFY PET (The "Trusted Vet" Logic)
+        // ════════════════════════════════════════════════════════════════════════
+        [HttpPost]
+        [Authorize(Roles = "Vet")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyPet(int petId, string returnUrl)
+        {
+            // 1. Get the logged-in Vet
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login", "Account");
+
+            // 2. Find their official Vet Profile ID
+            var vetProfile = await _context.VetProfiles
+                .FirstOrDefaultAsync(v => v.UserAccountId == user.Id);
+
+            if (vetProfile == null) return RedirectToAction(nameof(Create));
+
+            // 3. Find the exact Pet in the database
+            var pet = await _context.Pets.FirstOrDefaultAsync(p => p.Id == petId);
+            if (pet == null) return NotFound("Pet not found in the system.");
+
+            // 4. THE MAGIC HAPPENS HERE: Verify the pet and link it to this specific Vet
+            pet.IsVerified = true;
+            pet.VerifiedByVetId = vetProfile.Id;
+
+            // Optional: You could also automatically add a "Verification Visit" to the pet's medical records here later!
+
+            // 5. Save changes to the database
+            await _context.SaveChangesAsync();
+
+            // 6. Send the Vet back to where they clicked the button
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
+
+            return RedirectToAction("Dashboard");
+        }
+
+        #region --- HELPER: FILE UPLOAD ---
         private async Task<string?> ProcessUploadedFile(IFormFile? file)
         {
             if (file == null || file.Length == 0) return null;
 
+            // 1. Strict Extension Validation
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+            {
+                // Reject the file completely if it's not a safe image
+                return null;
+            }
+
             string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/vets");
             if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
+            // 2. Generate a secure, unique filename using only the validated extension
+            string uniqueFileName = Guid.NewGuid().ToString() + extension;
+
             using (var fileStream = new FileStream(Path.Combine(uploadsFolder, uniqueFileName), FileMode.Create))
             {
                 await file.CopyToAsync(fileStream);
@@ -354,5 +476,6 @@ namespace Pets_friends.Controllers
 
             return "/uploads/vets/" + uniqueFileName;
         }
+        #endregion
     }
 }
