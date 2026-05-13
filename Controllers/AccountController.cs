@@ -14,22 +14,22 @@ namespace Pets_friends.Controllers
     public class AccountController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly IWebHostEnvironment _webHostEnvironment; // ADD THIS
+        private readonly IWebHostEnvironment _webHostEnvironment; 
         private readonly UserManager<UserAccount> _userManager;
         private readonly SignInManager<UserAccount> _signInManager;
-        private readonly IConfiguration _configuration; // <-- Added this
+        private readonly IConfiguration _configuration; 
 
         // Inject IConfiguration AND IWebHostEnvironment into the constructor
         public AccountController(
             UserManager<UserAccount> userManager,
             SignInManager<UserAccount> signInManager,
             IConfiguration configuration,
-            IWebHostEnvironment webHostEnvironment) // <-- Added this parameter!
+            IWebHostEnvironment webHostEnvironment) 
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
-            _webHostEnvironment = webHostEnvironment; // <-- Assigned it here!
+            _webHostEnvironment = webHostEnvironment; 
         }
 
         #region --- REGISTRATION & AUTHENTICATION ---

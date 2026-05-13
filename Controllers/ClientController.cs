@@ -305,7 +305,11 @@ namespace Pets_friends.Controllers
             TempData["SuccessMessage"] = "Appointment requested successfully! Waiting for vet confirmation.";
             return RedirectToAction("Appointments");
         }
-
+        public IActionResult Index()
+        {
+            // If someone types /Client, immediately bounce them to /Client/Dashboard
+            return RedirectToAction("Dashboard");
+        }
         // GET: /Client/Profile
         [HttpGet]
         public async Task<IActionResult> Profile()
@@ -328,6 +332,8 @@ namespace Pets_friends.Controllers
             // Reroute them to the public directory inside the VetController
             return RedirectToAction("Index", "Vet");
         }
+
+
 
         // ════════════════════════════════════════════════════════════════════════
         // MEDICAL RECORDS PAGE (Client View)

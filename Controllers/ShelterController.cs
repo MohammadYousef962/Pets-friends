@@ -140,6 +140,16 @@ namespace Pets_friends.Controllers
             return View(vm);
         }
 
+        public async Task<IActionResult> Index()
+        {
+            // The .Include() tells the database to grab the linked UserAccount data too!
+            var shelters = await _context.ShelterProfiles
+                                         .Include(s => s.UserAccount)
+                                         .ToListAsync();
+
+            return View(shelters);
+        }
+
         // Save new shelter profile
         [HttpPost]
         [Authorize(Roles = "Shelter")]

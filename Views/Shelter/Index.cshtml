@@ -1,0 +1,40 @@
+﻿@model IEnumerable<Pets_friends.Models.ShelterProfile>
+
+@{
+    ViewData["Title"] = "Available Shelters";
+    Layout = "_ClientLayout";
+}
+
+<div class="section-header mt-4 mb-4 fade-up">
+    <h2 class="section-title">Available Shelters</h2>
+</div>
+
+<div class="pets-grid">
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var shelter in Model)
+        {
+            <div class="glass-card pet-card fade-up">
+                
+                <div class="pet-name" style="font-size: 1.2rem;">@shelter.ShelterName</div>
+                
+                <div class="pet-meta mt-2">
+                    <i class="bi bi-envelope"></i> @shelter.UserAccount?.Email <br />
+                    <i class="bi bi-telephone"></i> @shelter.UserAccount?.PhoneNumber
+                </div>
+
+                <a asp-controller="Shelter" asp-action="Details" asp-route-id="@shelter.Id" class="btn-primary-pf mt-3" style="padding: 6px 12px;">
+                    View Details
+                </a>
+
+            </div>
+        }
+    }
+    else
+    {
+        <div class="glass-card empty-state fade-up" style="grid-column: 1 / -1;">
+            <i class="bi bi-house-x"></i>
+            <p>No shelters are currently registered on the platform.</p>
+        </div>
+    }
+</div>

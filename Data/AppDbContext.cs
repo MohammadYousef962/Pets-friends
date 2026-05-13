@@ -28,12 +28,10 @@ namespace Pets_friends.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
-<<<<<<< HEAD
         public DbSet<ActivityLog> ActivityLogs { get; set; }
-=======
+
         public DbSet<ProductReview> ProductReviews { get; set; }
         public DbSet<ShoppingCart> ShoppingCarts { get; set; }
->>>>>>> origin/main
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
