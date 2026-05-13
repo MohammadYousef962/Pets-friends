@@ -13,6 +13,7 @@ wwwroot\Images\hero-dog-removebg-preview.png
 wwwroot\Images\hero-dog.png
 wwwroot\Images\Pets-1.png
 wwwroot\Images\Pets.png
+wwwroot\Images\profiles\26d790d2-fb26-482c-bb29-b35bbf0a1181_Untitled.jpg
 wwwroot\js\search.js
 wwwroot\js\site.js
 wwwroot\js\topbar.js
