@@ -1,5 +1,7 @@
 is_global = true
 build_property.TargetFramework = net8.0
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v8.0
 build_property.TargetPlatformMinVersion = 
 build_property.UsingMicrosoftNETSdkWeb = true
 build_property.ProjectTypeGuids = 
@@ -9,105 +11,105 @@ build_property.EnforceExtendedAnalyzerRules =
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = Pets_friends
 build_property.RootNamespace = Pets_friends
-build_property.ProjectDir = C:\Users\wazed\source\repos\Pet friends\Pets friends\
+build_property.ProjectDir = E:\Projects\PetsFriends\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = C:\Users\wazed\source\repos\Pet friends\Pets friends
+build_property.MSBuildProjectDirectory = E:\Projects\PetsFriends
 build_property._RazorSourceGeneratorDebug = 
 build_property.EffectiveAnalysisLevelStyle = 8.0
 build_property.EnableCodeStyleSeverity = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Account/AccessDenied.cshtml]
+[E:/Projects/PetsFriends/Views/Account/AccessDenied.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxBY2Nlc3NEZW5pZWQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Account/ForgotPassword.cshtml]
+[E:/Projects/PetsFriends/Views/Account/ForgotPassword.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxGb3Jnb3RQYXNzd29yZC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Account/ForgotPasswordConfirmation.cshtml]
+[E:/Projects/PetsFriends/Views/Account/ForgotPasswordConfirmation.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxGb3Jnb3RQYXNzd29yZENvbmZpcm1hdGlvbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Account/Login.cshtml]
+[E:/Projects/PetsFriends/Views/Account/Login.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Account/Register.cshtml]
+[E:/Projects/PetsFriends/Views/Account/Register.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxSZWdpc3Rlci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Account/ResetPassword.cshtml]
+[E:/Projects/PetsFriends/Views/Account/ResetPassword.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxSZXNldFBhc3N3b3JkLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Account/ResetPasswordConfirmation.cshtml]
+[E:/Projects/PetsFriends/Views/Account/ResetPasswordConfirmation.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxSZXNldFBhc3N3b3JkQ29uZmlybWF0aW9uLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Account/TokenExpired.cshtml]
+[E:/Projects/PetsFriends/Views/Account/TokenExpired.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxUb2tlbkV4cGlyZWQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Admin/Dashboard.cshtml]
+[E:/Projects/PetsFriends/Views/Admin/Dashboard.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cRGFzaGJvYXJkLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Admin/ManageUsers.cshtml]
+[E:/Projects/PetsFriends/Views/Admin/ManageUsers.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cTWFuYWdlVXNlcnMuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Admin/Transactions.cshtml]
+[E:/Projects/PetsFriends/Views/Admin/Transactions.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cVHJhbnNhY3Rpb25zLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shared/Error.cshtml]
+[E:/Projects/PetsFriends/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shared/_AdminLayout.cshtml]
+[E:/Projects/PetsFriends/Views/Shared/_AdminLayout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9BZG1pbkxheW91dC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shared/_AuthLayout.cshtml]
+[E:/Projects/PetsFriends/Views/Shared/_AuthLayout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9BdXRoTGF5b3V0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shared/_ValidationScriptsPartial.cshtml]
+[E:/Projects/PetsFriends/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shared/_VetLayout.cshtml]
+[E:/Projects/PetsFriends/Views/Shared/_VetLayout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WZXRMYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Vet/Create.cshtml]
+[E:/Projects/PetsFriends/Views/Vet/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVmV0XENyZWF0ZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Vet/Dashboard.cshtml]
+[E:/Projects/PetsFriends/Views/Vet/Dashboard.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVmV0XERhc2hib2FyZC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Vet/Edit.cshtml]
+[E:/Projects/PetsFriends/Views/Vet/Edit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVmV0XEVkaXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Vet/Profile.cshtml]
+[E:/Projects/PetsFriends/Views/Vet/Profile.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVmV0XFByb2ZpbGUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/_ViewImports.cshtml]
+[E:/Projects/PetsFriends/Views/_ViewImports.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/_ViewStart.cshtml]
+[E:/Projects/PetsFriends/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shared/_Layout.cshtml]
+[E:/Projects/PetsFriends/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-652z6r72lo
