@@ -4,128 +4,224 @@
 @inject UserManager<UserAccount> UserManager
 
 @{
-    // --- UPDATED LOGIC: Focus entirely on the Clinic Name ---
     var clinicName = !string.IsNullOrEmpty(Model.ClinicName) ? Model.ClinicName : "Veterinary Clinic";
-
     ViewData["Title"] = clinicName + " | Pet Vet";
-    Layout = "~/Views/Shared/_VetLayout.cshtml";
+    
+    if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Vet"))
+    {
+        Layout = "~/Views/Shared/_VetLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml"; 
+    }
 
     var currentUser = await UserManager.GetUserAsync(User);
     bool isOwnProfile = currentUser != null && currentUser.Id == Model.UserAccountId;
+    bool isAuthenticated = currentUser != null;
+    bool hasPets = ViewBag.MyPets != null && ((IEnumerable<dynamic>)ViewBag.MyPets).Any();
+
+    int happyPetsCount = Model.Appointments?.Where(a => a.Status == "Completed" || a.Status == "Confirmed").Select(a => a.PetId).Distinct().Count() ?? Model.TotalReviews;
+
+    // --- ONE-REVIEW-PER-USER DETECTION (Edit Mode Logic) ---
+    VetReview? myExistingReview = null;
+    if (currentUser != null && Model.Reviews != null)
+    {
+        myExistingReview = Model.Reviews.FirstOrDefault(r => r.ReviewerId == currentUser.Id);
+    }
+    
+    int initialStars = myExistingReview?.Rating ?? 5;
+    string initialComment = myExistingReview?.Comment ?? "";
+    string formTitle = myExistingReview != null ? "Edit Your Review" : "Rate Your Experience";
+    string submitBtnText = myExistingReview != null ? "Update Review" : "Publish Review";
 }
 
 @section Styles {
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/Profile.css" asp-append-version="true" />
     <style>
-        /* --- OVERRIDE DEFAULT LAYOUT BACKGROUND --- */
+        :root {
+            --text-dark: #1A1A1A;
+            --text-muted: #6B7280;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --vet-color: #059669;
+            --bg-card: #FFFFFF;
+            --border-light: #E5E7EB;
+        }
+
         body {
             background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
             background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
         }
 
-        main, .pb-3 {
-            background-color: transparent !important;
+        main, .pb-3 { background-color: transparent !important; }
+
+        h1, h2, h3, h4, h5, h6, .vet-name, .section-title, .stat-num, .rating-big {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: -0.5px;
         }
 
-        /* --- HERO CARD STYLING --- */
-        .hero-card {
-            background-color: #fff;
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.04);
+        .hero-card, .section-card {
+            background-color: var(--bg-card);
+            border-radius: 20px;
+            padding: 35px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            margin-bottom: 24px;
+        }
+
+        .vet-title-tag {
+            background: #FDFaf5;
+            color: var(--brand-primary);
             border: 1px solid #EBE0D5;
+            padding: 6px 16px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-bottom: 12px;
+            text-transform: uppercase;
         }
 
-        /* --- PERFECT 2x2 STATS GRID --- */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            width: 100%;
-            max-width: 400px;
-            margin-left: auto;
-        }
+        .vet-name { font-weight: 800; font-size: 2.2rem; color: var(--text-dark); margin-bottom: 4px; line-height: 1.2; }
+        .doctor-name { font-weight: 700; font-size: 1.2rem; color: var(--brand-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .vet-spec { color: var(--text-muted); font-weight: 500; font-size: 0.95rem; margin-bottom: 6px; }
 
-        @@media (max-width: 991px) {
-            .stats-grid {
-                margin-left: 0;
-                max-width: 100%;
-            }
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; max-width: 400px; margin-left: auto; }
+        @@media (max-width: 991px) { .stats-grid { margin-left: 0; max-width: 100%; margin-top: 20px; } .hero-card { padding: 25px; } }
 
-        /* --- Extra style for disabled preview buttons --- */
-        .btn-disabled-preview {
-            opacity: 0.6 !important;
-            cursor: not-allowed !important;
-            pointer-events: none; /* Physically blocks clicks */
-        }
+        .stat-pill { background: #FAFAFA; border: 1px solid var(--border-light); border-radius: 16px; padding: 16px 10px; text-align: center; transition: transform 0.2s ease; }
+        .stat-pill:hover { transform: translateY(-3px); border-color: var(--brand-accent); }
+        .stat-num { font-weight: 800; font-size: 1.6rem; color: var(--text-dark); line-height: 1; }
+        .stat-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-top: 6px; }
+
+        .service-tag { background: #FAF6F1; color: var(--brand-primary); border: 1px solid #EBE0D5; padding: 8px 18px; border-radius: 12px; font-size: 0.9rem; font-weight: 700; display: inline-flex; align-items: center; margin: 0 8px 8px 0; transition: all 0.2s ease; }
+        .service-tag:hover { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); transform: translateY(-2px); }
+
+        .section-title { font-weight: 700; font-size: 1.4rem; color: var(--text-dark); margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 10px; }
+        .section-title i { color: var(--brand-accent); }
+
+        .rating-hero { text-align: center; background: #FAFAFA; border-radius: 16px; padding: 24px; border: 1px solid var(--border-light); margin-bottom: 24px; }
+        .rating-big { font-size: 3rem; font-weight: 800; color: var(--text-dark); line-height: 1; }
+        
+        .review-card { background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 16px; padding: 20px; margin-bottom: 16px; transition: all 0.2s; }
+        .review-author { font-weight: 700; color: var(--text-dark); font-size: 0.95rem; }
+        .review-pet { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+        .review-text { color: #4B5563; font-size: 0.95rem; line-height: 1.6; margin-top: 12px; margin-bottom: 0; }
+
+        .hours-row { display: flex; justify-content: space-between; padding: 14px 15px; border-bottom: 1px dashed var(--border-light); font-size: 0.95rem; border-radius: 12px; transition: all 0.2s ease; color: var(--brand-primary); font-weight: 600; }
+        .hours-row:last-child { border-bottom: none; }
+        .hours-row:hover { background-color: #FAF6F1; border-bottom-color: transparent; transform: translateX(4px); }
+        .hours-row.today { background: #FDFaf5; padding: 14px 15px; border: 1px solid #EBE0D5; font-weight: 700; color: var(--brand-primary); box-shadow: 0 4px 10px rgba(92, 61, 30, 0.05); border-bottom-style: solid; }
+        .hours-row.today:hover { transform: translateX(4px); }
+        .badge-open { background: #DCFCE7; color: #059669; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; }
+        .badge-off { background: #FEE2E2; color: #DC2626; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; }
+
+        .contact-item { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border-light); }
+        .contact-item:last-child { border-bottom: none; }
+        .contact-icon { width: 44px; height: 44px; background: #F3F4F6; color: var(--brand-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+
+        .btn-primary-custom { background: var(--brand-primary); color: #fff; font-weight: 700; border-radius: 12px; padding: 12px 28px; transition: all 0.2s ease; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+        .btn-primary-custom:hover:not(:disabled) { background: var(--brand-accent); color: #fff; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(200,168,130,0.3); }
+        .btn-disabled-preview { opacity: 0.6 !important; cursor: not-allowed !important; pointer-events: none; }
+        .preview-badge { background: #F3F4F6; color: var(--text-muted); border: 1px solid var(--border-light); padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; }
+
+        .modal-content { border-radius: 24px; border: none; box-shadow: 0 20px 50px rgba(92, 61, 30, 0.15); }
+        .modal-header { background: #FAF6F1; border-bottom: 1px solid #EBE0D5; padding: 25px 30px; border-radius: 24px 24px 0 0; }
+        .modal-body { padding: 30px; background: #ffffff; }
+        .modal-footer { border-top: 1px solid #EBE0D5; padding: 20px 30px; background: #ffffff; border-radius: 0 0 24px 24px; }
+        
+        .form-label { font-weight: 800; color: #8C7560; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .form-select, .form-control { border-radius: 12px; padding: 14px 16px; border: 2px solid #EBE0D5; color: #1A1A1A; font-weight: 600; font-size: 1rem; transition: all 0.2s; box-shadow: none; }
+        .form-select:focus, .form-control:focus { border-color: var(--vet-color); box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.15); outline: none; }
+        
+        .pet-pill-label { border: 2px solid #EBE0D5; border-radius: 30px; padding: 10px 20px; font-weight: 700; color: #6B7280; cursor: pointer; transition: all 0.2s; user-select: none; display: inline-flex; align-items: center; gap: 8px; }
+        .pet-pill-label:hover { border-color: var(--brand-accent); color: var(--brand-primary); background: #FAF6F1; }
+        .btn-check:checked + .pet-pill-label { background: var(--vet-color); color: #fff; border-color: var(--vet-color); box-shadow: 0 4px 12px rgba(5,150,105,0.2); }
+
+        .urgent-box { background: #FEF2F2; border: 2px solid #FECACA; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 12px; transition: all 0.3s; cursor: pointer; }
+        .urgent-box:hover { background: #FEE2E2; border-color: #FCA5A5; }
+        .urgent-box.active { background: #DC2626; border-color: #B91C1C; }
+        .urgent-checkbox { width: 24px; height: 24px; border: 2px solid #FCA5A5; border-radius: 6px; cursor: pointer; }
+        .urgent-checkbox:checked { background-color: #DC2626; border-color: #DC2626; }
+        .urgent-label { color: #DC2626; font-size: 1.05rem; font-weight: 800; cursor: pointer; margin: 0; user-select: none; }
+
+        .invalid-feedback { display: none; color: #DC2626; font-size: 0.85rem; font-weight: 700; margin-top: 5px; background: #FEF2F2; padding: 8px 12px; border-radius: 8px; border: 1px solid #FECACA; }
+        .btn-submit:disabled { background: #A7F3D0 !important; box-shadow: none !important; cursor: not-allowed; transform: none !important; }
+
+        .new-pet-alert { background: #FDFaf5; border: 1px solid var(--brand-accent); border-radius: 16px; padding: 16px 20px; color: var(--brand-primary); display: flex; gap: 15px; align-items: flex-start; }
     </style>
 }
 
-<div class="container pt-5 pb-2" style="max-width: 1300px;">
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="container pt-3" style="max-width: 1200px;">
+        <div class="alert alert-success rounded-4 d-flex align-items-center border-0 shadow-sm" style="background: #ECFDF5; color: #065F46; padding: 16px 20px;">
+            <i class="bi bi-check-circle-fill me-3 fs-5" style="color: #10B981;"></i>
+            <div class="fw-bold">@TempData["SuccessMessage"]</div>
+        </div>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="container pt-3" style="max-width: 1200px;">
+        <div class="alert alert-danger rounded-4 d-flex align-items-center border-0 shadow-sm" style="background: #FEF2F2; color: #991B1B; padding: 16px 20px;">
+            <i class="bi bi-exclamation-triangle-fill me-3 fs-5" style="color: #EF4444;"></i>
+            <div class="fw-bold">@TempData["ErrorMessage"]</div>
+        </div>
+    </div>
+}
+
+<div class="container pt-4 pb-2" style="max-width: 1200px;">
     <div class="hero-card">
         <div class="row align-items-center g-4">
 
             <div class="col-lg-7 d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-4 text-center text-sm-start">
-                <div class="vet-photo-wrap flex-shrink-0" style="position: relative; width: 150px; height: 150px; border-radius: 50%; background-color: #EBE0D5; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+                <div class="vet-photo-wrap flex-shrink-0" style="position: relative; width: 140px; height: 140px; border-radius: 50%; background-color: #F3F4F6; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                     @{
-                        // Uses the first letter of the Clinic Name now
                         var defaultLetter = clinicName.Substring(0, 1).ToUpper();
-                        var fallbackImg = $"https://placehold.co/150x150/C8A882/white?text={defaultLetter}&font=Playfair+Display";
+                        var fallbackImg = $"https://placehold.co/150x150/C8A882/white?text={defaultLetter}&font=Plus+Jakarta+Sans";
                         var imgSrc = !string.IsNullOrEmpty(Model.ImageUrl) ? Model.ImageUrl : fallbackImg;
                     }
 
-                    <img src="@imgSrc"
-                         onerror="this.onerror=null; this.src='@fallbackImg';"
-                         alt="Photo of @clinicName"
-                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; border: 4px solid #fff;">
+                    <img src="@imgSrc" onerror="this.onerror=null; this.src='@fallbackImg';" alt="Photo of @clinicName" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; border: 4px solid #fff;">
 
-                    <div class="vet-badge" style="position: absolute; bottom: 5px; right: 5px; background: #C8A882; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; z-index: 2;">
+                    <div class="vet-badge" style="position: absolute; bottom: 5px; right: 5px; background: #10B981; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; z-index: 2;">
                         <i class="bi bi-patch-check-fill"></i>
                     </div>
                 </div>
+
                 <div>
-                    <span class="vet-title-tag" style="background: rgba(200, 168, 130, 0.2); color: #8C7560; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; display: inline-block; margin-bottom: 10px; text-transform: uppercase;">Veterinary Clinic</span>
+                    <span class="vet-title-tag">Veterinary Clinic</span>
+                    <h1 class="vet-name">@clinicName</h1>
+                    <div class="doctor-name"><i class="bi bi-person-badge"></i> @(Model.UserAccount?.FullName ?? "Staff Physician")</div>
 
-                    <h1 class="vet-name mb-1" style="font-family: 'Playfair Display', serif; font-weight: 700; color: #5C3D1E;">@clinicName</h1>
+                    <p class="vet-spec mb-4">
+                        <i class="bi bi-award-fill me-2" style="color:var(--brand-accent)"></i>@Model.Specialization
+                    </p>
 
-                    <p class="vet-spec mb-1" style="color: #8C7560; font-weight: 500;">
-                        <i class="bi bi-award me-1" style="color:#C8A882"></i>@Model.Specialization
-                    </p>
-                    <p class="vet-spec mb-2" style="color: #8C7560; font-weight: 500;">
-                        <i class="bi bi-geo-alt me-1" style="color:#C8A882"></i>
-                        @Model.ClinicAddress
-                    </p>
-                    <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-1 mb-3">
+                    <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-1 mb-4">
                         @for (int i = 1; i <= 5; i++)
                         {
-                            <i class="bi @(i <= Math.Floor(Model.AverageRating) ? "bi-star-fill" : (i - Model.AverageRating < 1 ? "bi-star-half" : "bi-star"))"
-                               style="color:#E8A838; font-size:.95rem;"></i>
+                            <i class="bi @(i <= Math.Floor(Model.AverageRating) ? "bi-star-fill" : (i - Model.AverageRating < 1 ? "bi-star-half" : "bi-star"))" style="color:#F59E0B; font-size:1rem;"></i>
                         }
-                        <span style="font-weight:700; color:#5C3D1E; margin-left:.35rem;">@Model.AverageRating.ToString("0.0")</span>
-                        <span style="color:#8C7560; font-size:.85rem; font-weight: 500;">(@Model.TotalReviews reviews)</span>
+                        <span style="font-weight:800; color:var(--text-dark); margin-left:.5rem;">@Model.AverageRating.ToString("0.0")</span>
+                        <span style="color:var(--text-muted); font-size:.85rem; font-weight: 500; margin-left: 4px;">(@Model.TotalReviews reviews)</span>
                     </div>
 
-                    <div class="d-flex gap-2 flex-wrap justify-content-center justify-content-sm-start align-items-center">
+                    <div class="d-flex flex-wrap justify-content-center justify-content-sm-start align-items-center gap-3">
                         @if (isOwnProfile)
                         {
-                            <button class="btn btn-disabled-preview" style="background: #C8A882; color: #fff; font-weight: 600; border-radius: 12px; padding: 8px 20px;" disabled>
-                                <i class="bi bi-calendar-check me-1"></i>Book Appointment
-                            </button>
-                            <button class="btn btn-disabled-preview" style="border: 2px solid #C8A882; color: #C8A882; font-weight: 600; border-radius: 12px; padding: 6px 20px; background: transparent;" disabled>
-                                <i class="bi bi-chat-dots me-1"></i>Message
-                            </button>
-                            <span class="ms-2 text-muted fw-bold" style="font-size: 0.85rem;"><i class="bi bi-eye me-1"></i>Preview Mode</span>
+                            <button class="btn-primary-custom btn-disabled-preview" disabled><i class="bi bi-calendar2-check"></i> Book Appointment</button>
+                            <span class="preview-badge"><i class="bi bi-eye"></i> Preview Mode</span>
                         }
                         else
                         {
-                            <button class="btn" style="background: #C8A882; color: #fff; font-weight: 600; border-radius: 12px; padding: 8px 20px;">
-                                <i class="bi bi-calendar-check me-1"></i>Book Appointment
-                            </button>
-                            <button class="btn" style="border: 2px solid #C8A882; color: #C8A882; font-weight: 600; border-radius: 12px; padding: 6px 20px; background: transparent;">
-                                <i class="bi bi-chat-dots me-1"></i>Message
-                            </button>
+                            <button type="button" class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#bookAppointmentModal"><i class="bi bi-calendar2-check"></i> Book Appointment</button>
                         }
                     </div>
                 </div>
@@ -133,21 +229,21 @@
 
             <div class="col-lg-5 mt-4 mt-lg-0">
                 <div class="stats-grid">
-                    <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
-                        <div class="stat-num" style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">@Model.YearsOfExperience<span style="font-size:1rem; color: #C8A882;">+</span></div>
-                        <div class="stat-label" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Years Exp.</div>
+                    <div class="stat-pill">
+                        <div class="stat-num">@Model.YearsOfExperience<span style="font-size:1.1rem; color: var(--brand-accent);">+</span></div>
+                        <div class="stat-label">Years Exp.</div>
                     </div>
-                    <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
-                        <div class="stat-num" style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">500<span style="font-size:1rem; color: #C8A882;">+</span></div>
-                        <div class="stat-label" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Happy Pets</div>
+                    <div class="stat-pill">
+                        <div class="stat-num">@happyPetsCount<span style="font-size:1.1rem; color: var(--brand-accent);">+</span></div>
+                        <div class="stat-label">Happy Pets</div>
                     </div>
-                    <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
-                        <div class="stat-num" style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">@Model.TotalReviews</div>
-                        <div class="stat-label" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Reviews</div>
+                    <div class="stat-pill">
+                        <div class="stat-num">@Model.TotalReviews</div>
+                        <div class="stat-label">Total Reviews</div>
                     </div>
-                    <div class="stat-pill" style="background: #FAF6F1; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px 10px; text-align: center;">
-                        <div class="stat-num" style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: #5C3D1E;">@Model.AverageRating.ToString("0.0")</div>
-                        <div class="stat-label" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8C7560;">Avg Rating</div>
+                    <div class="stat-pill">
+                        <div class="stat-num">@Model.AverageRating.ToString("0.0")</div>
+                        <div class="stat-label">Avg Rating</div>
                     </div>
                 </div>
             </div>
@@ -156,109 +252,116 @@
     </div>
 </div>
 
-<div class="container py-4" style="max-width: 1300px;">
+<div class="container py-2 pb-5" style="max-width: 1200px;">
     <div class="row g-4">
-
         <div class="col-lg-8">
-
             <div class="section-card">
-                <h2 class="section-title"><i class="bi bi-person-lines-fill"></i> About @clinicName</h2>
-                <p style="color:var(--text-main); line-height:1.75; font-size:.95rem;">@Model.Description</p>
+                <h2 class="section-title"><i class="bi bi-person-vcard"></i> About @clinicName</h2>
+                <p style="color:#4B5563; line-height:1.7; font-size:1rem; margin: 0;">@Model.Description</p>
             </div>
 
             <div class="section-card">
-                <h2 class="section-title"><i class="bi bi-heart-pulse-fill"></i> Services Offered</h2>
+                <h2 class="section-title"><i class="bi bi-heart-pulse"></i> Services Offered</h2>
                 <div>
                     @if (!string.IsNullOrEmpty(Model.Services))
                     {
                         foreach (var svc in Model.Services.Split(',', StringSplitOptions.RemoveEmptyEntries))
                         {
-                            <span class="service-tag">
-                                <i class="bi bi-check-circle-fill"></i>@svc.Trim()
-                            </span>
+                            <span class="service-tag">@svc.Trim()</span>
                         }
                     }
                     else
                     {
-                        <p class="text-muted">No specific services listed yet.</p>
+                        <p class="text-muted mb-0">No specific services listed yet.</p>
                     }
                 </div>
             </div>
 
-            <div class="section-card">
-                <h2 class="section-title"><i class="bi bi-chat-quote-fill"></i> Patient Reviews</h2>
+            <!-- The hidden delete form for Vet Review -->
+            @if(myExistingReview != null)
+            {
+                <form id="deleteVetReviewForm" asp-controller="Vet" asp-action="DeleteReview" method="post" style="display:none;">
+                    <input type="hidden" name="vetId" value="@Model.Id" />
+                </form>
+            }
 
-                <div class="rating-hero">
+            <div class="section-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="section-title mb-0 border-0"><i class="bi bi-chat-quote"></i> Patient Reviews</h2>
+                </div>
+                
+                <div class="rating-hero mt-2">
                     <div class="rating-big">@Model.AverageRating.ToString("0.0")</div>
-                    <div class="stars my-1">
+                    <div class="stars my-2">
                         @for (int i = 1; i <= 5; i++)
                         {
-                            <i class="bi @(i <= Math.Floor(Model.AverageRating) ? "bi-star-fill" : (i - Model.AverageRating < 1 ? "bi-star-half" : "bi-star"))"></i>
+                            <i class="bi @(i <= Math.Floor(Model.AverageRating) ? "bi-star-fill" : (i - Model.AverageRating < 1 ? "bi-star-half" : "bi-star"))" style="color: #F59E0B; font-size: 1.2rem;"></i>
                         }
                     </div>
-                    <div style="color:var(--text-muted); font-size:.85rem;">Based on @Model.TotalReviews reviews</div>
+                    <div style="color:var(--text-muted); font-size:.85rem; font-weight: 600;">Based on @Model.TotalReviews verified patient reviews</div>
                 </div>
 
                 @if (Model.Reviews != null && Model.Reviews.Any())
                 {
                     foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedAt))
                     {
-                        <div class="review-card">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="https://placehold.co/42x42/C8A882/white?text=@(review.Reviewer?.FullName?.FirstOrDefault() ?? 'U')" alt="User Avatar" class="review-avatar">
+                        bool isMyCard = currentUser != null && review.ReviewerId == currentUser.Id;
+                        string cardOutline = isMyCard ? "border: 2px solid #C8A882; background: #FFFCF9;" : "";
+
+                        <div class="review-card" style="@cardOutline">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="https://placehold.co/48x48/F3F4F6/5C3D1E?text=@(review.Reviewer?.FullName?.FirstOrDefault() ?? 'U')&font=Plus+Jakarta+Sans" alt="Avatar" style="border-radius: 12px;">
                                     <div>
-                                        <div class="review-author">@review.Reviewer?.FullName</div>
-                                        <div class="review-pet">
-                                            <i class="bi bi-heart-fill me-1" style="color:var(--tan); font-size:.7rem;"></i>Verified Patient
+                                        <div class="review-author">
+                                            @review.Reviewer?.FullName
+                                            @if(isMyCard) { <span class="badge bg-secondary ms-2" style="font-size:0.7rem;">Your Review</span> }
                                         </div>
+                                        <div class="review-pet"><i class="bi bi-shield-check me-1" style="color:#10B981;"></i>Verified Patient</div>
                                     </div>
                                 </div>
                                 <div class="text-end">
-                                    <div class="stars">
+                                    <div class="stars mb-1">
                                         @for (int i = 1; i <= 5; i++)
                                         {
-                                            <i class="bi @(i <= review.Rating ? "bi-star-fill" : "bi-star")"></i>
+                                            <i class="bi @(i <= review.Rating ? "bi-star-fill" : "bi-star")" style="color: #F59E0B; font-size: 0.9rem;"></i>
                                         }
                                     </div>
-                                    <div class="review-date">@review.CreatedAt.ToString("MMM d, yyyy")</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">@review.CreatedAt.ToString("MMM d, yyyy")</div>
                                 </div>
                             </div>
-                            <p class="review-text">@review.Comment</p>
+                            <p class="review-text">"@review.Comment"</p>
                         </div>
                     }
                 }
                 else
                 {
-                    <p class="text-muted text-center py-3">No reviews yet. Be the first to leave one!</p>
+                    <div class="text-center py-4">
+                        <i class="bi bi-chat-square-heart text-muted fs-1 mb-2 d-block"></i>
+                        <p class="text-muted fw-medium mb-0">No reviews yet. Be the first to leave one!</p>
+                    </div>
                 }
 
-                <div class="text-center mt-2">
+                <div class="text-center mt-4">
                     @if (isOwnProfile)
                     {
-                        <button class="btn btn-outline-tan btn-sm btn-disabled-preview" disabled>
-                            <i class="bi bi-pencil-square me-1"></i>Write a Review
-                        </button>
+                        <button class="btn-primary-custom btn-disabled-preview" style="background: #F3F4F6; color: var(--text-dark);" disabled><i class="bi bi-pencil-square"></i> Write a Review</button>
                     }
                     else
                     {
-                        <button class="btn btn-outline-tan btn-sm">
-                            <i class="bi bi-pencil-square me-1"></i>Write a Review
-                        </button>
+                        string btnDisplay = myExistingReview != null ? "Edit Your Review" : "Write a Review";
+                        string btnIcon = myExistingReview != null ? "bi-pencil-fill" : "bi-pencil-square";
+
+                        <button type="button" class="btn-primary-custom" style="background: #F3F4F6; color: var(--text-dark);" data-bs-toggle="modal" data-bs-target="#leaveReviewModal"><i class="bi @btnIcon"></i> @btnDisplay</button>
                     }
                 </div>
             </div>
-
         </div>
 
         <div class="col-lg-4">
-
             <div class="section-card">
-                <h2 class="section-title"><i class="bi bi-clock-fill"></i> Working Hours</h2>
-                @{
-                    var todayName = DateTime.Now.DayOfWeek.ToString();
-                }
-
+                <h2 class="section-title"><i class="bi bi-clock"></i> Working Hours</h2>
+                @{ var todayName = DateTime.Now.DayOfWeek.ToString(); }
                 @if (Model.Schedule != null && Model.Schedule.Any())
                 {
                     foreach (var wh in Model.Schedule.OrderBy(s => s.Day))
@@ -267,15 +370,16 @@
                         <div class="hours-row @(isToday ? "today" : "")">
                             <span class="day">
                                 @wh.Day
-                                @if (isToday)
-                                {
-                                    <span style="font-size:.72rem; color:var(--tan-dark); margin-left:.3rem;">(Today)</span>
-                                }
+                                @if (isToday) { <span style="font-size:.7rem; color:var(--brand-primary); margin-left:.3rem; text-transform: uppercase;">(Today)</span> }
                             </span>
 
                             @if (wh.IsOff || wh.OpenTime == null || wh.CloseTime == null)
                             {
                                 <span class="badge-off">Closed</span>
+                            }
+                            else if (wh.OpenTime == TimeSpan.Zero && wh.CloseTime.Value.TotalHours >= 23.9)
+                            {
+                                <span class="badge-open">Open 24 Hours</span>
                             }
                             else
                             {
@@ -288,50 +392,432 @@
                 }
                 else
                 {
-                    <p class="text-muted mb-0">Schedule not set.</p>
+                    <p class="text-muted mb-0 fw-medium">Schedule not set by clinic.</p>
                 }
             </div>
 
             <div class="section-card">
-                <h2 class="section-title"><i class="bi bi-telephone-fill"></i> Contact</h2>
+                <h2 class="section-title"><i class="bi bi-telephone"></i> Contact Details</h2>
                 <div class="contact-item">
-                    <div class="contact-icon"><i class="bi bi-envelope-fill"></i></div>
+                    <div class="contact-icon"><i class="bi bi-envelope"></i></div>
                     <div>
-                        <div style="font-size:.75rem; color:var(--text-muted); font-weight:500;">Email</div>
-                        <a href="mailto:@Model.UserAccount?.Email" style="color:var(--tan-dark); font-size:.9rem; font-weight:500; text-decoration:none;">@Model.UserAccount?.Email</a>
+                        <div style="font-size:.75rem; color:var(--text-muted); font-weight:700; text-transform: uppercase; letter-spacing: 0.5px;">Email</div>
+                        <a href="mailto:@Model.UserAccount?.Email" style="color:var(--text-dark); font-size:.9rem; font-weight:600; text-decoration:none;">@Model.UserAccount?.Email</a>
                     </div>
                 </div>
                 <div class="contact-item">
-                    <div class="contact-icon"><i class="bi bi-telephone-fill"></i></div>
+                    <div class="contact-icon"><i class="bi bi-telephone"></i></div>
                     <div>
-                        <div style="font-size:.75rem; color:var(--text-muted); font-weight:500;">Phone</div>
-                        <a href="tel:@Model.UserAccount?.PhoneNumber" style="color:var(--tan-dark); font-size:.9rem; font-weight:500; text-decoration:none;">@Model.UserAccount?.PhoneNumber</a>
+                        <div style="font-size:.75rem; color:var(--text-muted); font-weight:700; text-transform: uppercase; letter-spacing: 0.5px;">Phone</div>
+                        <a href="tel:@Model.UserAccount?.PhoneNumber" style="color:var(--text-dark); font-size:.9rem; font-weight:600; text-decoration:none;">@Model.UserAccount?.PhoneNumber</a>
                     </div>
                 </div>
-                <div class="contact-item">
-                    <div class="contact-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                <div class="contact-item" style="border-bottom: none;">
+                    <div class="contact-icon"><i class="bi bi-geo-alt"></i></div>
                     <div>
-                        <div style="font-size:.75rem; color:var(--text-muted); font-weight:500;">Clinic</div>
-                        <span style="font-size:.9rem;">@Model.ClinicAddress</span>
+                        <div style="font-size:.75rem; color:var(--text-muted); font-weight:700; text-transform: uppercase; letter-spacing: 0.5px;">Clinic Location</div>
+                        <span style="font-size:.9rem; font-weight:600; color:var(--text-dark); line-height: 1.3; display: block;">@Model.ClinicAddress</span>
                     </div>
                 </div>
 
-                <div class="mt-3">
+                <div class="mt-4">
                     @if (isOwnProfile)
                     {
-                        <button class="btn btn-book w-100 btn-disabled-preview" disabled>
-                            <i class="bi bi-telephone me-1"></i>Call Now
-                        </button>
+                        <button class="btn-primary-custom w-100 btn-disabled-preview" disabled><i class="bi bi-telephone"></i> Call Clinic Now</button>
                     }
                     else
                     {
-                        <a href="tel:@Model.UserAccount?.PhoneNumber" class="btn btn-book w-100">
-                            <i class="bi bi-telephone me-1"></i>Call Now
-                        </a>
+                        <a href="tel:@Model.UserAccount?.PhoneNumber" class="btn-primary-custom w-100" style="text-decoration: none;"><i class="bi bi-telephone"></i> Call Clinic Now</a>
                     }
                 </div>
             </div>
-
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="bookAppointmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="color: #2D1B0E;">
+                    <i class="bi bi-calendar-check me-2" style="color: #059669;"></i> Book Appointment
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form asp-controller="Vet" asp-action="BookAppointment" method="post" id="bookingForm">
+                <input type="hidden" name="vetId" value="@Model.Id" />
+                
+                <div class="modal-body">
+                    
+                    @if (!isAuthenticated)
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-box-arrow-in-right fs-1 text-muted mb-3 d-block"></i>
+                            <h6 class="fw-bold">Sign In Required</h6>
+                            <p class="text-muted small">You need to be signed in to book appointments.</p>
+                            <a href="/Account/Login" class="btn btn-sm btn-dark rounded-pill mt-2 px-4 py-2 fw-bold">Sign In Now</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div id="noPetsPromptUI" style="display: @(hasPets ? "none" : "block");">
+                            <div class="text-center py-4">
+                                <i class="bi bi-emoji-frown fs-1 text-muted mb-3 d-block"></i>
+                                <h6 class="fw-bold">No Pets Registered</h6>
+                                <p class="text-muted small mb-4">You don't have any pets on your profile yet. Add a pet to book a verification appointment.</p>
+                                <button type="button" class="btn btn-dark rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="showNewPetForm()">Add a Pet Now</button>
+                            </div>
+                        </div>
+
+                        <div id="existingPetsUI" style="display: @(hasPets ? "block" : "none");">
+                            <div class="mb-4">
+                                <label class="form-label">Who is this appointment for?</label>
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    @if (hasPets)
+                                    {
+                                        foreach (var pet in ViewBag.MyPets)
+                                        {
+                                            <div>
+                                                <input type="checkbox" class="btn-check pet-checkbox" name="petIds" id="pet_@pet.Id" value="@pet.Id" autocomplete="off">
+                                                <label class="pet-pill-label" for="pet_@pet.Id">
+                                                    <i class="bi bi-heptagon-fill" style="color: inherit;"></i> @pet.Name <span class="fw-normal" style="opacity: 0.8; font-size: 0.8rem;">(@pet.Breed)</span>
+                                                </label>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                                <div id="petSelectionError" class="invalid-feedback">Please select at least one pet to continue.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Select Service</label>
+                                <select name="serviceName" class="form-select" id="existingServiceSelect" @(hasPets ? "required" : "")>
+                                    <option value="" disabled selected>What do you need help with?</option>
+                                    @if (!string.IsNullOrEmpty(Model.Services))
+                                    {
+                                        foreach (var svc in Model.Services.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                        {
+                                            <option value="@svc.Trim()">@svc.Trim()</option>
+                                        }
+                                    }
+                                    <option value="General Consultation">General Consultation / Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="newPetUI" style="display: none;">
+                            <div class="new-pet-alert mb-4">
+                                <i class="bi bi-stars fs-3 text-warning"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Let's get your pet registered!</h6>
+                                    <p class="mb-0 small" style="opacity: 0.9;">Book a Verification Appointment to have the Vet officially examine and add your new pet to your profile.</p>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Pet's Name</label>
+                                    <input type="text" class="form-control new-pet-input" id="newPetName" placeholder="e.g. Bella">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Species & Breed</label>
+                                    <input type="text" class="form-control new-pet-input" id="newPetBreed" placeholder="e.g. Cat - Persian">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label">Service Type</label>
+                                <select class="form-select bg-light" disabled>
+                                    <option selected>New Patient Verification & Exam</option>
+                                </select>
+                                <div class="small text-muted mt-1 fw-bold"><i class="bi bi-lock-fill"></i> Required for unregistered pets</div>
+                            </div>
+
+                            <input type="hidden" name="petIds" value="0" />
+                            <input type="hidden" name="serviceName" id="newPetService" value="New Patient Verification & Exam" disabled />
+                        </div>
+
+                        <div id="sharedBookingFields" style="display: @(hasPets ? "block" : "none");">
+                            <div class="mb-4 mt-4">
+                                <label class="form-label">Preferred Date & Time</label>
+                                <input type="datetime-local" id="appointmentDateTime" name="appointmentDate" class="form-control" @(hasPets ? "required" : "") />
+                                <div id="timeError" class="invalid-feedback"><i class="bi bi-exclamation-circle-fill me-1"></i> The clinic is closed at this time. Please select a valid working hour.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Description / Notes</label>
+                                <textarea name="notes" id="notesInput" class="form-control" rows="2" placeholder="Briefly describe the reason for the checkup..."></textarea>
+                            </div>
+
+                            <label class="urgent-box mb-1" for="urgentCheck" id="urgentContainer">
+                                <input class="form-check-input urgent-checkbox shadow-none m-0" type="checkbox" name="isUrgent" value="true" id="urgentCheck">
+                                <span class="urgent-label"><i class="bi bi-exclamation-triangle-fill me-1"></i> Mark as Urgent</span>
+                            </label>
+                            <div style="font-size: 0.75rem; color: #6B7280; padding-left: 10px; margin-top: 5px;">
+                                * Urgent requests will flash red on the Vet's dashboard.
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    @if (isAuthenticated)
+                    {
+                        <button type="submit" id="submitBookingBtn" class="btn btn-submit rounded-pill px-4 fw-bold" style="background: #059669; color: #fff; display: @(hasPets ? "inline-block" : "none");" disabled>
+                            Request Booking
+                        </button>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="leaveReviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-star-fill me-2" style="color: #F59E0B;"></i> @formTitle</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form asp-controller="Vet" asp-action="SubmitReview" method="post">
+                <input type="hidden" name="vetId" value="@Model.Id" />
+                <input type="hidden" name="rating" id="starRatingValue" value="@initialStars" />
+                
+                <div class="modal-body text-center">
+                    <h6 class="fw-bold mb-3">How was your visit?</h6>
+                    
+                    <div class="d-flex justify-content-center gap-2 mb-4" id="starRatingUI" style="font-size: 2.5rem; color: #EBE0D5; cursor: pointer;">
+                        @for(int i = 1; i <= 5; i++)
+                        {
+                            string starClass = i <= initialStars ? "bi-star-fill text-warning" : "bi-star";
+                            <i class="bi @starClass review-star-icon" data-val="@i"></i>
+                        }
+                    </div>
+
+                    <div class="text-start">
+                        <label class="form-label">Written Review</label>
+                        <textarea name="comment" class="form-control" rows="4" placeholder="Share your experience to help other pet parents..." required>@initialComment</textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer d-flex justify-content-between">
+                    <div>
+                        @if(myExistingReview != null)
+                        {
+                            <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-bold" onclick="if(confirm('Are you sure you want to permanently delete your review?')) document.getElementById('deleteVetReviewForm').submit();">Delete</button>
+                        }
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn rounded-pill px-4 fw-bold" style="background: #2D1B0E; color: #fff;">@submitBtnText</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // --- 0. NEW PET FLOW TRIGGER ---
+        const userHasPets = @(hasPets ? "true" : "false");
+        
+        function showNewPetForm() {
+            // Hide the frown face prompt
+            document.getElementById('noPetsPromptUI').style.display = 'none';
+            
+            // Show the actual form fields
+            document.getElementById('newPetUI').style.display = 'block';
+            document.getElementById('sharedBookingFields').style.display = 'block';
+            
+            // Show the submit button
+            document.getElementById('submitBookingBtn').style.display = 'inline-block';
+            
+            // Activate the required fields for the new UI dynamically
+            document.getElementById('appointmentDateTime').setAttribute('required', 'required');
+            document.getElementById('newPetName').setAttribute('required', 'required');
+            document.getElementById('newPetBreed').setAttribute('required', 'required');
+            document.getElementById('newPetService').removeAttribute('disabled');
+
+            runValidations();
+        }
+
+        // --- 1. URGENT TOGGLE UX ---
+        const urgentCheck = document.getElementById('urgentCheck');
+        const urgentContainer = document.getElementById('urgentContainer');
+        
+        if (urgentCheck && urgentContainer) {
+            urgentCheck.addEventListener('change', function() {
+                if (this.checked) {
+                    urgentContainer.classList.add('active');
+                    urgentContainer.querySelector('.urgent-label').style.color = '#fff';
+                } else {
+                    urgentContainer.classList.remove('active');
+                    urgentContainer.querySelector('.urgent-label').style.color = '#DC2626';
+                }
+            });
+        }
+
+        // --- 2. DYNAMIC VALIDATION ENGINE (Handles Both UI States) ---
+        const submitBookingBtn = document.getElementById('submitBookingBtn');
+        const petCheckboxes = document.querySelectorAll('.pet-checkbox');
+        const petSelectionError = document.getElementById('petSelectionError');
+        const newPetInputs = document.querySelectorAll('.new-pet-input');
+
+        if (submitBookingBtn) {
+            function runValidations() {
+                let isValid = false;
+
+                if (userHasPets) {
+                    // Logic for Users WITH Pets
+                    const checkedCount = document.querySelectorAll('.pet-checkbox:checked').length;
+                    if (checkedCount > 0) {
+                        isValid = true;
+                        if (petSelectionError) petSelectionError.style.display = 'none';
+                    } else {
+                        isValid = false;
+                        if (petSelectionError) petSelectionError.style.display = 'block';
+                    }
+                } else {
+                    // Logic for Users WITHOUT Pets (Checking text fields)
+                    const nameLen = document.getElementById('newPetName').value.trim().length;
+                    const breedLen = document.getElementById('newPetBreed').value.trim().length;
+                    
+                    if (nameLen > 0 && breedLen > 0) {
+                        isValid = true;
+                    } else {
+                        isValid = false;
+                    }
+                }
+
+                // Also ensure time is valid before unlocking
+                const timeError = document.getElementById('timeError');
+                const timeErrVisible = timeError && timeError.style.display === 'block';
+                
+                submitBookingBtn.disabled = !(isValid && !timeErrVisible);
+            }
+
+            // Attach listeners
+            petCheckboxes.forEach(cb => cb.addEventListener('change', runValidations));
+            newPetInputs.forEach(input => input.addEventListener('input', runValidations));
+            
+            if (userHasPets) {
+                runValidations();
+            }
+        }
+
+        // --- INTERCEPT FORM SUBMISSION FOR NEW PETS ---
+        const bookingForm = document.getElementById('bookingForm');
+        if (bookingForm && !userHasPets) {
+            bookingForm.addEventListener('submit', function(e) {
+                const name = document.getElementById('newPetName').value.trim();
+                const breed = document.getElementById('newPetBreed').value.trim();
+                const notesElem = document.getElementById('notesInput');
+                
+                // Pack the new pet info safely into the notes field so the Vet can see it!
+                const existingNotes = notesElem.value;
+                notesElem.value = `[NEW PATIENT VERIFICATION] Pet Name: ${name} | Breed: ${breed} || Additional Notes: ${existingNotes}`;
+            });
+        }
+
+
+        // --- 3. DYNAMIC SERVER-DATA SCHEDULE CHECKER ---
+        const dtInput = document.getElementById('appointmentDateTime');
+        const timeError = document.getElementById('timeError');
+
+        if (dtInput) {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            dtInput.min = now.toISOString().slice(0,16);
+
+            const vetSchedule = {
+                @if (Model.Schedule != null)
+                {
+                    foreach(var day in Model.Schedule)
+                    {
+                        <text>
+                        "@day.Day.ToString()": {
+                            isOff: @(day.IsOff.ToString().ToLower()),
+                            open: "@(day.OpenTime?.ToString(@"hh\:mm") ?? "00:00")",
+                            close: "@(day.CloseTime?.ToString(@"hh\:mm") ?? "23:59")"
+                        },
+                        </text>
+                    }
+                }
+            };
+
+            const daysMap = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+            dtInput.addEventListener('change', function() {
+                if(timeError) timeError.style.display = 'none';
+                
+                if (submitBookingBtn) runValidations();
+
+                if (!this.value) return;
+
+                const selectedDate = new Date(this.value);
+                const dayName = daysMap[selectedDate.getDay()];
+                const schedule = vetSchedule[dayName];
+
+                if (schedule) {
+                    if (schedule.isOff) {
+                        showTimeError(`The clinic is closed on ${dayName}s.`);
+                        return;
+                    }
+
+                    const selectedTimeStr = this.value.split('T')[1]; 
+                    
+                    if (selectedTimeStr < schedule.open || selectedTimeStr > schedule.close) {
+                        const open12h = format12Hour(schedule.open);
+                        const close12h = format12Hour(schedule.close);
+                        showTimeError(`The clinic is only open between ${open12h} and ${close12h} on ${dayName}s.`);
+                    }
+                }
+            });
+        }
+
+        function showTimeError(msg) {
+            if(timeError) {
+                timeError.innerHTML = `<i class="bi bi-exclamation-circle-fill me-1"></i> ${msg}`;
+                timeError.style.display = 'block';
+                dtInput.value = ''; 
+                if(submitBookingBtn) submitBookingBtn.disabled = true; 
+            }
+        }
+
+        function format12Hour(time24) {
+            if(!time24) return "";
+            let [h, m] = time24.split(':');
+            let period = 'AM';
+            h = parseInt(h);
+            if (h >= 12) { period = 'PM'; if (h > 12) h -= 12; }
+            if (h === 0) h = 12;
+            return `${h}:${m} ${period}`;
+        }
+
+        // --- 4. REVIEW RATING SYSTEM UI ---
+        const stars = document.querySelectorAll('.review-star-icon');
+        const ratingInput = document.getElementById('starRatingValue');
+
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const val = parseInt(this.getAttribute('data-val'));
+                ratingInput.value = val;
+                
+                stars.forEach(s => {
+                    if (parseInt(s.getAttribute('data-val')) <= val) {
+                        s.classList.replace('bi-star', 'bi-star-fill');
+                        s.classList.add('text-warning');
+                    } else {
+                        s.classList.replace('bi-star-fill', 'bi-star');
+                        s.classList.remove('text-warning');
+                    }
+                });
+            });
+        });
+    </script>
+}

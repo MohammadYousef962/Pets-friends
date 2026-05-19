@@ -11,7 +11,6 @@ namespace Pets_friends.Data
 
         // --- 1. Profiles ---
         public DbSet<ClientProfile> ClientProfiles { get; set; }
-
         public DbSet<VetProfile> VetProfiles { get; set; }
         public DbSet<ShelterProfile> ShelterProfiles { get; set; }
         public DbSet<MerchantProfile> MerchantProfiles { get; set; }
@@ -30,7 +29,9 @@ namespace Pets_friends.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<ProductReview> ProductReviews { get; set; }
         public DbSet<ShoppingCart> ShoppingCarts { get; set; }
-
+        public DbSet<AdoptionApplication> AdoptionApplications { get; set; }
+        public DbSet<BoardingRecord> BoardingRecords { get; set; }
+        public DbSet<AdoptionRequest> AdoptionRequests { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); // CRITICAL: Always first
@@ -46,7 +47,7 @@ namespace Pets_friends.Data
             builder.Entity<CartItem>().HasOne(c => c.Product).WithMany().HasForeignKey(c => c.ProductId).OnDelete(DeleteBehavior.NoAction);
             builder.Entity<OrderItem>().HasOne(o => o.Product).WithMany().HasForeignKey(o => o.ProductId).OnDelete(DeleteBehavior.NoAction);
 
-            // ---> NEW: Fixes the Error 1785 crash for Product Reviews <---
+            // Fixes the Error 1785 crash for Product Reviews 
             builder.Entity<ProductReview>()
                 .HasOne(pr => pr.ClientProfile)
                 .WithMany()
@@ -54,14 +55,13 @@ namespace Pets_friends.Data
                 .OnDelete(DeleteBehavior.NoAction);
 
             // ── THE ULTIMATE APPOINTMENT FIX ──
-            // We must restrict ALL foreign keys on the Appointment table to stop the Diamond Loop.
             builder.Entity<Appointment>()
                 .HasOne(a => a.ClientProfile)
                 .WithMany()
                 .HasForeignKey(a => a.ClientProfileId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // ---> NEW: Fixes the Error 1785 crash for Orders <---
+            // Fixes the Error 1785 crash for Orders
             builder.Entity<Order>()
                 .HasOne(o => o.MerchantProfile)
                 .WithMany()
@@ -84,6 +84,19 @@ namespace Pets_friends.Data
                 .HasOne(a => a.VetProfile)
                 .WithMany(v => v.Appointments)
                 .HasForeignKey(a => a.VetProfileId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // ---> NEW: Fixes the Error 1785 crash for Adoption Applications <---
+            builder.Entity<AdoptionApplication>()
+                .HasOne(a => a.Pet)
+                .WithMany()
+                .HasForeignKey(a => a.PetId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<AdoptionApplication>()
+                .HasOne(a => a.ClientProfile)
+                .WithMany()
+                .HasForeignKey(a => a.ClientProfileId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             // --- 3. Global Decimal Precision for Money ---

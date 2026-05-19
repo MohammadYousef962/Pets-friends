@@ -1,50 +1,351 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@inject UserManager<UserAccount> UserManager
+
+@{
+    var currentPath = Context.Request.Path.ToString().ToLower();
+    var currentUser = await UserManager.GetUserAsync(User);
+    string userName = currentUser?.FullName ?? "User";
+    var encodedName = userName.Replace(" ", "+");
+    var profileImageUrl = $"https://ui-avatars.com/api/?name={encodedName}&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true";
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Pets_friends</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Pets_friends.styles.css" asp-append-version="true" />
-    @RenderSection("Styles", required: false)
+    <title>@ViewData["Title"] | PetFriends</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --text-dark: #2D1B0E;
+            --text-muted: #8C7560;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --bg-light: #FAF6F1;
+            --bg-white: #FFFFFF;
+            --border-light: #EBE0D5;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Nunito', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- NAVBAR --- */
+        .main-nav {
+            padding: 20px 0;
+            background: rgba(250, 246, 241, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid #EBE0D5; /* hard-coded */
+        }
+
+        .nav-brand {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: #2D1B0E; /* hard-coded */
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            color: #8C7560; /* hard-coded */
+            font-weight: 600;
+            text-decoration: none;
+            margin: 0 15px;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #5C3D1E !important; /* hard-coded */
+        }
+
+        .btn-nav {
+            background: #2D1B0E; /* hard-coded */
+            color: white !important;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            display: inline-block;
+        }
+
+        .btn-nav:hover {
+            background: #C8A882; /* hard-coded */
+            color: white !important;
+            transform: translateY(-2px);
+        }
+
+        /* --- USER DROPDOWN --- */
+        .user-profile-btn {
+            background: #FFFFFF;
+            border: 1px solid #EBE0D5;
+            border-radius: 50px;
+            padding: 4px 16px 4px 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(92, 61, 30, 0.05);
+            outline: none;
+        }
+
+        .user-profile-btn:hover, .dropdown-toggle.show {
+            background: #FAF6F1;
+            border-color: #C8A882;
+            box-shadow: 0 4px 12px rgba(92, 61, 30, 0.1);
+        }
+
+        .user-profile-btn::after {
+            display: none;
+        }
+
+        .nav-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: #EBE0D5;
+        }
+
+        .nav-user-name {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            color: #2D1B0E; /* hard-coded */
+            font-size: 0.95rem;
+        }
+
+        .dropdown-chevron {
+            color: #8C7560;
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
+        }
+
+        .dropdown-toggle.show .dropdown-chevron {
+            transform: rotate(180deg);
+            color: #5C3D1E;
+        }
+
+        .custom-user-dropdown {
+            border-radius: 20px;
+            border: 1px solid #EBE0D5;
+            box-shadow: 0 15px 35px rgba(92, 61, 30, 0.1);
+            padding: 12px;
+            margin-top: 15px !important;
+            min-width: 220px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            animation: dropFade 0.2s ease-out forwards;
+            transform-origin: top right;
+        }
+
+        @@keyframes dropFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .custom-user-dropdown .dropdown-item {
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-weight: 600;
+            color: #2D1B0E;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .custom-user-dropdown .dropdown-item i {
+            color: #C8A882;
+            font-size: 1.1rem;
+            width: 24px;
+        }
+
+        .custom-user-dropdown .dropdown-item:hover {
+            background: #FDFaf5;
+            color: #5C3D1E;
+            transform: translateX(4px);
+        }
+
+        .custom-user-dropdown .dropdown-item:hover i {
+            color: #5C3D1E;
+        }
+
+        .custom-user-dropdown .dropdown-divider {
+            border-color: #EBE0D5;
+            margin: 8px 10px;
+            opacity: 1;
+        }
+
+        .logout-btn-item {
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+        .logout-btn-item:hover {
+            background: #FEF2F2 !important;
+            color: #DC2626 !important;
+        }
+
+        .logout-btn-item:hover i {
+            color: #DC2626 !important;
+        }
+
+        main {
+            flex: 1 0 auto;
+        }
+
+        /* --- FOOTER --- */
+        .premium-footer {
+            background-color: #251408;
+            font-size: 0.9rem;
+            padding: 28px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            width: 100%;
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
+        .footer-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .footer-copyright {
+            color: #A1A1AA;
+            font-weight: 400;
+            letter-spacing: 0.2px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .footer-links a {
+            color: #A1A1AA;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: #FFFFFF !important;
+        }
+
+        @@media (max-width: 767px) {
+            .footer-wrap {
+                flex-direction: column;
+                text-align: center;
+                justify-content: center;
+            }
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Pets_friends</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+
+    <nav class="main-nav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/" class="nav-brand">PetFriends</a>
+            <div class="nav-links d-none d-md-flex">
+                <a href="/" class="@(currentPath == "/" || currentPath == "/home/main" ? "active" : "")">Home</a>
+                <a href="/Store/Home" class="@(currentPath.StartsWith("/store") ? "active" : "")">Marketplace</a>
+                <a href="/Home/Clinics" class="@(currentPath.StartsWith("/home/clinics") || currentPath.StartsWith("/vet/profile") ? "active" : "")">Vet Clinics</a>
+                <a href="/Home/Shelters" class="@(currentPath.StartsWith("/home/shelters") ? "active" : "")">Shelters</a>
+            </div>
+            <div>
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <div class="dropdown">
+                        <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,15">
+                            <img src="@profileImageUrl" alt="Avatar" class="nav-avatar">
+                            <span class="nav-user-name">@userName</span>
+                            <i class="bi bi-chevron-down dropdown-chevron"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end custom-user-dropdown" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="/Client/Dashboard"><i class="bi bi-person-badge"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="/Client/MyPets"><i class="bi bi-heptagon-fill"></i> My Pets</a></li>
+                            <li><a class="dropdown-item" href="/Client/Appointments"><i class="bi bi-calendar-event"></i> Appointments</a></li>
+                            <li><a class="dropdown-item" href="/Order/MyOrders"><i class="bi bi-box-seam"></i> My Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 p-0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item logout-btn-item">
+                                        <i class="bi bi-box-arrow-right" style="color: #EF4444;"></i> Sign Out
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a href="/Account/Login" class="btn-nav">Sign In</a>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="premium-footer">
+        <div class="container">
+            <div class="footer-wrap">
+                <div class="footer-copyright">
+                    &copy; 2026 petfriends.support@@gmail.com. All Rights Reserved.
+                </div>
+                <div class="footer-links">
+                    <a href="/Home/Privacy">Privacy Policy</a>
+                    <a href="/Home/Terms">Terms of Service</a>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Pets_friends - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

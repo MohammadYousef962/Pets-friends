@@ -1,109 +1,344 @@
 ﻿@model IEnumerable<Pets_friends.Data.ViewModels.TransactionRecordVM>
-
 @{
-    ViewData["Title"] = "Transaction History";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml"; // Uses the new full-screen layout!
+    ViewData["Title"] = "Transaction Ledger";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="admin-wrapper">
-    <div class="container">
+@section Styles {
+    <style>
+        /* Implements smooth font smoothing across the page */
+        .admin-transactions-container {
+            font-family: 'DM Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-        <a asp-action="Dashboard" class="btn-back">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-        </a>
+        /* Heading elements for ultra-soft, premium font structures */
+        .premium-title {
+            font-family: 'Playfair Display', serif;
+            color: #5C3D1E;
+            font-weight: 700;
+            font-size: 2.4rem;
+            letter-spacing: -0.5px;
+        }
 
-        <div class="glass-panel">
-            <h2 style="font-family: 'Playfair Display', serif; color: #5C3D1E; font-weight: 700; margin-bottom: 5px;">
-                <i class="bi bi-receipt-cutoff" style="color: #C8A882; margin-right: 10px;"></i>Transaction Ledger
-            </h2>
-            <p style="color: #8C7560; margin-bottom: 25px;">A chronological history of all payments and bookings on the platform.</p>
+        .premium-subtitle {
+            font-family: 'DM Sans', sans-serif;
+            color: #8C7560;
+            font-size: 1.05rem;
+            font-weight: 400;
+            margin-bottom: 35px;
+        }
 
-            <div class="table-responsive">
-                <table class="table table-custom">
-                    <thead>
-                        <tr>
-                            <th>Date & Time</th>
-                            <th>Customer</th>
-                            <th>Details</th>
-                            <th>Amount</th>
-                            <th class="text-end">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (!Model.Any())
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
-                                    <i class="bi bi-inbox fs-1 d-block mb-2" style="color: #EDE0D0;"></i>
-                                    No transactions have occurred yet.
-                                </td>
-                            </tr>
-                        }
-                        @foreach (var record in Model)
-                        {
-                            <tr>
-                                <td>
-                                    <div class="fw-bold" style="color: #5C3D1E;">@record.Timestamp.ToString("MMM dd, yyyy")</div>
-                                    <div style="font-size: 0.8rem; color: #8C7560;">@record.Timestamp.ToString("hh:mm tt")</div>
-                                </td>
+        /* Interactive floating rows style structure */
+        .table-floating { 
+            width: 100%; 
+            border-collapse: separate; 
+            border-spacing: 0 12px; 
+            margin-top: -12px; 
+        }
 
-                                <td class="fw-bold" style="color: #5C3D1E;">
-                                    @record.CustomerName
-                                </td>
+        .table-floating th { 
+            border: none; 
+            color: #8C7560; 
+            font-size: 0.85rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1.2px; 
+            padding: 0 24px 5px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: color 0.25s ease;
+        }
 
-                                <td>
-                                    <div style="color: #C8A882; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">
-                                        @record.Type
-                                    </div>
-                                    <div style="font-size: 0.95rem;">@record.Details</div>
-                                </td>
+        .table-floating th:hover { 
+            color: #C8A882; 
+        }
 
-                                <td>
-                                    @if (record.Amount.HasValue)
-                                    {
-                                        <span style="font-weight: 700; color: #3a8a4f; font-size: 1.1rem;">
-                                            $@record.Amount.Value.ToString("0.00")
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
+        /* Micro Sorting Chevron Styling */
+        .sort-icon-small {
+            font-size: 0.65rem;
+            color: #C8A882;
+            opacity: 0.7;
+            vertical-align: middle;
+            transition: opacity 0.2s, transform 0.2s;
+        }
 
-                                <td class="text-end">
-                                    @{
-                                        // Dynamically style the status badge based on the word
-                                        var badgeBg = "#f5f1eb";
-                                        var badgeColor = "#8C7560";
+        .table-floating th:hover .sort-icon-small {
+            opacity: 1;
+            transform: scale(1.15);
+        }
 
-                                        if (record.Status.ToLower() == "completed" || record.Status.ToLower() == "confirmed")
-                                        {
-                                            badgeBg = "#e4f0e8";
-                                            badgeColor = "#3a8a4f";
-                                        }
-                                        else if (record.Status.ToLower() == "pending")
-                                        {
-                                            badgeBg = "#fff3cd";
-                                            badgeColor = "#856404";
-                                        }
-                                        else if (record.Status.ToLower() == "cancelled" || record.Status.ToLower() == "failed")
-                                        {
-                                            badgeBg = "#f8d7da";
-                                            badgeColor = "#721c24";
-                                        }
-                                    }
-                                    <span class="badge rounded-pill shadow-sm"
-                                          style="background-color: @badgeBg; color: @badgeColor; padding: 8px 14px; font-weight: 600; border: 1px solid rgba(0,0,0,0.05);">
-                                        @record.Status
-                                    </span>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+        .table-floating tbody tr { 
+            background: #FFFFFF; 
+            box-shadow: 0 6px 18px rgba(92, 61, 30, 0.02); 
+            transition: all 0.35s cubic-bezier(0.165, 0.84, 0.44, 1); 
+        }
 
+        .table-floating tbody tr:hover { 
+            transform: scale(1.008) translateY(-3px); 
+            box-shadow: 0 12px 30px rgba(92, 61, 30, 0.07); 
+        }
+
+        .table-floating td { 
+            padding: 18px 24px; 
+            vertical-align: middle; 
+            border-top: 1px solid #EDE0D0; 
+            border-bottom: 1px solid #EDE0D0; 
+            font-weight: 500; 
+            font-size: 0.95rem; 
+        }
+
+        .table-floating td:first-child { 
+            border-left: 1px solid #EDE0D0; 
+            border-radius: 20px 0 0 20px; 
+        }
+
+        .table-floating td:last-child { 
+            border-right: 1px solid #EDE0D0; 
+            border-radius: 0 20px 20px 0; 
+        }
+
+        /* Soft transaction source icons */
+        .source-icon-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        /* Refined system indicator badges with warm transparencies */
+        .badge-soft { 
+            padding: 8px 16px; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.8px; 
+            display: inline-block;
+        }
+        
+        .badge-completed { background: rgba(5, 150, 105, 0.1); color: #059669; }
+        .badge-pending { background: rgba(217, 119, 6, 0.1); color: #D97706; }
+        .badge-cancelled { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+
+        /* Unified filter alignment workspace */
+        .filter-bar { 
+            background: #FFFFFF; 
+            padding: 18px; 
+            border-radius: 24px; 
+            box-shadow: 0 10px 25px rgba(92, 61, 30, 0.03); 
+            border: 1px solid #EDE0D0; 
+            display: flex; 
+            gap: 16px; 
+            align-items: center; 
+            margin-bottom: 35px; 
+            flex-wrap: wrap; 
+        }
+
+        .search-input, .filter-select { 
+            background: #FAF8F5; 
+            border: 2px solid transparent; 
+            border-radius: 16px; 
+            font-weight: 500; 
+            color: #5C3D1E;
+            transition: all 0.3s ease; 
+        }
+
+        .search-input { 
+            width: 100%; 
+            padding: 12px 20px 12px 48px; 
+        }
+
+        .search-input:focus, .filter-select:focus { 
+            background: #FFFFFF; 
+            border-color: #C8A882; 
+            outline: none; 
+            box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.15);
+        }
+
+        /* Removed appearance:none and custom SVG arrow layout */
+        .filter-select { 
+            padding: 12px 20px; 
+            cursor: pointer; 
+        }
+    </style>
+}
+
+<div class="glass-panel admin-transactions-container">
+    
+    <!-- Top Greeting Header -->
+    <div class="row align-items-center mb-5">
+        <div class="col-md-8 text-start">
+            <h1 class="premium-title">Ecosystem Ledger</h1>
+            <p class="premium-subtitle mb-0">Chronological ledger recording storefront checkouts and ecosystem service appointments.</p>
         </div>
     </div>
+
+    <!-- Interactive Filtering Area -->
+    <div class="filter-bar">
+        <div class="position-relative flex-grow-1" style="min-width: 280px;">
+            <i class="bi bi-search position-absolute" style="left: 20px; top: 50%; transform: translateY(-50%); color: #C8A882; font-size: 1.05rem;"></i>
+            <input type="text" id="transactionSearch" class="search-input" placeholder="Search transactions by customer or detail description...">
+        </div>
+
+        <select id="transactionStatus" class="filter-select" style="min-width: 160px;">
+            <option value="All">All Statuses</option>
+            <option value="Completed">Completed / Delivered</option>
+            <option value="Confirmed">Confirmed (Appointments)</option>
+            <option value="Pending">Pending / Active</option>
+            <option value="Cancelled">Cancelled</option>
+        </select>
+
+        <select id="transactionType" class="filter-select" style="min-width: 160px;">
+            <option value="All">All Sources</option>
+            <option value="Product">Store Orders (Revenue)</option>
+            <option value="Service">Appointments (Zero-Fee)</option>
+        </select>
+    </div>
+
+    <!-- Floating Grid Table -->
+    <div class="table-responsive">
+        <table class="table-floating" id="ledgerTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTxTable(0)" title="Sort by Date">
+                        Date & Time <i class="bi bi-chevron-expand sort-icon-small ms-1"></i>
+                    </th>
+                    <th onclick="sortTxTable(1)" title="Sort by Client">
+                        Client / Buyer <i class="bi bi-chevron-expand sort-icon-small ms-1"></i>
+                    </th>
+                    <th onclick="sortTxTable(2)" title="Sort by Details">
+                        Transaction Detail <i class="bi bi-chevron-expand sort-icon-small ms-1"></i>
+                    </th>
+                    <th onclick="sortTxTable(3)" title="Sort by Value">
+                        Total Value <i class="bi bi-chevron-expand sort-icon-small ms-1"></i>
+                    </th>
+                    <th onclick="sortTxTable(4)" class="text-end" title="Sort by Status" style="padding-right: 24px;">
+                        Status <i class="bi bi-chevron-expand sort-icon-small ms-1"></i>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var record in Model)
+                {
+                    var statusLower = record.Status.ToLower();
+                    var badgeClass = statusLower == "completed" || statusLower == "confirmed" ? "badge-completed" :
+                                    (statusLower == "pending" ? "badge-pending" : "badge-cancelled");
+
+                    <tr class="tx-row" data-name="@record.CustomerName.ToLower()" data-detail="@record.Details.ToLower()" data-status="@record.Status" data-type="@record.Type">
+                        <td>
+                            <div class="fw-bold" style="color: #5C3D1E; font-size: 1.05rem;">@record.Timestamp.ToString("MMM dd, yyyy")</div>
+                            <div style="font-size: 0.8rem; color: #8C7560; font-weight: 600;">@record.Timestamp.ToString("hh:mm tt")</div>
+                        </td>
+                        <td>
+                            <div class="fw-bold" style="color: #5C3D1E; font-size: 1.05rem;">@record.CustomerName</div>
+                        </td>
+                        <td>
+                            @if (record.Type == "Service")
+                            {
+                                <div class="source-icon-badge" style="color: #0284C7;">
+                                    <i class="bi bi-calendar-event"></i> Appointment
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="source-icon-badge" style="color: #D97706;">
+                                    <i class="bi bi-box-seam"></i> Store Order
+                                </div>
+                            }
+                            <div style="font-size: 0.95rem; font-weight: 600; color: #8C7560;">@record.Details</div>
+                        </td>
+                        <td>
+                            @if (record.Amount.HasValue && record.Type == "Product")
+                            {
+                                <span style="font-weight: 700; color: #059669; font-size: 1.15rem;">@record.Amount.Value.ToString("C")</span>
+                            }
+                            else
+                            {
+                                <span style="font-weight: 600; color: #8C7560; font-size: 1.05rem;">$0.00 (Platform Free)</span>
+                            }
+                        </td>
+                        <td class="text-end" style="padding-right: 24px;">
+                            <span class="badge-soft @badgeClass">@record.Status</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Empty Filter Fallback -->
+    <div id="txNoResults" class="text-center py-5" style="display:none;">
+        <i class="bi bi-receipt-cutoff text-muted mb-3 d-block" style="font-size: 3rem; color: #8C7560 !important;"></i>
+        <p class="text-muted fw-bold mb-0">No transaction records match your search parameters or filters.</p>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Real-time client-side transaction filters
+        function filterTransactions() {
+            const search = document.getElementById('transactionSearch').value.toLowerCase();
+            const status = document.getElementById('transactionStatus').value;
+            const type = document.getElementById('transactionType').value;
+            let visibleCount = 0;
+
+            document.querySelectorAll('.tx-row').forEach(row => {
+                const rName = row.getAttribute('data-name');
+                const rDetail = row.getAttribute('data-detail');
+                const rStatus = row.getAttribute('data-status');
+                const rType = row.getAttribute('data-type');
+
+                const matchSearch = rName.includes(search) || rDetail.includes(search);
+                const matchStatus = status === 'All' || rStatus === status || (status === 'Completed' && rStatus === 'Delivered');
+                const matchType = type === 'All' || rType === type;
+
+                if (matchSearch && matchStatus && matchType) { 
+                    row.style.display = ''; 
+                    visibleCount++; 
+                } else { 
+                    row.style.display = 'none'; 
+                }
+            });
+
+            document.getElementById('txNoResults').style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        document.getElementById('transactionSearch').addEventListener('input', filterTransactions);
+        document.getElementById('transactionStatus').addEventListener('change', filterTransactions);
+        document.getElementById('transactionType').addEventListener('change', filterTransactions);
+
+        // Sorting algorithm for the Ledger
+        function sortTxTable(n) {
+            var table = document.getElementById("ledgerTable");
+            var rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            switching = true; 
+            dir = "asc"; 
+            while (switching) {
+                switching = false;
+                rows = table.querySelectorAll("tbody tr.tx-row");
+                for (i = 0; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].querySelectorAll("td")[n];
+                    y = rows[i + 1].querySelectorAll("td")[n];
+                    if (dir == "asc") {
+                        if (x.innerText.toLowerCase() > y.innerText.toLowerCase()) { shouldSwitch = true; break; }
+                    } else if (dir == "desc") {
+                        if (x.innerText.toLowerCase() < y.innerText.toLowerCase()) { shouldSwitch = true; break; }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true; 
+                    switchcount++;      
+                } else {
+                    if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; }
+                }
+            }
+        }
+    </script>
+}

@@ -1,0 +1,601 @@
+﻿@model IEnumerable<Pets_friends.Data.ViewModels.MyPetDisplayVM>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<Pets_friends.Models.UserAccount> UserManager
+
+@{
+    ViewData["Title"] = "Shelter Residents";
+
+    var currentUser = await UserManager.GetUserAsync(User);
+    bool isShelterManager = User.IsInRole("Shelter");
+    bool isClient = !isShelterManager; // Treat anyone who isn't the shelter as a potential adopter
+
+    // --- THE FIX: ADDED THIS LINE ---
+    bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+
+    if (isShelterManager)
+    {
+        Layout = "~/Views/Shared/_ShelterLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+}
+
+@section Styles {
+    <style>
+        :root {
+            --text-dark-blue: #002B49;
+            --text-dark: #1F2937;
+            --text-muted: #6B7280;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --bg-body: #F3F4F6;
+            --border-light: #EBE0D5;
+            --adopt-color: #059669; /* Adoption Green */
+        }
+
+        body {
+            background-color: var(--bg-body);
+            background-image: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            max-width: 1000px;
+            margin: 40px auto 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .page-title {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 2.5rem;
+            color: #2D1B0E;
+            margin: 0;
+        }
+
+        .grid-container {
+            max-width: 1000px;
+            margin: 0 auto 60px;
+        }
+
+        /* PET CARD */
+        .my-pet-card {
+            background: #FFFFFF;
+            border-radius: 28px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: block;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .my-pet-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 15px 35px rgba(92, 61, 30, 0.1);
+                border-color: var(--brand-accent);
+            }
+
+        .my-pet-img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 18px;
+            margin-bottom: 16px;
+            background: #F3F4F6;
+            transition: transform 0.5s;
+        }
+
+        .my-pet-card:hover .my-pet-img {
+            transform: scale(1.05);
+        }
+
+        .my-pet-name {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--text-dark-blue);
+            margin-bottom: 4px;
+            padding: 0 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .my-pet-meta {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            padding: 0 8px 8px;
+        }
+
+        /* CARD HOVER OVERLAY */
+        .pet-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(45, 27, 14, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 28px;
+            backdrop-filter: blur(2px);
+        }
+
+        .my-pet-card:hover .pet-overlay {
+            opacity: 1;
+        }
+
+        .btn-overlay-view {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            font-weight: 700;
+            padding: 12px 28px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.8);
+            font-size: 1rem;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        /* MODAL UI */
+        .modal-content {
+            border-radius: 24px;
+            border: none;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            background: #FFFFFF;
+            border-bottom: 1px solid var(--border-light);
+            padding: 24px 30px;
+        }
+
+        .modal-title {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            color: #2D1B0E;
+        }
+
+        .medical-lock-banner {
+            background: #FFFBEB;
+            color: #D97706;
+            padding: 12px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #FEF3C7;
+        }
+
+        .client-banner {
+            background: #F0FDF4;
+            color: #065F46;
+            border-bottom: 1px solid #D1FAE5;
+        }
+
+        .locked-field {
+            background: #F3F4F6;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #4B5563;
+            font-weight: 500;
+            cursor: not-allowed;
+            margin-bottom: 15px;
+        }
+
+        .locked-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 800;
+            color: #9CA3AF;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .editable-input {
+            background: #FFFFFF;
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #1F2937;
+            font-weight: 600;
+            width: 100%;
+            transition: 0.2s;
+            margin-bottom: 15px;
+        }
+
+            .editable-input:focus {
+                border-color: var(--brand-accent);
+                outline: none;
+                box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.1);
+            }
+
+        .editable-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 800;
+            color: var(--brand-accent);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .pfp-upload-wrap {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 4px solid #fff;
+        }
+
+            .pfp-upload-wrap img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .pfp-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .pfp-upload-wrap:hover .pfp-overlay {
+            opacity: 1;
+        }
+
+        .btn-save-modal {
+            background: var(--brand-primary);
+            color: white;
+            border-radius: 12px;
+            font-weight: 700;
+            padding: 12px 30px;
+            border: none;
+            transition: 0.2s;
+        }
+
+            .btn-save-modal:hover {
+                background: var(--brand-accent);
+                transform: translateY(-2px);
+            }
+
+        .btn-adopt-modal {
+            background: var(--adopt-color);
+            color: white;
+            border-radius: 12px;
+            font-weight: 700;
+            padding: 12px 30px;
+            border: none;
+            transition: 0.2s;
+        }
+
+            .btn-adopt-modal:hover {
+                background: #047857;
+                transform: translateY(-2px);
+            }
+
+        /* PAGINATION */
+        .pagination-wrap {
+            max-width: 1000px;
+            margin: 40px auto;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .page-link-custom {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 12px;
+            color: var(--brand-primary);
+            font-weight: 800;
+            text-decoration: none;
+            border: 1px solid var(--border-light);
+            transition: 0.2s;
+        }
+
+            .page-link-custom.active {
+                background: var(--brand-primary);
+                color: white;
+                border-color: var(--brand-primary);
+            }
+
+            .page-link-custom:hover:not(.active) {
+                background: var(--brand-accent);
+                color: white;
+            }
+    </style>
+}
+
+<div class="container px-3 pb-5">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success rounded-4 mt-4 mb-0 d-flex align-items-center border-0 shadow-sm mx-auto" style="background: #ECFDF5; color: #065F46; padding: 16px 20px; max-width: 1000px;">
+            <i class="bi bi-check-circle-fill me-3 fs-5" style="color: #10B981;"></i>
+            <div class="fw-bold">@TempData["SuccessMessage"]</div>
+        </div>
+    }
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Shelter Residents</h1>
+            <p class="text-muted fw-bold mb-0">Meet our wonderful pets looking for a loving home.</p>
+        </div>
+    </div>
+
+    <div class="grid-container">
+        @if (Model != null && Model.Any())
+        {
+            <div class="row g-4">
+                @foreach (var pet in Model)
+                {
+                    <div class="col-md-4 col-sm-6">
+                        <div class="my-pet-card" data-bs-toggle="modal" data-bs-target="#editModal-@pet.Id">
+                            <div class="position-relative" style="border-radius: 18px; overflow: hidden; margin-bottom: 16px;">
+                                <img src="@pet.ImageUrl" class="my-pet-img m-0" alt="@pet.Name" onerror="this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
+                                <div class="pet-overlay">
+                                    <span class="btn-overlay-view">@(isShelterManager ? "Edit Pet Details" : "View & Adopt")</span>
+                                </div>
+                            </div>
+                            <div class="my-pet-name">@pet.Name</div>
+                            <div class="my-pet-meta">@pet.Breed &bull; @pet.Age yrs</div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="editModal-@pet.Id" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">@pet.Name's Official Profile</h5>
+                                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                @if (isShelterManager)
+                                {
+                                    <div class="medical-lock-banner">
+                                        <i class="bi bi-shield-check fs-5"></i>
+                                        You have clearance to update medical history and reproductive status. Core physical traits are locked.
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="medical-lock-banner client-banner">
+                                        <i class="bi bi-house-heart-fill fs-5"></i>
+                                        This pet is available for adoption! Review their details and submit an application below.
+                                    </div>
+                                }
+
+                                <form asp-action="UpdateShelterPet" asp-controller="Shelter" method="post" enctype="multipart/form-data">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="PetId" value="@pet.Id" />
+                                    <input type="hidden" name="ExistingImageUrl" value="@pet.ImageUrl" />
+
+                                    <div class="modal-body p-4">
+                                        <div class="row g-4">
+
+                                            <!-- LEFT COLUMN (Profile/Display Info) -->
+                                            <div class="col-md-6 border-end pe-md-4">
+                                                @if (isShelterManager)
+                                                {
+                                                    <h6 class="fw-bold mb-4" style="color: var(--brand-primary); font-family: 'Nunito', sans-serif;">Editable Display Profile</h6>
+
+                                                    <div class="pfp-upload-wrap" onclick="document.getElementById('file-@pet.Id').click()">
+                                                        <img src="@pet.ImageUrl" id="preview-@pet.Id" alt="@pet.Name" onerror="this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
+                                                        <div class="pfp-overlay"><i class="bi bi-camera"></i></div>
+                                                        <input name="ImageFile" type="file" id="file-@pet.Id" hidden accept="image/*" onchange="previewImage(this, 'preview-@pet.Id')">
+                                                    </div>
+
+                                                    <label class="editable-label">Pet Name <span class="text-danger">*</span></label>
+                                                    <input type="text" name="Name" class="editable-input" value="@pet.Name" required maxlength="50">
+
+                                                    <label class="editable-label">Personality / Description</label>
+                                                    <textarea name="Description" class="editable-input" rows="4" placeholder="Describe their personality...">@pet.Description</textarea>
+                                                }
+                                                else
+                                                {
+                                                    <img src="@pet.ImageUrl" class="rounded-4 w-100 shadow-sm mb-3" style="height:280px; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
+                                                    <h5 class="fw-bold text-dark mb-2">About @pet.Name</h5>
+                                                    <p class="text-muted" style="line-height: 1.6;">@(string.IsNullOrWhiteSpace(pet.Description) ? "A wonderful companion waiting for a home." : pet.Description)</p>
+                                                }
+                                            </div>
+
+                                            <!-- RIGHT COLUMN (Medical Info) -->
+                                            <div class="col-md-6 ps-md-4">
+                                                <h6 class="fw-bold mb-4" style="color: var(--text-muted); font-family: 'Nunito', sans-serif;">Verified Medical ID</h6>
+
+                                                <div class="locked-label">Breed / Species <i class="bi bi-lock-fill"></i></div>
+                                                <div class="locked-field">@pet.Breed</div>
+
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <div class="locked-label">Age <i class="bi bi-lock-fill"></i></div>
+                                                        <div class="locked-field">@pet.Age years</div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="locked-label">Gender <i class="bi bi-lock-fill"></i></div>
+                                                        <div class="locked-field">@pet.Gender</div>
+                                                    </div>
+                                                </div>
+
+                                                @if (isShelterManager)
+                                                {
+                                                    <label class="editable-label">Reproductive Status</label>
+                                                    <select name="IsNeutered" class="editable-input">
+                                                        @if (pet.IsNeutered)
+                                                        {
+                                                            <option value="true" selected>Neutered / Spayed</option>
+                                                            <option value="false">Intact</option>
+                                                        }
+                                                        else
+                                                        {
+                                                            <option value="true">Neutered / Spayed</option>
+                                                            <option value="false" selected>Intact</option>
+                                                        }
+                                                    </select>
+
+                                                    <label class="editable-label">Medical History</label>
+                                                    <textarea name="MedicalHistory" class="editable-input" rows="4" placeholder="Enter vaccination status, allergies, etc...">@pet.MedicalHistory</textarea>
+                                                }
+                                                else
+                                                {
+                                                    <div class="row mb-2">
+                                                        <div class="col-12">
+                                                            <div class="locked-label">Reproductive Status <i class="bi bi-lock-fill"></i></div>
+                                                            <div class="locked-field">@(pet.IsNeutered ? "Neutered / Spayed" : "Intact")</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="locked-label">Medical History <i class="bi bi-lock-fill"></i></div>
+                                                    <div class="locked-field mb-0" style="min-height: 100px; font-size: 0.9rem; line-height: 1.6;">
+                                                        @(string.IsNullOrWhiteSpace(pet.MedicalHistory) ? "No history recorded." : pet.MedicalHistory)
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer" style="border-top: 1px solid var(--border-light); padding: 20px 30px; background: #FAFAFA; display:flex; justify-content:space-between;">
+                                        <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Close</button>
+
+                                        @if (isShelterManager)
+                                        {
+                                            <button type="submit" class="btn-save-modal">Save Profile Changes</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn-adopt-modal" onclick="openAdoptionModal('@pet.Name', '@pet.Id', 'editModal-@pet.Id')">
+                                                <i class="bi bi-heart-fill me-1"></i> Apply to Adopt
+                                            </button>
+                                        }
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="pagination-wrap">
+                <a href="#" class="page-link-custom"><i class="bi bi-chevron-left"></i></a>
+                <a href="#" class="page-link-custom active">1</a>
+                <a href="#" class="page-link-custom"><i class="bi bi-chevron-right"></i></a>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 rounded-4" style="background: #FFFFFF; border: 2px dashed #EBE0D5;">
+                <i class="bi bi-hearts fs-1 text-muted d-block mb-3"></i>
+                <h4 class="fw-bold" style="color: #2D1B0E; font-family: 'Nunito', sans-serif;">No pets available</h4>
+                <p class="text-muted mb-0">This shelter currently doesn't have any pets available for adoption.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- 5. CLIENT ADOPTION APPLICATION MODAL -->
+<div class="modal fade" id="adoptionApplicationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#ECFDF5; border-bottom:1px solid #D1FAE5;">
+                <h5 class="fw-bold modal-title" style="color: #065F46;"><i class="bi bi-envelope-paper-heart-fill me-2" style="color:#059669;"></i> Adopt: <span id="adoptModalPetName">Pet</span></h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form asp-controller="Shelter" asp-action="SubmitAdoptionRequest" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="PetId" id="adoptPetIdField" />
+
+                <div class="modal-body p-4">
+                    @if (!isAuthenticated)
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-shield-lock fs-1 text-muted mb-3 d-block"></i>
+                            <h6 class="fw-bold">Sign In Required</h6>
+                            <p class="text-muted small">You need to be signed in to submit an adoption application.</p>
+                            <a href="/Account/Login" class="btn btn-sm btn-dark rounded-pill mt-2 px-4 py-2 fw-bold">Sign In Now</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-4">
+                            <label class="form-label">Why are you looking to adopt this pet? *</label>
+                            <textarea name="Motivation" class="form-control" rows="3" required placeholder="Explain your decision details..."></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Describe your current domestic infrastructure *</label>
+                            <textarea name="LivingSituation" class="form-control" rows="3" required placeholder="Specify yard status, residential context, rental lease boundaries if any..."></textarea>
+                        </div>
+                        <div class="alert" style="background: #FFFBEB; border: 2px solid #FDE68A; border-radius: 16px; padding: 15px; display: flex; align-items: flex-start; gap: 12px;">
+                            <input type="checkbox" name="AgreedToPolicy" value="true" required class="form-check-input" style="width:20px; height:20px; cursor: pointer; margin-top:3px;" />
+                            <p class="mb-0" style="color: #92400E; font-size: 0.9rem; line-height: 1.5; font-weight: 600;">I formally commit to returning the rescue to a verified shelter checkup hub once a week during month one, and twice a month for the successive context to safeguard proper adjustment.</p>
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer" style="background:#FAFAFA;">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    @if (isAuthenticated)
+                    {
+                        <button type="submit" class="btn btn-submit rounded-pill px-5 fw-bold" style="background:#059669;">Submit</button>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => document.getElementById(targetId).src = e.target.result;
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Logic to transition from Pet Details Modal -> Adoption Modal seamlessly
+        function openAdoptionModal(name, id, parentModalId) {
+            // Close the details modal first if it is open
+            if (parentModalId) {
+                var parentModal = bootstrap.Modal.getInstance(document.getElementById(parentModalId));
+                if(parentModal) { parentModal.hide(); }
+            }
+
+            // Populate and open Adoption Modal
+            document.getElementById('adoptModalPetName').innerText = name;
+            document.getElementById('adoptPetIdField').value = id;
+            new bootstrap.Modal(document.getElementById('adoptionApplicationModal')).show();
+        }
+    </script>
+}

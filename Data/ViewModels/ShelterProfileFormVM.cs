@@ -4,50 +4,39 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Pets_friends.Data.ViewModels
 {
-    // This ViewModel is used by the Create and Edit shelter forms.
-    // It collects all the information the shelter user enters in the page.
     public class ShelterProfileFormVM
     {
-        // Used when editing an existing shelter profile
         public int Id { get; set; }
 
-        // Shelter basic info
+        [Required(ErrorMessage = "Manager's Full Name is required.")]
+        [StringLength(30, ErrorMessage = "Name cannot exceed 100 characters.")]
+        public string FullName { get; set; }
+
         [Required(ErrorMessage = "Shelter Name is required.")]
-        [StringLength(100)]
-        public string ShelterName { get; set; } = string.Empty;
+        [StringLength(50, ErrorMessage = "Shelter Name cannot exceed 100 characters.")]
+        public string ShelterName { get; set; }
 
         [Required(ErrorMessage = "Shelter Address is required.")]
-        [StringLength(200)]
-        public string ShelterAddress { get; set; } = string.Empty;
+        [StringLength(250, ErrorMessage = "Address cannot exceed 250 characters.")]
+        public string Address { get; set; }
 
-        // Contact email for the shelter account
-        [Required(ErrorMessage = "Email is required.")]
-        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
-            ErrorMessage = "Invalid format. Must be name@domain.com")]
-        public string Email { get; set; } = string.Empty;
-
-        // Contact phone number
         [Required(ErrorMessage = "Phone Number is required.")]
-        [RegularExpression(@"^\+?[0-9\s-]{8,20}$",
-            ErrorMessage = "Invalid phone format. (8-20 characters required)")]
-        public string PhoneNumber { get; set; } = string.Empty;
+        [Phone(ErrorMessage = "Invalid phone number format.")]
+        public string PhoneNumber { get; set; }
 
-        // Description shown on the shelter profile page
-        [Required(ErrorMessage = "Description is required.")]
-        [StringLength(1000)]
-        public string Description { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Contact Email is required.")]
+        [EmailAddress(ErrorMessage = "Invalid email format.")]
+        [StringLength(60)]
+        public string Email { get; set; }
 
-        // Services are stored as one string, separated by commas
-        [Required(ErrorMessage = "Please add at least one service.")]
-        public string Services { get; set; } = string.Empty;
+        [Required(ErrorMessage = "A description of the shelter is required.")]
+        [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters.")]
+        public string Description { get; set; }
 
-        // Uploaded image file
+        // The '?' stops the hidden validation crashes!
         public IFormFile? ImageFile { get; set; }
-
-        // Existing saved image path, useful in Edit page
         public string? ExistingImageUrl { get; set; }
 
-        // Weekly working schedule
-        public List<WorkingDayVM> Schedule { get; set; } = new();
+        public List<WorkingDayVM> Schedule { get; set; } = new List<WorkingDayVM>();
     }
 }

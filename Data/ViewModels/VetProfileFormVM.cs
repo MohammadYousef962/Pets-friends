@@ -8,21 +8,24 @@ namespace Pets_friends.Data.ViewModels
     {
         public int Id { get; set; }
 
+        // --- ADDED: Maps directly to the root registration handle ---
+        [Required(ErrorMessage = "Full Name is required.")]
+        [StringLength(25)]
+        public string FullName { get; set; } = string.Empty;
+
         [Required(ErrorMessage = "Clinic Name is required.")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string ClinicName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Clinic Address is required.")]
         [StringLength(200)]
         public string ClinicAddress { get; set; } = string.Empty;
 
-        // --- STRICT EMAIL: Requires .com, .jo, etc. ---
         [Required(ErrorMessage = "Email is required.")]
         [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
             ErrorMessage = "Invalid format. Must be name@domain.com (or .jo, .net, etc)")]
         public string Email { get; set; } = string.Empty;
 
-        // --- FIXED: Increased to {8,20} to match the HTML and long numbers ---
         [Required(ErrorMessage = "Phone Number is required.")]
         [RegularExpression(@"^\+?[0-9\s-]{8,20}$",
             ErrorMessage = "Invalid phone format. (8-20 characters required)")]
@@ -43,7 +46,6 @@ namespace Pets_friends.Data.ViewModels
         public IFormFile? ImageFile { get; set; }
         public string? ExistingImageUrl { get; set; }
 
-        // This handles the string sent by our new JavaScript Tag UI
         [Required(ErrorMessage = "Please add at least one service.")]
         public string Services { get; set; } = string.Empty;
 

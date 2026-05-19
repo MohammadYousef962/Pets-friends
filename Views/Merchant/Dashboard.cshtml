@@ -5,10 +5,7 @@
 
 @{
     ViewData["Title"] = "Store Dashboard";
-    Layout = "~/Views/Shared/_MerchantLayout.cshtml"; 
-
-    var currentUser = await UserManager.GetUserAsync(User);
-    var storeName = Model.Profile?.StoreName ?? "My Pet Store";
+    Layout = "~/Views/Shared/_MerchantLayout.cshtml";
 }
 
 @section Styles {
@@ -35,27 +32,6 @@
             margin: 0;
         }
 
-        /* --- BUTTONS --- */
-        .btn-brand {
-            background-color: #5C3D1E;
-            color: #fff;
-            border-radius: 12px;
-            padding: 10px 24px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-        .btn-brand:hover {
-            background-color: #C8A882;
-            color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(200, 168, 130, 0.4);
-        }
-
         .btn-brand-outline {
             background-color: transparent;
             color: #5C3D1E;
@@ -66,12 +42,12 @@
             transition: all 0.3s ease;
             text-decoration: none;
         }
-        .btn-brand-outline:hover {
-            background-color: #5C3D1E;
-            color: #fff;
-        }
 
-        /* --- GLASS CARDS --- */
+            .btn-brand-outline:hover {
+                background-color: #5C3D1E;
+                color: #fff;
+            }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(10px);
@@ -95,7 +71,6 @@
             justify-content: space-between;
         }
 
-        /* --- STAT PILLS --- */
         .stat-card {
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px);
@@ -107,12 +82,14 @@
             gap: 15px;
             transition: transform 0.3s ease;
         }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.9);
-            border-color: #C8A882;
-            box-shadow: 0 10px 25px rgba(200, 168, 130, 0.15);
-        }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+                background: rgba(255, 255, 255, 0.9);
+                border-color: #C8A882;
+                box-shadow: 0 10px 25px rgba(200, 168, 130, 0.15);
+            }
+
         .stat-icon {
             width: 50px;
             height: 50px;
@@ -123,31 +100,67 @@
             font-size: 1.5rem;
             flex-shrink: 0;
         }
-        .stat-icon.sales { background: #EEDECB; color: #5C3D1E; }
-        .stat-icon.orders { background: #DBC3A9; color: #5C3D1E; }
-        .stat-icon.products { background: #EEDECB; color: #8C7560; }
-        .stat-icon.alerts { background: rgba(217, 83, 79, 0.15); color: #8b0000; }
 
-        .stat-info h5 { margin: 0; font-size: 0.85rem; color: #2D1B0E; font-weight: 500; }
-        .stat-info h2 { margin: 2px 0 0; font-family: 'DM Sans', sans-serif; color: #2D1B0E; font-weight: 700; font-size: 1.5rem; }
+            .stat-icon.sales {
+                background: #EEDECB;
+                color: #5C3D1E;
+            }
 
-        /* --- TABLES --- */
-        .custom-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        .custom-table th {
-            color: #2D1B0E;
-            font-weight: 600;
+            .stat-icon.orders {
+                background: #DBC3A9;
+                color: #5C3D1E;
+            }
+
+            .stat-icon.products {
+                background: #EEDECB;
+                color: #8C7560;
+            }
+
+            .stat-icon.alerts {
+                background: rgba(217, 83, 79, 0.15);
+                color: #8b0000;
+            }
+
+        .stat-info h5 {
+            margin: 0;
             font-size: 0.85rem;
-            padding: 0 15px 15px;
-            border-bottom: 1px solid #DBC3A9;
-        }
-        .custom-table td {
-            padding: 16px 15px;
-            vertical-align: middle;
             color: #2D1B0E;
-            font-size: 0.9rem;
-            border-bottom: 1px solid rgba(219, 195, 169, 0.4);
+            font-weight: 500;
         }
-        .custom-table tr:last-child td { border-bottom: none; }
+
+        .stat-info h2 {
+            margin: 2px 0 0;
+            font-family: 'DM Sans', sans-serif;
+            color: #2D1B0E;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+            .custom-table th {
+                color: #2D1B0E;
+                font-weight: 600;
+                font-size: 0.85rem;
+                padding: 0 15px 15px;
+                border-bottom: 1px solid #DBC3A9;
+            }
+
+            .custom-table td {
+                padding: 16px 15px;
+                vertical-align: middle;
+                color: #2D1B0E;
+                font-size: 0.9rem;
+                border-bottom: 1px solid rgba(219, 195, 169, 0.4);
+            }
+
+            .custom-table tr:last-child td {
+                border-bottom: none;
+            }
 
         .status-badge {
             padding: 4px 12px;
@@ -155,8 +168,26 @@
             font-size: 0.8rem;
             font-weight: 600;
         }
-        .status-pending { background: #FFF3CD; color: #856404; }
-        .status-shipped { background: #D4EDDA; color: #155724; }
+
+        .status-pending {
+            background: #FFF3CD;
+            color: #856404;
+        }
+
+        .status-shipped {
+            background: #E0F2FE;
+            color: #0C5460;
+        }
+
+        .status-delivered {
+            background: #D4EDDA;
+            color: #155724;
+        }
+
+        .status-cancelled {
+            background: #F8D7DA;
+            color: #721C24;
+        }
     </style>
 }
 
@@ -174,7 +205,7 @@
                 <div class="stat-icon sales"><i class="bi bi-currency-dollar"></i></div>
                 <div class="stat-info">
                     <h5>Total Revenue:</h5>
-                    <h2>@Model.TotalRevenue.ToString("C2")</h2> 
+                    <h2>@Model.TotalRevenue.ToString("C2")</h2>
                 </div>
             </div>
         </div>
@@ -183,7 +214,7 @@
                 <div class="stat-icon orders"><i class="bi bi-cart3"></i></div>
                 <div class="stat-info">
                     <h5>Active Orders:</h5>
-                    <h2>@Model.ActiveOrdersCount</h2> 
+                    <h2>@Model.ActiveOrdersCount</h2>
                 </div>
             </div>
         </div>
@@ -192,7 +223,7 @@
                 <div class="stat-icon products"><i class="bi bi-box-seam"></i></div>
                 <div class="stat-info">
                     <h5>Products:</h5>
-                    <h2>@Model.TotalProductsCount</h2> 
+                    <h2>@Model.TotalProductsCount</h2>
                 </div>
             </div>
         </div>
@@ -201,7 +232,7 @@
                 <div class="stat-icon alerts"><i class="bi bi-exclamation-triangle"></i></div>
                 <div class="stat-info">
                     <h5>Low Stock Items:</h5>
-                    <h2 style="color: #8b0000;">@(Model.LowStockProducts?.Count ?? 0)</h2> 
+                    <h2 style="color: #8b0000;">@(Model.LowStockProducts?.Count ?? 0)</h2>
                 </div>
             </div>
         </div>
@@ -229,11 +260,21 @@
                             {
                                 foreach (var order in Model.RecentOrders)
                                 {
+                                    // FIXED RZ1010: Declared as a plain C# variable directly inside active scope bounds
+                                    string badgeClass = (order.Status ?? "") switch
+                                    {
+                                        "Pending" => "status-pending",
+                                        "Shipped" => "status-shipped",
+                                        "Delivered" => "status-delivered",
+                                        "Cancelled" => "status-cancelled",
+                                        _ => "status-pending"
+                                    };
+
                                     <tr>
                                         <td>@order.Id</td>
                                         <td>@(order.ClientProfile?.UserAccount?.FullName ?? "Customer")</td>
                                         <td>
-                                            <span class="status-badge @(order.Status == "Pending" ? "status-pending" : "status-shipped")">
+                                            <span class="status-badge @badgeClass">
                                                 @order.Status
                                             </span>
                                         </td>
@@ -263,9 +304,12 @@
                     {
                         foreach (var item in Model.LowStockProducts.Take(4))
                         {
+                            // FIXED RZ1010: Plain un-prefixed C# scalar string assignment
+                            string alertColor = item.StockQuantity <= 5 ? "#A63A3A" : "#8C7560";
+
                             <div class="d-flex justify-content-between align-items-center" style="font-family: 'DM Sans', sans-serif; font-size: 0.95rem;">
                                 <span style="color: #1C150D; font-weight: 500;">@item.Name</span>
-                                <span style="font-weight: 600; color: @(item.StockQuantity <= 5 ? "#A63A3A" : "#8C7560");">
+                                <span style="font-weight: 600; color: @alertColor;">
                                     @item.StockQuantity left
                                 </span>
                             </div>

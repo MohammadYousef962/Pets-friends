@@ -155,6 +155,81 @@ namespace Pets_friends.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Pets_friends.Models.AdoptionApplication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ApplicationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ClientProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientProfileId");
+
+                    b.HasIndex("PetId");
+
+                    b.ToTable("AdoptionApplications");
+                });
+
+            modelBuilder.Entity("Pets_friends.Models.AdoptionRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicantId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ClientProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LivingSituation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Motivation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PetId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RequestDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ShelterProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AdoptionRequests");
+                });
+
             modelBuilder.Entity("Pets_friends.Models.Appointment", b =>
                 {
                     b.Property<int>("Id")
@@ -169,10 +244,16 @@ namespace Pets_friends.Migrations
                     b.Property<int>("ClientProfileId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PetId")
+                    b.Property<bool>("IsUrgent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PetId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ServiceId")
+                    b.Property<int?>("ServiceId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -193,6 +274,51 @@ namespace Pets_friends.Migrations
                     b.HasIndex("VetProfileId");
 
                     b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("Pets_friends.Models.BoardingRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("OwnerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PetBreed")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PetName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ScheduledDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ShelterProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SpecialNotes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TimeLabel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShelterProfileId");
+
+                    b.ToTable("BoardingRecords");
                 });
 
             modelBuilder.Entity("Pets_friends.Models.CartItem", b =>
@@ -228,6 +354,13 @@ namespace Pets_friends.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserAccountId")
                         .IsRequired()
@@ -350,27 +483,54 @@ namespace Pets_friends.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Age")
-                        .HasColumnType("int");
-
                     b.Property<string>("Breed")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ClientProfileId")
+                    b.Property<int?>("ClientProfileId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsAdopted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsNeutered")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPubliclyListed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastNameChangeDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("MedicalHistory")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Species")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ShelterProfileId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ClientProfileId");
+
+                    b.HasIndex("ShelterProfileId");
 
                     b.ToTable("Pets");
                 });
@@ -493,15 +653,15 @@ namespace Pets_friends.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Services")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -796,7 +956,7 @@ namespace Pets_friends.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Pets_friends.Models.Appointment", b =>
+            modelBuilder.Entity("Pets_friends.Models.AdoptionApplication", b =>
                 {
                     b.HasOne("Pets_friends.Models.ClientProfile", "ClientProfile")
                         .WithMany()
@@ -810,11 +970,28 @@ namespace Pets_friends.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.Navigation("ClientProfile");
+
+                    b.Navigation("Pet");
+                });
+
+            modelBuilder.Entity("Pets_friends.Models.Appointment", b =>
+                {
+                    b.HasOne("Pets_friends.Models.ClientProfile", "ClientProfile")
+                        .WithMany()
+                        .HasForeignKey("ClientProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Pets_friends.Models.Pet", "Pet")
+                        .WithMany()
+                        .HasForeignKey("PetId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Pets_friends.Models.Service", "Service")
                         .WithMany()
                         .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Pets_friends.Models.VetProfile", "VetProfile")
                         .WithMany("Appointments")
@@ -829,6 +1006,17 @@ namespace Pets_friends.Migrations
                     b.Navigation("Service");
 
                     b.Navigation("VetProfile");
+                });
+
+            modelBuilder.Entity("Pets_friends.Models.BoardingRecord", b =>
+                {
+                    b.HasOne("Pets_friends.Models.ShelterProfile", "ShelterProfile")
+                        .WithMany()
+                        .HasForeignKey("ShelterProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ShelterProfile");
                 });
 
             modelBuilder.Entity("Pets_friends.Models.CartItem", b =>
@@ -914,11 +1102,15 @@ namespace Pets_friends.Migrations
                 {
                     b.HasOne("Pets_friends.Models.ClientProfile", "ClientProfile")
                         .WithMany("Pets")
-                        .HasForeignKey("ClientProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ClientProfileId");
+
+                    b.HasOne("Pets_friends.Models.ShelterProfile", "ShelterProfile")
+                        .WithMany("Pets")
+                        .HasForeignKey("ShelterProfileId");
 
                     b.Navigation("ClientProfile");
+
+                    b.Navigation("ShelterProfile");
                 });
 
             modelBuilder.Entity("Pets_friends.Models.Product", b =>
@@ -1055,6 +1247,8 @@ namespace Pets_friends.Migrations
 
             modelBuilder.Entity("Pets_friends.Models.ShelterProfile", b =>
                 {
+                    b.Navigation("Pets");
+
                     b.Navigation("Schedule");
                 });
 

@@ -1,0 +1,258 @@
+﻿@model Pets_friends.Data.ViewModels.ClientDashboardVM
+
+@{
+    ViewData["Title"] = "Edit Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml"; 
+}
+
+@section Styles {
+    <style>
+        :root {
+            --text-dark: #1F2937;
+            --text-label: #374151;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --bg-input: #F9FAFB;
+            --border-light: #F3F4F6;
+        }
+
+        /* FORCE THE BACKGROUND GRADIENT */
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            min-height: 100vh;
+        }
+
+        .profile-wrapper {
+            max-width: 950px; margin: 50px auto 0; background: #FFFFFF; border-radius: 24px;
+            padding: 50px; box-shadow: 0 10px 40px rgba(92, 61, 30, 0.05); border: 1px solid rgba(255,255,255,0.8);
+        }
+
+        .profile-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid var(--border-light); flex-wrap: wrap; gap: 20px;
+        }
+
+        .user-info-group { display: flex; align-items: center; gap: 20px; }
+        
+        .profile-avatar-wrapper {
+            position: relative; width: 85px; height: 85px; border-radius: 50%;
+            cursor: pointer; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        .profile-avatar-large { width: 100%; height: 100%; object-fit: cover; background: #FAF6F1; border: 1px solid var(--border-light);}
+        
+        .avatar-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex;
+            align-items: center; justify-content: center; color: white; font-size: 1.5rem;
+            opacity: 0; transition: opacity 0.2s ease;
+        }
+        .profile-avatar-wrapper:hover .avatar-overlay { opacity: 1; }
+
+        .user-name { font-weight: 800; font-size: 1.35rem; color: var(--text-dark); margin: 0 0 4px 0; font-family: 'Nunito', sans-serif;}
+        
+        /* THE COPY ID BADGE */
+        .id-badge {
+            display: inline-flex; align-items: center; gap: 6px; background: #F3F4F6;
+            color: #6B7280; padding: 4px 12px; border-radius: 8px; font-family: monospace;
+            font-size: 0.85rem; font-weight: 600; border: 1px solid var(--border-light); cursor: pointer; transition: all 0.2s ease;
+        }
+        .id-badge:hover { background: #FAF6F1; color: var(--brand-primary); border-color: var(--brand-accent); }
+
+        .btn-save {
+            background-color: var(--brand-primary); color: #FFFFFF; border: none; border-radius: 10px;
+            padding: 10px 30px; font-weight: 600; font-size: 0.95rem; transition: all 0.2s ease; box-shadow: 0 4px 10px rgba(92, 61, 30, 0.15);
+        }
+        .btn-save:hover { background-color: var(--brand-accent); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(200, 168, 130, 0.3); }
+
+        .btn-cancel {
+            background: #F3F4F6; color: #4B5563; font-weight: 700; border-radius: 10px; border: 1px solid var(--border-light);
+            padding: 9px 20px; font-size: 0.95rem; transition: 0.2s; text-decoration: none;
+        }
+        .btn-cancel:hover { background: #E5E7EB; color: #1F2937; }
+
+        .form-label-custom { font-weight: 600; color: var(--text-label); font-size: 0.95rem; margin-bottom: 10px; display: block; }
+        .form-control-soft, .form-select-soft {
+            background-color: var(--bg-input); border: 2px solid transparent; border-radius: 12px;
+            padding: 14px 18px; color: var(--text-dark); font-size: 0.95rem; font-weight: 500; width: 100%; transition: all 0.2s ease;
+        }
+        .form-control-soft:focus, .form-select-soft:focus {
+            background-color: #FFFFFF; border-color: var(--brand-accent); outline: none; box-shadow: 0 4px 12px rgba(200, 168, 130, 0.1);
+        }
+
+        .phone-wrapper {
+            display: flex; align-items: stretch; background-color: var(--bg-input); border-radius: 12px;
+            border: 2px solid transparent; overflow: hidden; transition: all 0.2s ease;
+        }
+        .phone-wrapper:focus-within { background-color: #FFFFFF; border-color: var(--brand-accent); box-shadow: 0 4px 12px rgba(200, 168, 130, 0.1); }
+        .country-select { border: none; background: transparent; padding: 14px 10px 14px 14px; font-size: 0.95rem; color: var(--text-dark); font-weight: 600; cursor: pointer; border-right: 1px solid var(--border-light); outline: none; }
+        .phone-input { border: none; background: transparent; padding: 14px 16px; flex-grow: 1; outline: none; font-size: 0.95rem; font-weight: 500; color: var(--text-dark); }
+
+        .form-select-soft {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%239CA3AF' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 1rem center; background-size: 16px 12px;
+        }
+
+        .text-danger { font-size: 0.8rem; font-weight: 600; margin-top: 5px; display: block; color: #DC2626 !important; }
+        .required-star { color: #DC2626; }
+
+        @@media (max-width: 768px) {
+            .profile-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .btn-save, .btn-cancel { width: 100%; text-align: center; display: block; margin-bottom: 10px; margin-right: 0 !important; }
+        }
+    </style>
+}
+
+<div class="container px-3 pb-5">
+    <div class="profile-wrapper">
+        
+        <form asp-action="EditProfile" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="ExistingImageUrl" />
+
+            <div class="profile-header">
+                <div class="user-info-group">
+                    @{
+                        var safeName = Model.FullName.Replace(" ", "+");
+                        var generatedAvatar = $"https://ui-avatars.com/api/?name={safeName}&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true&size=150";
+                        var avatarUrl = string.IsNullOrEmpty(Model.ExistingImageUrl) ? generatedAvatar : Model.ExistingImageUrl;
+                    }
+                    <div class="profile-avatar-wrapper" onclick="document.getElementById('fileInput').click()" title="Change Profile Picture">
+                        <img src="@avatarUrl" id="imgPreview" alt="@Model.FullName" class="profile-avatar-large">
+                        <div class="avatar-overlay"><i class="bi bi-camera"></i></div>
+                        <input asp-for="ImageFile" type="file" id="fileInput" hidden accept="image/*" onchange="handleFileSelect(this)">
+                    </div>
+                    <div>
+                        <h2 class="user-name">@Model.FullName</h2>
+                        <div class="id-badge" onclick="copyToClipboard('@Model.FormattedAccountId', this)" title="Copy Full ID">
+                            ID: @Model.FormattedAccountId <i class="bi bi-copy"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center">
+                    <a asp-action="Dashboard" class="btn-cancel me-0 me-sm-2 mb-2 mb-sm-0">Cancel</a>
+                    <button type="submit" class="btn-save m-0">Save Changes</button>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label asp-for="FullName" class="form-label-custom">Full Name <span class="required-star">*</span></label>
+                    <input asp-for="FullName" class="form-control-soft" placeholder="Your Full Name" maxlength="50" required>
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+                
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label-custom">Email Address <span class="required-star">*</span></label>
+                    <input asp-for="Email" type="email" class="form-control-soft" placeholder="Your Email Address" maxlength="100" required>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Gender" class="form-label-custom">Gender <span class="required-star">*</span></label>
+                    <select asp-for="Gender" class="form-select-soft" required>
+                        <option value="" disabled selected>Select Gender</option>
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label-custom">Phone Number <span class="required-star">*</span></label>
+                    <div class="phone-wrapper">
+                        <select class="country-select" id="countryCodeSelect">
+                            <option value="+962">JO +962</option>
+                            <option value="+966">SA +966</option>
+                            <option value="+971">AE +971</option>
+                            <option value="+20">EG +20</option>
+                            <option value="+1">US +1</option>
+                            <option value="+44">UK +44</option>
+                            <option value="+33">FR +33</option>
+                            <option value="+49">DE +49</option>
+                            <option value="+61">AU +61</option>
+                        </select>
+                        <input type="tel" id="localPhoneInput" class="phone-input" placeholder="79XXXXXXX" maxlength="12" required>
+                    </div>
+                    <input type="hidden" asp-for="PhoneNumber" id="hiddenPhoneNumber" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-12">
+                    <label asp-for="City" class="form-label-custom">City / Location <span class="required-star">*</span></label>
+                    <input asp-for="City" type="text" class="form-control-soft" placeholder="e.g. Amman" maxlength="50" required>
+                    <span asp-validation-for="City" class="text-danger"></span>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    
+    <script>
+        function copyToClipboard(text, element) {
+            navigator.clipboard.writeText(text).then(() => {
+                const icon = element.querySelector('i');
+                const originalClass = icon.className;
+                icon.className = 'bi bi-check-lg text-success fs-6';
+                setTimeout(() => { icon.className = originalClass; }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => document.getElementById('imgPreview').src = e.target.result;
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        const hiddenPhone = document.getElementById('hiddenPhoneNumber');
+        const countrySelect = document.getElementById('countryCodeSelect');
+        const localInput = document.getElementById('localPhoneInput');
+
+        function updateHiddenPhone() {
+            if(localInput.value.trim() === '') {
+                hiddenPhone.value = ''; 
+            } else {
+                hiddenPhone.value = countrySelect.value + localInput.value;
+            }
+        }
+
+        localInput.addEventListener('input', function (e) {
+            let cleaned = this.value.replace(/\D/g, ''); 
+            cleaned = cleaned.replace(/^0+/, ''); 
+            this.value = cleaned;
+            updateHiddenPhone();
+        });
+
+        countrySelect.addEventListener('change', updateHiddenPhone);
+
+        if (hiddenPhone.value) {
+            let fullNumber = hiddenPhone.value;
+            let matchedCode = "";
+            
+            for (let i = 0; i < countrySelect.options.length; i++) {
+                let code = countrySelect.options[i].value;
+                if (fullNumber.startsWith(code) && code.length > matchedCode.length) {
+                    matchedCode = code;
+                }
+            }
+            
+            if (matchedCode) {
+                countrySelect.value = matchedCode;
+                localInput.value = fullNumber.substring(matchedCode.length);
+            } else {
+                localInput.value = fullNumber.replace(/\D/g, ''); 
+            }
+        }
+    </script>
+}

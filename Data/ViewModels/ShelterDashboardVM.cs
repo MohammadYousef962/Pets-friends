@@ -1,22 +1,42 @@
-﻿using Pets_friends.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Pets_friends.Data.ViewModels
 {
-    // This ViewModel is used by the shelter dashboard page.
-    // It collects the profile itself plus some simple calculated values.
     public class ShelterDashboardVM
     {
-        // The main shelter profile data
-        public ShelterProfile Profile { get; set; } = null!;
+        public string ShelterName { get; set; }
+        public string ImageUrl { get; set; }
 
-        // Number of services listed by the shelter
-        public int ServicesCount { get; set; }
+        public int InResidenceCount { get; set; }
+        public int PendingAdoptionsCount { get; set; }
+        public int IntakeRequestsCount { get; set; }
+        public int ActiveBoardingCount { get; set; }
 
-        // Number of days the shelter is open
-        public int OpenDaysCount { get; set; }
+        public List<QueueItemDto> QueueItems { get; set; } = new List<QueueItemDto>();
+        public List<BoardingLogDto> BoardingLogs { get; set; } = new List<BoardingLogDto>();
+    }
 
-        // A short preview of working days shown on dashboard
-        public IEnumerable<WorkingDay> SchedulePreview { get; set; } = new List<WorkingDay>();
+    public class QueueItemDto
+    {
+        public int Id { get; set; }
+        public string Type { get; set; } // Adoption, Transfer
+        public string PetName { get; set; }
+        public string PetInfo { get; set; }
+        public string PetImageUrl { get; set; }
+        public string ApplicantName { get; set; }
+        public string ApplicantContact { get; set; }
+        public string Status { get; set; }
+    }
+
+    public class BoardingLogDto
+    {
+        public int Id { get; set; }
+        public string PetName { get; set; }
+        public string PetBreed { get; set; }
+        public string OwnerName { get; set; }
+        public string TimeLabel { get; set; }
+        public string StatusType { get; set; }
+        public string SpecialNotes { get; set; }
+        public DateTime ScheduledDate { get; set; } 
     }
 }

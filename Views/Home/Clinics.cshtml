@@ -1,0 +1,621 @@
+﻿@model Pets_friends.Data.ViewModels.ClinicsDirectoryVM
+@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@inject UserManager<UserAccount> UserManager
+
+@{
+    Layout = null; // Hides the standard internal layout
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Find a Vet | PetFriends</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --text-dark: #2D1B0E;
+            --text-muted: #8C7560;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --bg-light: #FAF6F1;
+            --bg-white: #FFFFFF;
+            --border-light: #EBE0D5;
+            --vet-color: #059669;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Nunito', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- NAVBAR --- */
+        .main-nav {
+            padding: 20px 0;
+            background: rgba(250, 246, 241, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .nav-brand {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-decoration: none;
+            margin: 0 15px;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+
+            .nav-links a:hover, .nav-links a.active {
+                color: var(--brand-primary);
+            }
+
+        .btn-nav {
+            background: var(--text-dark);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+            .btn-nav:hover {
+                background: var(--brand-accent);
+                color: white;
+                transform: translateY(-2px);
+            }
+
+        /* --- NEW USER DROPDOWN UI (SMOOTH ANIMATION) --- */
+        .user-profile-btn {
+            background: #FFFFFF;
+            border: 1px solid var(--border-light);
+            border-radius: 50px;
+            padding: 4px 16px 4px 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(92, 61, 30, 0.05);
+        }
+
+            .user-profile-btn:hover, .user-profile-btn:focus, .dropdown-toggle.show {
+                background: #FAF6F1;
+                border-color: var(--brand-accent);
+                box-shadow: 0 4px 12px rgba(92, 61, 30, 0.1);
+            }
+
+            .user-profile-btn::after {
+                display: none;
+            }
+
+        .nav-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: var(--border-light);
+        }
+
+        .nav-user-name {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .dropdown-chevron {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
+        }
+
+        .dropdown-toggle.show .dropdown-chevron {
+            transform: rotate(180deg);
+            color: var(--brand-primary);
+        }
+
+        .custom-user-dropdown {
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 15px 35px rgba(92, 61, 30, 0.1);
+            padding: 12px;
+            margin-top: 15px !important;
+            min-width: 220px;
+            /* Smooth Apple-style pop-in animation - ONLY OPACITY */
+            animation: dropFade 0.2s ease-out forwards;
+            transform-origin: top right;
+        }
+
+        @@keyframes dropFade {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .custom-user-dropdown .dropdown-item {
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+            .custom-user-dropdown .dropdown-item i {
+                color: var(--brand-accent);
+                font-size: 1.1rem;
+                width: 24px;
+            }
+
+            .custom-user-dropdown .dropdown-item:hover {
+                background: #FDFaf5;
+                color: var(--brand-primary);
+                transform: translateX(4px);
+            }
+
+                .custom-user-dropdown .dropdown-item:hover i {
+                    color: var(--brand-primary);
+                }
+
+        .custom-user-dropdown .dropdown-divider {
+            border-color: #EBE0D5;
+            margin: 8px 10px;
+            opacity: 1;
+        }
+
+        .logout-btn-item {
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+            .logout-btn-item:hover {
+                background: #FEF2F2 !important;
+                color: #DC2626 !important;
+            }
+
+                .logout-btn-item:hover i {
+                    color: #DC2626 !important;
+                }
+
+        /* --- HERO --- */
+        .directory-hero {
+            padding: 100px 0 80px;
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
+            text-align: center;
+        }
+
+            .directory-hero h1 {
+                font-size: 3.5rem;
+                font-weight: 900;
+                color: var(--text-dark);
+                margin-bottom: 20px;
+            }
+
+            .directory-hero p {
+                font-size: 1.15rem;
+                color: #6E5033;
+                max-width: 600px;
+                margin: 0 auto 40px;
+                font-weight: 500;
+                line-height: 1.6;
+            }
+
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 10px;
+            border-radius: 50px;
+            display: flex;
+            box-shadow: 0 20px 40px rgba(92, 61, 30, 0.1);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .search-input {
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.05rem;
+            flex-grow: 1;
+            border-radius: 50px;
+            background: transparent;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+            .search-input:focus {
+                outline: none;
+            }
+
+        .btn-search {
+            background: var(--brand-primary);
+            color: white;
+            border: none;
+            padding: 0 35px;
+            border-radius: 50px;
+            font-weight: 700;
+            transition: 0.3s;
+        }
+
+            .btn-search:hover {
+                background: var(--text-dark);
+                transform: scale(1.02);
+            }
+
+        /* --- FILTERS --- */
+        .filters-wrapper {
+            background: var(--bg-white);
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 73px;
+            z-index: 999;
+        }
+
+        .filter-pill {
+            display: inline-block;
+            text-decoration: none;
+            background: #F8F2E8;
+            border: 1px solid var(--border-light);
+            color: var(--text-muted);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+            .filter-pill:hover, .filter-pill.active {
+                background: var(--brand-primary);
+                border-color: var(--brand-primary);
+                color: white !important;
+            }
+
+        /* --- GRID & CARDS --- */
+        .vets-grid-section {
+            padding: 60px 0;
+            background: var(--bg-white);
+            min-height: 600px;
+        }
+
+        .vet-card {
+            background: var(--bg-light);
+            border-radius: 24px;
+            padding: 35px 20px;
+            border: 1px solid var(--border-light);
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+            .vet-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 15px 40px rgba(92, 61, 30, 0.08);
+                border-color: var(--brand-accent);
+            }
+
+        .vet-avatar {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fff;
+            box-shadow: 0 5px 15px rgba(92, 61, 30, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .vet-name-small {
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        .vet-location {
+            font-size: 0.85rem;
+            color: var(--brand-accent);
+            font-weight: 800;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .vet-stars {
+            color: #F59E0B;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
+        .review-count {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-left: 5px;
+        }
+
+        .vet-spec {
+            font-size: 0.95rem;
+            color: #6E5033;
+            margin-bottom: 25px;
+            flex-grow: 1;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .btn-vet-view {
+            background: #fff;
+            color: var(--text-dark);
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: 0.2s;
+            width: 100%;
+            display: block;
+        }
+
+            .btn-vet-view:hover {
+                background: var(--vet-color);
+                color: #fff;
+                border-color: var(--vet-color);
+                transform: scale(1.02);
+            }
+
+        /* --- PAGINATION --- */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 40px;
+            padding-bottom: 40px;
+        }
+
+        .page-dot {
+            text-decoration: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border: 1px solid var(--border-light);
+            font-weight: 700;
+            color: var(--brand-primary);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+            .page-dot:hover {
+                border-color: var(--brand-accent);
+                background: var(--bg-light);
+            }
+
+            .page-dot.active {
+                background: var(--brand-primary);
+                color: #fff !important;
+                border-color: var(--brand-primary);
+            }
+
+        /* --- FOOTER --- */
+        .footer-cta {
+            background: var(--text-dark);
+            color: white;
+            padding: 100px 0 0;
+            text-align: center;
+        }
+
+            .footer-cta h2 {
+                font-size: 3rem;
+                font-weight: 800;
+                margin-bottom: 15px;
+            }
+    </style>
+</head>
+<body>
+
+    @{
+        var currentPath = Context.Request.Path.ToString().ToLower();
+
+        // Get currently logged in user logic
+        var currentUser = await UserManager.GetUserAsync(User);
+        string userName = currentUser?.FullName ?? "User";
+
+        var encodedName = userName.Replace(" ", "+");
+        var profileImageUrl = $"https://ui-avatars.com/api/?name={encodedName}&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true";
+    }
+
+    <nav class="main-nav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/" class="nav-brand">PetFriends</a>
+            <div class="nav-links d-none d-md-flex">
+                <a href="/" class="@(currentPath == "/" || currentPath == "/home/main" ? "active" : "")">Home</a>
+                <a href="/Store/Home" class="@(currentPath.StartsWith("/store") ? "active" : "")">Marketplace</a>
+                <a href="/Home/Clinics" class="active">Vet Clinics</a>
+                <a href="/Home/Shelters" class="@(currentPath.StartsWith("/home/shelters") ? "active" : "")">Shelters</a>
+            </div>
+            <div>
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <div class="dropdown">
+                        <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,15">
+                            <img src="@profileImageUrl" alt="Avatar" class="nav-avatar">
+                            <span class="nav-user-name">@userName</span>
+                            <i class="bi bi-chevron-down dropdown-chevron"></i>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end custom-user-dropdown" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="/Client/Dashboard"><i class="bi bi-person-badge"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="/Client/MyPets"><i class="bi bi-heptagon-fill"></i> My Pets</a></li>
+                            <li><a class="dropdown-item" href="/Client/Appointments"><i class="bi bi-calendar-event"></i> Appointments</a></li>
+                            <li><a class="dropdown-item" href="/Order/MyOrders"><i class="bi bi-box-seam"></i> My Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 p-0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item logout-btn-item">
+                                        <i class="bi bi-box-arrow-right" style="color: #EF4444;"></i> Sign Out
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a href="/Account/Login" class="btn-nav">Sign In</a>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <section class="directory-hero">
+        <div class="container">
+            <h1>Find the Perfect Vet</h1>
+            <p>Connect with top-rated medical professionals who care as much about your pet as you do.</p>
+
+            <form asp-action="Clinics" method="get">
+                <input type="hidden" name="category" value="@Model.CurrentCategory" />
+
+                <div class="search-container">
+                    <i class="bi bi-search ms-3 me-2" style="color: var(--brand-accent); font-size: 1.2rem; margin-top: 14px;"></i>
+                    <input type="text" name="query" value="@Model.CurrentQuery" class="search-input" placeholder="Search by name, specialty, or location...">
+                    <button type="submit" class="btn-search">Find Now</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <div class="filters-wrapper">
+        <div class="container d-flex gap-3 overflow-auto pb-1" style="scrollbar-width: none;">
+            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=all" class="filter-pill @(Model.CurrentCategory == "all" ? "active" : "")">All Specialists</a>
+            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=General" class="filter-pill @(Model.CurrentCategory == "General" ? "active" : "")">General Practice</a>
+            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=Surgery" class="filter-pill @(Model.CurrentCategory == "Surgery" ? "active" : "")">Surgical Care</a>
+            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=Dental" class="filter-pill @(Model.CurrentCategory == "Dental" ? "active" : "")">Dental Health</a>
+            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=Emergency" class="filter-pill @(Model.CurrentCategory == "Emergency" ? "active" : "")">Emergency 24/7</a>
+            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=Exotic" class="filter-pill @(Model.CurrentCategory == "Exotic" ? "active" : "")">Exotic Pets</a>
+        </div>
+    </div>
+
+    <section class="vets-grid-section">
+        <div class="container">
+
+            @if (Model.Clinics == null || !Model.Clinics.Any())
+            {
+                <div id="noResults" class="text-center py-5">
+                    <i class="bi bi-search-heart fs-1 text-muted d-block mb-3"></i>
+                    <h4 class="fw-bold">No clinics found matching your criteria</h4>
+                    <p class="text-muted">Try adjusting your search terms or filters.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4" id="vetsGrid">
+                    @foreach (var vet in Model.Clinics)
+                    {
+                        <div class="col-md-4 col-sm-6 animate-in">
+                            <div class="vet-card">
+                                <img src="@vet.ImageUrl" class="vet-avatar">
+                                <h4 class="vet-name-small">@vet.ClinicName</h4>
+                                <div class="vet-location"><i class="bi bi-geo-alt-fill"></i> @vet.Location</div>
+                                <div class="vet-stars">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= Math.Floor(vet.AverageRating))
+                                        {
+                                            <i class="bi bi-star-fill"></i>
+                                        }
+                                        else if (i == Math.Ceiling(vet.AverageRating) && vet.AverageRating % 1 != 0)
+                                        {
+                                            <i class="bi bi-star-half"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-star"></i>
+                                        }
+                                    }
+                                    <span class="review-count">(@vet.ReviewCount)</span>
+                                </div>
+                                <p class="vet-spec">@vet.Specialties</p>
+                                <a asp-controller="Vet" asp-action="Profile" asp-route-id="@vet.Id" class="btn-vet-view">View Profile</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <div class="pagination-wrapper" id="pagination">
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=@Model.CurrentCategory&page=@i"
+                               class="page-dot @(Model.CurrentPage == i ? "active" : "")">@i</a>
+                        }
+                    </div>
+                }
+            }
+
+        </div>
+    </section>
+
+    <footer class="footer-cta">
+        <div class="container">
+            <h2>Join the Network</h2>
+            <p>Apply to become a verified partner and connect with thousands of local pet owners.</p>
+            <div class="py-5">
+                <p class="mb-0 small opacity-50">© 2026 PetFriends Ecosystem. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

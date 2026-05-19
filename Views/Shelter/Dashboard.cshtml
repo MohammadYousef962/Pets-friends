@@ -1,139 +1,744 @@
 ﻿@model Pets_friends.Data.ViewModels.ShelterDashboardVM
 
 @{
-    ViewData["Title"] = "Shelter Dashboard";
+    ViewData["Title"] = "Shelter Command Center";
     Layout = "~/Views/Shared/_ShelterLayout.cshtml";
 }
 
-<div class="admin-wrapper">
-    <div class="container">
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --text-dark: #1A1A1A;
+            --text-muted: #6B7280;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --shelter-color: #d9534f;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --border-light: #EBE0D5;
+        }
 
-        <!-- Top statistics cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <i class="bi bi-heart-fill stat-icon"></i>
-                    <div class="stat-number">@Model.ServicesCount</div>
-                    <div class="stat-label">Services Listed</div>
-                </div>
-            </div>
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+            padding-bottom: 60px;
+        }
 
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <i class="bi bi-calendar-week-fill stat-icon"></i>
-                    <div class="stat-number">@Model.OpenDaysCount</div>
-                    <div class="stat-label">Open Days</div>
-                </div>
-            </div>
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: -0.5px;
+        }
 
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <i class="bi bi-building-heart stat-icon" style="color: #d9534f;"></i>
-                    <div class="stat-number">@Model.Profile.ShelterName.Length</div>
-                    <div class="stat-label">Profile Strength</div>
+        .dashboard-wrapper {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding-top: 50px;
+        }
+
+        /* --- DASHBOARD HEADER & DROPDOWN --- */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-add-intake {
+            background: var(--shelter-color);
+            color: #fff;
+            font-weight: 800;
+            padding: 12px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(217, 83, 79, 0.25);
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+        }
+
+            .btn-add-intake:hover {
+                background: #c9302c;
+                color: #fff;
+                transform: translateY(-3px);
+                box-shadow: 0 12px 25px rgba(217, 83, 79, 0.35);
+            }
+
+        .btn-nav-custom {
+            background: #fff;
+            color: var(--text-dark);
+            border: 2px solid var(--border-light);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+            .btn-nav-custom:hover {
+                background: #FAF6F1;
+                border-color: var(--brand-accent);
+                color: var(--brand-primary);
+            }
+
+        .dropdown-menu { border-radius: 20px !important; border: 1px solid var(--border-light) !important; padding: 10px !important; box-shadow: 0 10px 30px rgba(92, 61, 30, 0.08) !important; }
+        .dropdown-item { border-radius: 12px; font-weight: 600; color: var(--text-dark); transition: 0.2s; }
+        .dropdown-item:hover { background: #FAF6F1; color: var(--brand-primary); }
+
+        /* --- COMPACT STAT CARDS --- */
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 20px rgba(92, 61, 30, 0.04);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-4px);
+                border-color: var(--brand-accent);
+                box-shadow: 0 12px 30px rgba(92, 61, 30, 0.08);
+            }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+
+        .stat-info { display: flex; flex-direction: column; align-items: center; }
+        .stat-info h5 { margin: 0; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-info h2 { margin: 4px 0 0; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-dark); font-weight: 800; font-size: 2.2rem; line-height: 1; }
+
+        .icon-blue { background: #E0F2FE; color: #0284C7; border: 1px solid #BDE4FF; }
+        .icon-green { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+        .icon-orange { background: #FFF7ED; color: #D97706; border: 1px solid #FED7AA; }
+        .icon-purple { background: #FAF5FF; color: #9333EA; border: 1px solid #E9D5FF; }
+
+        /* --- ULTRA-SOFT MAIN PANELS --- */
+        .panel-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(15px);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.04);
+            padding: 35px;
+            height: 100%;
+        }
+
+        .card-heading {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 20px;
+        }
+
+        /* --- QUEUE CARDS --- */
+        .apt-card {
+            background: #fff;
+            border-radius: 24px;
+            border: 1px solid var(--border-light);
+            padding: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        }
+
+            .apt-card:hover {
+                border-color: var(--brand-accent);
+                box-shadow: 0 8px 25px rgba(92, 61, 30, 0.06);
+                transform: translateY(-3px);
+            }
+
+        .apt-img {
+            width: 65px; height: 65px; border-radius: 50%; object-fit: cover; border: 2px solid #FAF6F1; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .apt-details { flex-grow: 1; }
+        .apt-pet-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--text-dark); margin-bottom: 4px; display: flex; align-items: center; }
+        .apt-owner-name { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+
+        .service-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .service-badge { padding: 6px 12px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; border: 1px dashed; }
+        .badge-adopt { background: #EFF6FF; color: #2563EB; border-color: #BFDBFE; }
+        .badge-transfer { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
+        .badge-boarding { background: #FAF5FF; color: #9333EA; border-color: #E9D5FF; }
+        .badge-pending { background: #FFFBEB; color: #D97706; border-color: #FEF3C7; }
+        .badge-ready { background: #ECFDF5; color: #059669; border-color: #D1FAE5; }
+
+        .btn-action-sm {
+            background: var(--text-dark); color: #fff; border: none; padding: 10px 24px;
+            border-radius: 50px; font-weight: 700; font-size: 0.95rem; transition: 0.2s;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(92, 61, 30, 0.15); display: inline-block; text-decoration: none;
+        }
+        .btn-action-sm:hover { background: var(--brand-accent); transform: translateY(-2px); color: white; }
+
+        .btn-outline-sm {
+            background: #fff; color: var(--text-dark); border: 2px solid var(--border-light);
+            padding: 8px 24px; border-radius: 50px; font-weight: 700; font-size: 0.95rem;
+            transition: 0.2s; cursor: pointer; display: inline-block; text-decoration: none;
+        }
+        .btn-outline-sm:hover { background: #FAF6F1; border-color: var(--text-dark); color: var(--text-dark); }
+
+        /* --- TIMELINE --- */
+        .timeline-container { padding-top: 10px; }
+        .timeline-item { padding-left: 28px; border-left: 2px dashed var(--border-light); position: relative; margin-bottom: 30px; padding-bottom: 5px; }
+        .timeline-item:last-child { margin-bottom: 0; border-left-color: transparent; }
+        .timeline-item::before { content: ''; position: absolute; left: -8px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid var(--brand-accent); }
+        .type-dropoff::before { border-color: #3B82F6; }
+        .type-active::before { border-color: #10B981; }
+        .type-pickup::before { border-color: #F59E0B; }
+
+        .timeline-time { font-weight: 800; font-size: 0.8rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+        .timeline-content { background: #fff; padding: 20px; border-radius: 20px; border: 1px solid var(--border-light); position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .timeline-content:hover { transform: translateX(4px); border-color: var(--brand-accent); box-shadow: 0 8px 20px rgba(92, 61, 30, 0.05); }
+
+        .card-dropoff { border-left: 4px solid #3B82F6; }
+        .card-active { border-left: 4px solid #10B981; background: #F0FDF4; border-color: #D1FAE5; }
+        .card-pickup { border-left: 4px solid #F59E0B; }
+
+        .board-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; }
+        .btn-icon { background: transparent; border: none; color: var(--text-muted); padding: 6px; border-radius: 10px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-icon:hover { background: #FAF6F1; color: var(--text-dark); }
+        .btn-icon-delete:hover { background: #FFF5F5; color: #DC2626; }
+
+        /* --- MODALS --- */
+        .modal-content { border-radius: 32px !important; border: none; overflow: hidden; box-shadow: 0 20px 50px rgba(92, 61, 30, 0.15); }
+        .modal-header { background: var(--bg-card); border-bottom: 1px solid var(--border-light); padding: 25px 30px; }
+        .modal-body { padding: 30px; background: #FAFAFA; }
+        .modal-footer { padding: 20px 30px; background: #fff; border-top: 1px solid var(--border-light); }
+        .form-control, .form-select { border-radius: 16px; padding: 12px 18px; border: 1px solid var(--border-light); font-weight: 500; transition: all 0.2s; }
+        .form-control:focus, .form-select:focus { border-color: var(--brand-accent); box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.15); outline: none; }
+    </style>
+}
+
+<div class="container dashboard-wrapper">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success rounded-4 d-flex align-items-center mb-4 border-0 shadow-sm" style="background: #ECFDF5; color: #065F46; padding: 16px 20px;">
+            <i class="bi bi-check-circle-fill me-3 fs-5" style="color: #10B981;"></i>
+            <div class="fw-bold">@TempData["SuccessMessage"]</div>
+        </div>
+    }
+
+    <!-- NEW DASHBOARD HEADER -->
+    <div class="dashboard-header">
+        
+        <!-- Left Side: Profile Management Dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-light fw-bold shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" style="border-radius: 12px; padding: 12px 20px; border: 1px solid var(--border-light); color: var(--text-dark);">
+                <i class="bi bi-gear-fill me-2" style="color: var(--brand-accent);"></i> Profile Settings
+            </button>
+            <ul class="dropdown-menu shadow-lg border-0" style="border-radius: 16px; padding: 10px;">
+                <li>
+                    <a class="dropdown-item fw-bold rounded-3 py-2" asp-controller="Shelter" asp-action="Profile">
+                        <i class="bi bi-person-badge me-2" style="color: var(--brand-primary);"></i> View Public Profile
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item fw-bold rounded-3 py-2" asp-controller="Shelter" asp-action="Edit">
+                        <i class="bi bi-pencil-square me-2" style="color: #3B82F6;"></i> Edit Profile Details
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form asp-controller="Shelter" asp-action="Delete" method="post" class="m-0">
+                        <button type="submit" class="dropdown-item fw-bold rounded-3 py-2 text-danger" onclick="return confirm('WARNING: Are you sure you want to permanently delete your Shelter Profile and all associated data?');">
+                            <i class="bi bi-trash3-fill me-2"></i> Close Shelter Account
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Right Side: Navigation & Actions -->
+        <div class="d-flex gap-2 flex-wrap">
+            <a asp-controller="Shelter" asp-action="Pets" class="btn-nav-custom">
+                <i class="bi bi-house-heart text-danger"></i> In Residence
+            </a>
+            <a asp-controller="Shelter" asp-action="InternalPets" class="btn-nav-custom">
+                <i class="bi bi-moon-stars text-warning"></i> Boarding & Internal
+            </a>
+            <a asp-controller="Shelter" asp-action="AddPet" class="btn-add-intake ms-2">
+                <i class="bi bi-plus-circle-fill"></i> Add Newborn / Intake
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4 justify-content-center">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon icon-blue"><i class="bi bi-house-door-fill"></i></div>
+                <div class="stat-info">
+                    <h5>In Residence</h5>
+                    <h2>@Model.InResidenceCount</h2>
                 </div>
             </div>
         </div>
-
-        <!-- Main dashboard content -->
-        <div class="row g-4 mb-4">
-
-            <!-- Shelter summary panel -->
-            <div class="col-lg-7">
-                <div class="glass-panel h-100" style="padding: 30px;">
-                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; border-bottom: 2px solid #EDE0D0; padding-bottom: 10px;">
-                        <i class="bi bi-info-circle-fill me-2" style="color: #C8A882;"></i> Shelter Overview
-                    </h3>
-
-                    <div class="pt-3">
-                        <div class="dashboard-list-item">
-                            <div class="fw-bold" style="color: #5C3D1E;">Shelter Name</div>
-                            <div style="color: #8C7560;">@Model.Profile.ShelterName</div>
-                        </div>
-
-                        <div class="dashboard-list-item">
-                            <div class="fw-bold" style="color: #5C3D1E;">Address</div>
-                            <div style="color: #8C7560;">@Model.Profile.ShelterAddress</div>
-                        </div>
-
-                        <div class="dashboard-list-item">
-                            <div class="fw-bold" style="color: #5C3D1E;">Contact Email</div>
-                            <div style="color: #8C7560;">@Model.Profile.UserAccount?.Email</div>
-                        </div>
-
-                        <div class="dashboard-list-item" style="border-bottom:none;">
-                            <div class="fw-bold" style="color: #5C3D1E;">About</div>
-                            <div style="color: #8C7560;">@Model.Profile.Description</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Working hours preview -->
-            <div class="col-lg-5">
-                <div class="glass-panel h-100" style="padding: 30px;">
-                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; border-bottom: 2px solid #EDE0D0; padding-bottom: 10px;">
-                        <i class="bi bi-clock-history me-2" style="color: #C8A882;"></i> Schedule Snapshot
-                    </h3>
-
-                    @if (!Model.SchedulePreview.Any())
-                    {
-                    <div class="text-center text-muted py-5">
-                        <i class="bi bi-calendar-x fs-1 d-block mb-2" style="color: #EDE0D0;"></i>
-                        No schedule has been set yet.
-                    </div>
-                    }
-                    else
-                    {
-                        foreach (var day in Model.SchedulePreview)
-                        {
-                    <div class="dashboard-list-item d-flex justify-content-between align-items-center">
-                        <div class="fw-bold" style="color: #5C3D1E;">@day.Day</div>
-
-                        @if (day.IsOff || day.OpenTime == null || day.CloseTime == null)
-                                {
-                        <span style="color:#d9534f; font-weight:600;">Closed</span>
-                                }
-                                else
-                                {
-                        <span style="color:#8C7560;">
-                            @DateTime.Today.Add(day.OpenTime.Value).ToString("h:mm tt")
-                            -
-                            @DateTime.Today.Add(day.CloseTime.Value).ToString("h:mm tt")
-                        </span>
-                                }
-                    </div>
-                        }
-                    }
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon icon-green"><i class="bi bi-suit-heart-fill"></i></div>
+                <div class="stat-info">
+                    <h5>Adoption Req.</h5>
+                    <h2>@Model.PendingAdoptionsCount</h2>
                 </div>
             </div>
         </div>
-
-        <!-- Quick action cards -->
-        <div class="row g-4">
-            <div class="col-md-6">
-                <div class="action-card">
-                    <div>
-                        <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Public Profile</h3>
-                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">View how visitors see your shelter.</p>
-                    </div>
-                    <a asp-action="Profile" class="btn-admin" style="background-color: #EDE0D0; color: #5C3D1E;">
-                        View Page <i class="bi bi-box-arrow-up-right ms-2"></i>
-                    </a>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon icon-orange"><i class="bi bi-box-arrow-in-right"></i></div>
+                <div class="stat-info">
+                    <h5>Intake Req.</h5>
+                    <h2>@Model.IntakeRequestsCount</h2>
                 </div>
             </div>
-
-            <div class="col-md-6">
-                <div class="action-card">
-                    <div>
-                        <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Edit Details</h3>
-                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">Update your shelter info, services, and photo.</p>
-                    </div>
-                    <a asp-action="Edit" class="btn-admin">
-                        Edit Profile <i class="bi bi-pencil-square ms-2"></i>
-                    </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon icon-purple"><i class="bi bi-calendar2-check-fill"></i></div>
+                <div class="stat-info">
+                    <h5>Boarding Now</h5>
+                    <h2>@Model.ActiveBoardingCount</h2>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="row g-4 align-items-start">
+
+        <!-- QUEUE PANEL -->
+        <div class="col-lg-8">
+            <div class="panel-container">
+                <div class="card-heading">
+                    <span><i class="bi bi-inbox-fill me-2" style="color: var(--brand-accent);"></i> Intake & Adoption Queue</span>
+
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-outline-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" style="border-radius: 50px;">
+                            <i class="bi bi-filter"></i> Filter
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0">
+                            <li><a class="dropdown-item fw-bold rounded-3" href="#" onclick="filterQueue('all')">Show All</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item rounded-3" href="#" onclick="filterQueue('Adoption')">Adoptions Only</a></li>
+                            <li><a class="dropdown-item rounded-3" href="#" onclick="filterQueue('Transfer')">Transfers Only</a></li>
+                            <li><a class="dropdown-item rounded-3" href="#" onclick="filterQueue('Boarding')">Boarding Only</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                @if (Model.QueueItems == null || !Model.QueueItems.Any())
+                {
+                    <div class="text-center py-5 my-3" id="empty-state">
+                        <i class="bi bi-check2-circle fs-1 d-block mb-3" style="color: #10B981;"></i>
+                        <h4 class="fw-bold text-dark">Queue is empty</h4>
+                        <p class="text-muted mb-0">New applications will appear here instantly.</p>
+                    </div>
+                }
+                else
+                {
+                    <div id="empty-state" style="display: none;" class="text-center py-5 my-3">
+                        <i class="bi bi-check2-circle fs-1 d-block mb-3" style="color: #10B981;"></i>
+                        <h4 class="fw-bold text-dark">Queue is empty</h4>
+                        <p class="text-muted mb-0">No matching requests found.</p>
+                    </div>
+
+                    @foreach (var item in Model.QueueItems)
+                    {
+                        <div class="apt-card filterable-card" data-type="@item.Type" style="@(item.Type == "Transfer" ? "border-color: #F5C6CB; background: #FFF5F5;" : (item.Type == "Boarding" ? "border-color: #E9D5FF; background: #FAF5FF;" : ""))">
+                            <img src="@item.PetImageUrl" class="apt-img" alt="@item.PetName">
+
+                            <div class="apt-details">
+                                <div class="apt-pet-name">
+                                    @item.PetName <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;" class="ms-2">(@item.PetInfo)</span>
+                                </div>
+                                <div class="apt-owner-name">
+                                    <i class="bi @(item.Type == "Adoption" ? "bi-person-fill" : "bi-arrow-down-circle-fill text-danger") me-1"></i>
+                                    @(item.Type == "Adoption" ? "Applicant:" : (item.Type == "Boarding" ? "Owner:" : "Surrender:")) @item.ApplicantName
+                                </div>
+                                <div class="service-list">
+                                    @if (item.Type == "Adoption")
+                                    {
+                                        <span class="service-badge badge-adopt">Adoption</span>
+                                    }
+                                    else if (item.Type == "Transfer")
+                                    {
+                                        <span class="service-badge badge-transfer">Ownership Intake</span>
+                                    }
+                                    else if (item.Type == "Boarding")
+                                    {
+                                        <span class="service-badge badge-boarding">Boarding Request</span>
+                                    }
+
+                                    @if (item.Status == "Pending")
+                                    {
+                                        <span class="service-badge badge-pending">Pending Review</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="service-badge badge-ready">Approved</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="text-end d-flex justify-content-end gap-2">
+                                @if (item.Type == "Boarding")
+                                {
+                                    <form asp-action="ApproveBoarding" method="post" class="m-0">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn-outline-sm" style="border-color:#10B981; color:#10B981;">Accept Boarding</button>
+                                    </form>
+                                    <form asp-action="DeclineBoarding" method="post" class="m-0">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn-outline-sm" style="border-color:#DC2626; color:#DC2626;">Reject</button>
+                                    </form>
+                                }
+                                else if (item.Type == "Transfer")
+                                {
+                                    <form asp-action="ProcessTransfer" method="post" class="m-0">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn-outline-sm" style="border-color:#10B981; color:#10B981;">Accept Intake</button>
+                                    </form>
+                                    <form asp-action="DeclineApplication" method="post" class="m-0">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn-outline-sm" style="border-color:#DC2626; color:#DC2626;">Reject</button>
+                                    </form>
+                                }
+                                else if (item.Type == "Adoption" && item.Status == "Pending")
+                                {
+                                    <button type="button" class="btn-action-sm" onclick="openReviewModal(@item.Id, '@item.ApplicantName', '@item.PetName', '@item.PetInfo', '@item.PetImageUrl')">Review</button>
+                                }
+                                else if (item.Type == "Adoption" && item.Status == "Approved")
+                                {
+                                    <form asp-action="FinalizeAdoption" method="post" class="m-0">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn-action-sm" style="background:#10B981;">Finalize Adoption</button>
+                                    </form>
+                                    <form asp-action="DeclineApplication" method="post" class="m-0">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn-outline-sm ms-2" style="border-color:#DC2626; color:#DC2626;">Cancel</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- BOARDING LOG PANEL -->
+        <div class="col-lg-4">
+            <div class="panel-container" style="position: sticky; top: 100px;">
+                <div class="card-heading mb-4">
+                    <span><i class="bi bi-calendar3 me-2" style="color: var(--brand-accent);"></i> Boarding Log</span>
+                    <button type="button" class="btn-action-sm px-3 m-0" data-bs-toggle="modal" data-bs-target="#addBoardingModal" style="width: 44px; height: 44px; padding:0; display: flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+
+                @if (Model.BoardingLogs == null || !Model.BoardingLogs.Any())
+                {
+                    <p class="text-muted text-center mt-4 fw-bold">No active boarding logs today.</p>
+                }
+                else
+                {
+                    <div class="timeline-container">
+                        @foreach (var log in Model.BoardingLogs)
+                        {
+                            string typeClass = "";
+                            string cardClass = "";
+                            string iconClass = "";
+                            string timeColor = "color: var(--text-muted);";
+
+                            if (log.StatusType == "DropOff")
+                            {
+                                typeClass = "type-dropoff"; cardClass = "card-dropoff"; iconClass = "bi-box-arrow-in-right"; timeColor = "color: #2563EB;";
+                            }
+                            else if (log.StatusType == "Active")
+                            {
+                                typeClass = "type-active"; cardClass = "card-active"; iconClass = "bi-record-circle"; timeColor = "color: #059669;";
+                            }
+                            else if (log.StatusType == "PickUp")
+                            {
+                                typeClass = "type-pickup"; cardClass = "card-pickup"; iconClass = "bi-box-arrow-right"; timeColor = "color: #D97706;";
+                            }
+
+                            <div class="timeline-item @typeClass" data-time="@log.ScheduledDate.ToString("O")">
+                                <div class="timeline-time" style="@timeColor"><i class="bi @iconClass me-1"></i> @log.TimeLabel</div>
+
+                                <div class="timeline-content @cardClass">
+                                    <div class="board-actions">
+                                        <button type="button" class="btn-icon" title="Edit" onclick="openEditModal(@log.Id, '@log.PetName', '@log.PetBreed', '@(log.OwnerName ?? "")', '@log.ScheduledDate.ToString("yyyy-MM-ddTHH:mm")', '@log.StatusType', '@log.SpecialNotes')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+
+                                        <form asp-action="DeleteBoardingSession" method="post" class="m-0">
+                                            <input type="hidden" name="id" value="@log.Id" />
+                                            <button type="submit" class="btn-icon btn-icon-delete" title="Delete"><i class="bi bi-trash3"></i></button>
+                                        </form>
+                                    </div>
+
+                                    <div class="fw-bold fs-6 mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                        @log.PetName <span class="text-muted small fw-normal" style="font-family: 'DM Sans', sans-serif;">(@log.PetBreed)</span>
+                                    </div>
+                                    <div class="text-muted fw-bold mb-2" style="font-size: 0.8rem;">
+                                        <i class="bi bi-person me-1"></i> @(string.IsNullOrWhiteSpace(log.OwnerName) ? "-" : log.OwnerName)
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(log.SpecialNotes) && log.SpecialNotes != "Standard")
+                                    {
+                                        <div class="mt-2 pt-2 border-top" style="border-color: rgba(0,0,0,0.05) !important;">
+                                            <span class="badge bg-white text-dark border" style="font-size: 0.75rem; white-space: normal; text-align: left; border-radius: 8px;">@log.SpecialNotes</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- REVIEW ADOPTION MODAL -->
+<div class="modal fade" id="reviewAdoptionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                    <i class="bi bi-file-earmark-person me-2" style="color: var(--brand-accent);"></i> Review Application
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <h6 class="fw-bold text-uppercase mb-3" style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px;">Applicant Details</h6>
+
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div style="width: 50px; height: 50px; background: #FAF6F1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--brand-primary); border: 1px solid #EBE0D5;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div>
+                        <div id="modalApplicantName" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text-dark);">Name</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                            <i class="bi bi-envelope me-1"></i> Contact via internal system
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between p-3 mb-4" style="background: #fff; border: 1px solid #EBE0D5; border-radius: 16px;">
+                    <div class="d-flex align-items-center gap-3">
+                        <img id="modalPetImage" src="" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;" alt="Pet">
+                        <div>
+                            <div id="modalPetName" style="font-weight: 700; color: var(--text-dark); font-size: 0.95rem;">Pet Name</div>
+                            <div id="modalPetInfo" style="font-size: 0.8rem; color: var(--text-muted);">Breed</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold text-uppercase mb-2" style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px;">Internal Actions</h6>
+                <div style="background: #fff; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px; font-size: 0.95rem; color: #4B5563; font-style: italic; line-height: 1.6;">
+                    Ensure you have contacted the applicant to verify their living situation before approving this adoption request.
+                </div>
+            </div>
+
+            <div class="modal-footer" style="display: flex; gap: 10px;">
+                <form asp-action="DeclineApplication" method="post" class="flex-fill m-0">
+                    <input type="hidden" name="id" id="modalDeclineId" />
+                    <button type="submit" class="btn w-100" style="background: #fff; color: #d9534f; border: 2px solid #F5C6CB; border-radius: 12px; font-weight: 700; padding: 12px;">
+                        Decline
+                    </button>
+                </form>
+
+                <form asp-action="ApproveAdoption" method="post" class="flex-fill m-0">
+                    <input type="hidden" name="id" id="modalApproveId" />
+                    <button type="submit" class="btn w-100" style="background: #10B981; color: #fff; border: none; border-radius: 12px; font-weight: 700; padding: 12px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                        Approve Application <i class="bi bi-check-circle-fill ms-1"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADD BOARDING MODAL -->
+<div class="modal fade" id="addBoardingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">New Boarding Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Shelter" asp-action="AddBoardingSession" method="post">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Pet Name</label>
+                            <input type="text" name="PetName" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Pet Breed</label>
+                            <input type="text" name="PetBreed" class="form-control" required />
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Owner Name</label>
+                            <input type="text" name="OwnerName" class="form-control" placeholder="Leave blank if shelter pet" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Time / Date</label>
+                            <input type="datetime-local" name="ScheduledDate" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Type</label>
+                            <select name="Status" class="form-select" required>
+                                <option value="DropOff">Drop-off</option>
+                                <option value="Active">Active Boarding</option>
+                                <option value="PickUp">Pick-up</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Notes / Alerts</label>
+                            <textarea name="SpecialNotes" class="form-control" rows="2" placeholder="E.g., Medical alerts, feeding times..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-sm m-0" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-action-sm m-0">Save Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT BOARDING MODAL -->
+<div class="modal fade" id="editBoardingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">Edit Boarding Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Shelter" asp-action="UpdateBoardingSession" method="post">
+                <input type="hidden" name="id" id="edit-id" />
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Pet Name</label>
+                            <input type="text" name="PetName" id="edit-petName" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Pet Breed</label>
+                            <input type="text" name="PetBreed" id="edit-petBreed" class="form-control" required />
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Owner Name</label>
+                            <input type="text" name="OwnerName" id="edit-ownerName" class="form-control" placeholder="Leave blank if shelter pet" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Time / Date</label>
+                            <input type="datetime-local" name="ScheduledDate" id="edit-scheduledDate" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Type</label>
+                            <select name="Status" id="edit-status" class="form-select" required>
+                                <option value="DropOff">Drop-off</option>
+                                <option value="Active">Active Boarding</option>
+                                <option value="PickUp">Pick-up</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Notes / Alerts</label>
+                            <textarea name="SpecialNotes" id="edit-specialNotes" class="form-control" rows="2" placeholder="E.g., Medical alerts, feeding times..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-sm m-0" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-action-sm m-0">Update Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Filter logic
+        function filterQueue(type) {
+            event.preventDefault();
+            const cards = document.querySelectorAll('.filterable-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                if (type === 'all' || card.getAttribute('data-type') === type) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            document.getElementById('empty-state').style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        // Logic to populate and open the Review Application Modal
+        function openReviewModal(id, applicantName, petName, petInfo, petImage) {
+            document.getElementById('modalDeclineId').value = id;
+            document.getElementById('modalApproveId').value = id;
+            document.getElementById('modalApplicantName').innerText = applicantName;
+            document.getElementById('modalPetName').innerText = petName;
+            document.getElementById('modalPetInfo').innerText = petInfo;
+            document.getElementById('modalPetImage').src = petImage;
+            var reviewModal = new bootstrap.Modal(document.getElementById('reviewAdoptionModal'));
+            reviewModal.show();
+        }
+
+        // Logic to populate and open the Edit Boarding Modal
+        function openEditModal(id, name, breed, owner, date, status, notes) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-petName').value = name;
+            document.getElementById('edit-petBreed').value = breed;
+            document.getElementById('edit-ownerName').value = owner;
+            document.getElementById('edit-scheduledDate').value = date;
+            document.getElementById('edit-status').value = status;
+            document.getElementById('edit-specialNotes').value = notes === 'Standard' ? '' : notes;
+            var editModal = new bootstrap.Modal(document.getElementById('editBoardingModal'));
+            editModal.show();
+        }
+    </script>
+}

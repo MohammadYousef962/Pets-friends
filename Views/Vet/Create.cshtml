@@ -6,6 +6,7 @@
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --text-dark: #5C3D1E;
@@ -81,12 +82,19 @@
         }
 
         h4.card-title {
-            font-family: 'Playfair Display', serif;
+            font-family: 'DM Sans', sans-serif;
             font-weight: 700;
             color: var(--text-dark);
             border-bottom: 2px solid var(--tan-medium);
             padding-bottom: 15px;
             margin-bottom: 25px;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            margin-bottom: 6px;
         }
 
         .form-control, .form-select {
@@ -100,11 +108,14 @@
             .form-control:focus, .form-select:focus {
                 border-color: var(--tan-accent);
                 box-shadow: 0 0 0 0.25rem rgba(200, 168, 130, 0.15);
+                outline: none;
             }
 
+        /* FIXED: Expanded layout max-width parameters prevent native browser UI text clipping */
         .time-input {
             width: 100%;
-            max-width: 140px;
+            max-width: 150px;
+            padding: 10px 12px;
             text-align: center;
         }
 
@@ -240,27 +251,26 @@
     </style>
 }
 
-<div class="container py-5" style="max-width: 1200px;">
+<div class="container py-5" style="max-width: 1200px; margin: 0 auto;">
 
     <div class="text-center mb-5">
-        <h1 style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--text-dark);">Welcome to the Team!</h1>
+        <h1 style="font-family: 'DM Sans', sans-serif; font-weight: 700; color: var(--text-dark);">Welcome to the Team!</h1>
         <p style="color: var(--text-muted); font-size: 1.05rem;">Please complete your professional profile to unlock your dashboard.</p>
     </div>
 
     <form asp-action="Create" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
-
         <input type="hidden" asp-for="ExistingImageUrl" />
 
         <div class="pfp-upload-container">
             @{
-                var fallbackImg = "https://placehold.co/150x150/C8A882/white?text=Vet&font=Playfair+Display";
+                var fallbackImg = "https://placehold.co/150x150/C8A882/white?text=Vet&font=DM+Sans";
                 var imgSrc = string.IsNullOrEmpty(Model?.ExistingImageUrl) ? fallbackImg : Model.ExistingImageUrl;
             }
             <div class="pfp-preview-circle">
                 <img id="imgPreview" src="@imgSrc" onerror="this.onerror=null; this.src='@fallbackImg';" alt="Profile">
             </div>
-            <h3 style="font-family: 'Playfair Display'; font-weight: 700; margin-bottom: 25px;">Upload Profile Photo</h3>
+            <h3 style="font-family: 'DM Sans', sans-serif; font-weight: 700; margin-bottom: 25px;">Upload Profile Photo</h3>
             <div class="upload-drop-zone" onclick="document.getElementById('fileInput').click()">
                 <i class="bi bi-camera-fill" style="font-size: 3rem; color: var(--tan-accent);"></i>
                 <p class="mb-0 mt-2" style="color: var(--text-muted); font-weight: 500;">Click or drag to upload photo</p>
@@ -272,6 +282,12 @@
             <div class="col-lg-6">
                 <div class="glass-card">
                     <h4 class="card-title">Professional Details</h4>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label">Doctor's Full Name</label>
+                        <input asp-for="FullName" class="form-control" maxlength="100" required />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
 
                     <div class="mb-3">
                         <label asp-for="ClinicName" class="form-label">Clinic Name</label>
@@ -290,7 +306,6 @@
                             <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
 
                             <div style="display: flex; align-items: stretch; border: 1px solid var(--tan-medium); border-radius: 12px; background: #fff; overflow: hidden; box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);">
-
                                 <div style="background-color: #f8f9fa; border-right: 1px solid #EBE0D5; display: flex;">
                                     <select id="countryCodeSelect" style="border: none; background: transparent; outline: none; padding: 12px; font-size: 1rem; color: var(--text-dark); cursor: pointer; text-align: center; width: auto; min-width: 90px; appearance: none; -webkit-appearance: none;">
                                         <option value="+962">JO +962</option>
@@ -301,7 +316,6 @@
                                         <option value="+44">UK +44</option>
                                     </select>
                                 </div>
-
                                 <input type="tel" id="localPhoneInput" placeholder="791234567" maxlength="12" style="flex-grow: 1; border: none; outline: none; padding: 12px 16px; font-size: 1rem; color: var(--text-dark); background: transparent;" />
                             </div>
 
@@ -347,7 +361,7 @@
             </div>
 
             <div class="col-lg-6">
-                <div class="glass-card">
+                <div class="glass-card" id="scheduleContainer">
                     <h4 class="card-title">Working Hours</h4>
 
                     @if (Model.Schedule != null && Model.Schedule.Count > 0)
@@ -370,7 +384,7 @@
 
                                 <div class="form-check form-switch m-0 flex-shrink-0" style="width: 52px;">
                                     <input type="hidden" asp-for="Schedule[i].IsOff" class="hidden-is-off" />
-                                    <input class="form-check-input work-toggle" type="checkbox" onchange="toggleWork(this)" @(Model.Schedule[i].IsOff ? "" : "checked")>
+                                    <input class="form-check-input work-toggle" type="checkbox" @(Model.Schedule[i].IsOff ? "" : "checked")>
                                 </div>
                             </div>
                         }
@@ -380,8 +394,13 @@
         </div>
 
         <div class="action-bar">
-            <button type="submit" class="btn-save"><i class="bi bi-person-check-fill me-2"></i>Complete Setup & Start</button>
-            <a asp-action="Login" asp-controller="Account" class="btn-cancel">Exit to Login</a>
+            <button type="submit" class="btn-save">
+                <i class="bi bi-person-check-fill me-2"></i>Complete Setup & Start
+            </button>
+
+            <button type="submit" asp-controller="Account" asp-action="Logout" class="btn-cancel" formnovalidate>
+                <i class="bi bi-box-arrow-right me-2"></i>Exit to Login
+            </button>
         </div>
     </form>
 </div>
@@ -391,129 +410,139 @@
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     <script>
-        // 1. SERVICES TAG LOGIC
-        const hiddenServicesInput = document.getElementById('hiddenServicesInput');
-        const tagsContainer = document.getElementById('tags-container');
-        let tags = hiddenServicesInput.value ? hiddenServicesInput.value.split(',').map(t => t.trim()).filter(t => t) : [];
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. HIGH-PERFORMANCE SERVICES TAG LOGIC
+            const hiddenServicesInput = document.getElementById('hiddenServicesInput');
+            const tagsContainer = document.getElementById('tags-container');
+            const serviceEntry = document.getElementById('serviceEntry');
 
-        function renderTags() {
-            tagsContainer.innerHTML = '';
-            tags.forEach((tag, idx) => {
-                tagsContainer.innerHTML += `<span class="tag-badge">${tag} <i class="bi bi-x-circle-fill tag-remove" onclick="removeTag(${idx})"></i></span>`;
-            });
-            hiddenServicesInput.value = tags.join(', ');
-        }
+            let tags = hiddenServicesInput?.value ? hiddenServicesInput.value.split(',').map(t => t.trim()).filter(t => t) : [];
 
-        document.getElementById('serviceEntry').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const val = this.value.trim().replace(/,/g, '');
-                if (val && !tags.includes(val)) { tags.push(val); renderTags(); }
-                this.value = '';
+            function renderTags() {
+                if (!tagsContainer) return;
+                tagsContainer.innerHTML = '';
+
+                const fragment = document.createDocumentFragment();
+                tags.forEach((tag, idx) => {
+                    const span = document.createElement('span');
+                    span.className = 'tag-badge';
+                    span.innerHTML = `${tag} <i class="bi bi-x-circle-fill tag-remove" data-index="${idx}"></i>`;
+                    fragment.appendChild(span);
+                });
+
+                tagsContainer.appendChild(fragment);
+                if (hiddenServicesInput) hiddenServicesInput.value = tags.join(', ');
             }
-        });
 
-        window.removeTag = (idx) => { tags.splice(idx, 1); renderTags(); };
-        renderTags();
-
-        // 2. SMART PHONE INPUT (Dropdown + Local Number)
-        const hiddenPhone = document.getElementById('hiddenPhoneNumber');
-        const countrySelect = document.getElementById('countryCodeSelect');
-        const localInput = document.getElementById('localPhoneInput');
-
-        // Function to combine the code and number
-        function updateHiddenPhone() {
-            if(localInput.value.trim() === '') {
-                hiddenPhone.value = ''; // If empty, clear it so Required validation catches it
-            } else {
-                hiddenPhone.value = countrySelect.value + localInput.value;
+            if (tagsContainer) {
+                tagsContainer.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('tag-remove')) {
+                        const idx = parseInt(e.target.getAttribute('data-index'), 10);
+                        tags.splice(idx, 1);
+                        renderTags();
+                    }
+                });
             }
-        }
 
-        // Restrict local input to NUMBERS ONLY, block leading zeros, and update hidden field
-        localInput.addEventListener('input', function (e) {
-        let cleaned = this.value.replace(/\D/g, ''); // Strips out non-digits
-    
-             cleaned = cleaned.replace(/^0+/, ''); // Removes any '0' if it is the very first character
+            if (serviceEntry) {
+                serviceEntry.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const val = this.value.trim().replace(/,/g, '');
+                        if (val && !tags.includes(val)) {
+                            tags.push(val);
+                            renderTags();
+                        }
+                        this.value = '';
+                    }
+                });
+            }
 
-             this.value = cleaned;
-             updateHiddenPhone();
-        });
+            renderTags();
 
-        // Update hidden field if they change the country code
-        countrySelect.addEventListener('change', updateHiddenPhone);
+            // 2. SMART PHONE INPUT
+            const hiddenPhone = document.getElementById('hiddenPhoneNumber');
+            const countrySelect = document.getElementById('countryCodeSelect');
+            const localInput = document.getElementById('localPhoneInput');
 
-        // INITIALIZATION: If returning to page due to a form validation error, repopulate
-        if (hiddenPhone.value) {
-            let fullNumber = hiddenPhone.value;
-            let matchedCode = "";
+            if (localInput) {
+                function updateHiddenPhone() {
+                    if (!hiddenPhone) return;
+                    hiddenPhone.value = localInput.value.trim() === '' ? '' : countrySelect.value + localInput.value;
+                }
 
-            // Look for the matching country code
-            for (let i = 0; i < countrySelect.options.length; i++) {
-                let code = countrySelect.options[i].value;
-                if (fullNumber.startsWith(code) && code.length > matchedCode.length) {
-                    matchedCode = code;
+                localInput.addEventListener('input', function () {
+                    this.value = this.value.replace(/\D/g, '').replace(/^0+/, '');
+                    updateHiddenPhone();
+                });
+
+                if (countrySelect) {
+                    countrySelect.addEventListener('change', updateHiddenPhone);
+                }
+
+                if (hiddenPhone?.value && countrySelect) {
+                    let fullNumber = hiddenPhone.value;
+                    let matchedCode = "";
+                    for (let option of countrySelect.options) {
+                        if (fullNumber.startsWith(option.value) && option.value.length > matchedCode.length) {
+                            matchedCode = option.value;
+                        }
+                    }
+                    if (matchedCode) {
+                        countrySelect.value = matchedCode;
+                        localInput.value = fullNumber.substring(matchedCode.length);
+                    } else {
+                        localInput.value = fullNumber.replace(/\D/g, '');
+                    }
                 }
             }
 
-            // If found, set the dropdown and put the rest in the text box
-            if (matchedCode) {
-                countrySelect.value = matchedCode;
-                localInput.value = fullNumber.substring(matchedCode.length);
-            } else {
-                // Fallback if country code isn't in our list
-                localInput.value = fullNumber.replace(/\D/g, '');
-            }
-        }
+            // 3. OPTIMIZED WORKING HOURS ENGINE (Event Delegation Pattern)
+            const scheduleContainer = document.getElementById('scheduleContainer');
 
-        // 3. PFP UPLOAD
+            function applyRowState(row, isChecked) {
+                const hiddenIsOff = row.querySelector('.hidden-is-off');
+                const inputs = row.querySelectorAll('.time-input');
+
+                if (hiddenIsOff) hiddenIsOff.value = isChecked ? "false" : "true";
+
+                inputs.forEach((input, index) => {
+                    input.disabled = !isChecked;
+                    input.style.opacity = isChecked ? "1" : "0.4";
+                    input.style.backgroundColor = isChecked ? "#fff" : "#F5F5F5";
+
+                    if (!isChecked) {
+                        input.value = "";
+                    } else if (input.value === "") {
+                        input.value = index === 0 ? "09:00" : "17:00";
+                    }
+                });
+            }
+
+            if (scheduleContainer) {
+                scheduleContainer.querySelectorAll('.day-row').forEach(row => {
+                    const toggle = row.querySelector('.work-toggle');
+                    if (toggle) applyRowState(row, toggle.checked);
+                });
+
+                scheduleContainer.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('work-toggle')) {
+                        const row = e.target.closest('.day-row');
+                        if (row) applyRowState(row, e.target.checked);
+                    }
+                });
+            }
+        });
+
         function handleFileSelect(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = e => document.getElementById('imgPreview').src = e.target.result;
+                reader.onload = e => {
+                    const preview = document.getElementById('imgPreview');
+                    if (preview) preview.src = e.target.result;
+                };
                 reader.readAsDataURL(input.files[0]);
             }
         }
-
-// 4. FIXED SMART WORKING HOURS LOGIC (ON = Working)
-        function toggleWork(checkbox) {
-            const row = checkbox.closest('.day-row');
-            const hiddenIsOff = row.querySelector('.hidden-is-off');
-            
-            // inputs[0] is OpenTime, inputs[1] is CloseTime
-            const inputs = row.querySelectorAll('.time-input'); 
-
-            // Sync the hidden DB input: If visually checked (working), IsOff is false
-            hiddenIsOff.value = checkbox.checked ? "false" : "true";
-
-            inputs.forEach((input, index) => {
-                input.disabled = !checkbox.checked;
-                input.style.opacity = checkbox.checked ? "1" : "0.4";
-                input.style.backgroundColor = checkbox.checked ? "#fff" : "#F5F5F5";
-                
-                if (!checkbox.checked) {
-                    // Clear the time if they toggle the day OFF
-                    input.value = "";
-                } else if (input.value === "") {
-                    // If they toggle it ON and the box is empty, set default 9 to 5
-                    if (index === 0) {
-                        input.value = "09:00"; // Default Open (9 AM)
-                    } else if (index === 1) {
-                        input.value = "17:00"; // Default Close (5 PM)
-                    }
-                }
-            });
-        }
-
-        // Initialize UI on load
-        document.querySelectorAll('.work-toggle').forEach(t => {
-            const row = t.closest('.day-row');
-            const inputs = row.querySelectorAll('.time-input');
-            inputs.forEach(input => {
-                input.disabled = !t.checked;
-                input.style.opacity = t.checked ? "1" : "0.4";
-                input.style.backgroundColor = t.checked ? "#fff" : "#F5F5F5";
-            });
-        });
     </script>
 }

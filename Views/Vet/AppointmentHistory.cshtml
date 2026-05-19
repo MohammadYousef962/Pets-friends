@@ -1,0 +1,363 @@
+﻿@model IEnumerable<Pets_friends.Models.Appointment>
+
+@{
+    ViewData["Title"] = "Appointment History";
+    Layout = "~/Views/Shared/_VetLayout.cshtml";
+
+    var currentStatus = ViewBag.CurrentStatus as string ?? "All";
+    var currentSort = ViewBag.CurrentSort as string ?? "desc";
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --vet-color: #059669;
+            --text-dark: #1A1A1A;
+            --text-muted: #6B7280;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255,255,255,0.9);
+            box-shadow: 0 15px 35px rgba(92, 61, 30, 0.08);
+            max-width: 1300px;
+            margin: 40px auto;
+        }
+
+        .page-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 2rem;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+        }
+
+        /* Toolbar / Filters */
+        .filter-toolbar {
+            background: #FAFAFA;
+            border: 1px solid #EBE0D5;
+            padding: 16px 24px;
+            border-radius: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .form-select-custom {
+            border: 2px solid #EBE0D5;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            box-shadow: none;
+            width: auto;
+            min-width: 200px;
+            transition: all 0.2s;
+        }
+
+            .form-select-custom:focus {
+                border-color: var(--brand-accent);
+                outline: none;
+                box-shadow: 0 0 0 4px rgba(200,168,130,0.15);
+            }
+
+        /* History Cards */
+        .history-card {
+            background: #ffffff;
+            border: 1px solid #EBE0D5;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .history-card:hover {
+                border-color: var(--brand-accent);
+                transform: translateY(-4px);
+                box-shadow: 0 12px 30px rgba(92, 61, 30, 0.08);
+            }
+
+        .hc-pet {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+        }
+
+        .hc-owner {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hc-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #9CA3AF;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .hc-value {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 1rem;
+        }
+
+        .hc-date-pill {
+            background: #FAF6F1;
+            color: var(--brand-primary);
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 8px 16px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #EBE0D5;
+        }
+
+        /* Badges & Buttons */
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-pending {
+            background: #FFFBEB;
+            color: #D97706;
+            border: 1px solid #FEF3C7;
+        }
+
+        .status-confirmed {
+            background: #ECFDF5;
+            color: #059669;
+            border: 1px solid #D1FAE5;
+        }
+
+        .status-cancelled {
+            background: #FEF2F2;
+            color: #DC2626;
+            border: 1px solid #FEE2E2;
+        }
+
+        .status-completed {
+            background: #F0F9FF;
+            color: #0284C7;
+            border: 1px solid #E0F2FE;
+        }
+
+        /* Custom Complete Button */
+        .btn-action-complete {
+            background: #0284C7;
+            color: white;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2);
+            width: 100%;
+            justify-content: center;
+        }
+
+            .btn-action-complete:hover {
+                background: #0369A1;
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 15px rgba(2, 132, 199, 0.3);
+            }
+    </style>
+}
+
+<div class="container pb-5">
+    <div class="glass-panel">
+
+        <div class="d-flex align-items-center mb-4 gap-4">
+            <a asp-action="Dashboard" class="btn btn-light rounded-circle shadow-sm" style="width:48px; height:48px; display:flex; align-items:center; justify-content:center; border: 1px solid #EBE0D5; transition: all 0.2s;">
+                <i class="bi bi-arrow-left fs-5" style="color: var(--brand-primary)"></i>
+            </a>
+            <div>
+                <h1 class="page-title mb-1">Appointment History</h1>
+                <p class="text-muted mb-0 fw-medium">View and filter all past and current appointment records.</p>
+            </div>
+        </div>
+
+        <form method="get" class="filter-toolbar" id="filterForm">
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-funnel-fill text-muted fs-5"></i>
+                    <select name="status" class="form-select form-select-custom" onchange="document.getElementById('filterForm').submit();">
+                        <option value="All" selected="@(currentStatus == "All")">All Appointments</option>
+                        <option value="Confirmed" selected="@(currentStatus == "Confirmed")">Confirmed / Upcoming</option>
+                        <option value="Pending" selected="@(currentStatus == "Pending")">Pending Requests</option>
+                        <option value="Completed" selected="@(currentStatus == "Completed")">Completed</option>
+                        <option value="Cancelled" selected="@(currentStatus == "Cancelled")">Cancelled / Declined</option>
+                    </select>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-sort-down-alt text-muted fs-5"></i>
+                    <select name="sortOrder" class="form-select form-select-custom" onchange="document.getElementById('filterForm').submit();">
+                        <option value="desc" selected="@(currentSort == "desc")">Date (Newest First)</option>
+                        <option value="asc" selected="@(currentSort == "asc")">Date (Oldest First)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="fw-bold text-muted" style="font-size: 0.95rem;">
+                <i class="bi bi-card-list me-1"></i> Showing @Model.Count() records
+            </div>
+        </form>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <div style="width: 80px; height: 80px; background: #F3F4F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                </div>
+                <h4 class="fw-bold" style="color: var(--brand-primary)">No records found</h4>
+                <p class="text-muted mb-4">No appointments match your current filters.</p>
+                <a asp-action="AppointmentHistory" class="btn btn-light border rounded-pill px-4 py-2 fw-bold text-muted">Clear Filters</a>
+            </div>
+        }
+        else
+        {
+            <div class="history-list">
+                @foreach (var apt in Model)
+                {
+                    <div class="history-card">
+                        <div class="row align-items-center g-4 m-0">
+
+                            <!-- Profile Info -->
+                            <div class="col-12 col-lg-4 d-flex align-items-center gap-3">
+                                <img src="@(apt.Pet?.ImageUrl ?? "https://placehold.co/100/EBE0D5/5C3D1E?text=New")" style="width: 65px; height: 65px; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.05);" />
+                                <div>
+                                    <div class="hc-pet">@(apt.Pet?.Name ?? "New Patient (Unregistered)")</div>
+                                    <div class="hc-owner"><i class="bi bi-person-badge-fill" style="color: var(--brand-accent)"></i> @(apt.ClientProfile?.UserAccount?.FullName ?? "Unknown Client")</div>
+                                </div>
+                            </div>
+
+                            <!-- Service & Date -->
+                            <div class="col-12 col-lg-5">
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <div class="hc-label">Service Type</div>
+                                        <div class="hc-value text-truncate" title="@(apt.Service?.Name ?? "General Visit")">
+                                            @(apt.Service?.Name ?? "General Visit")
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="hc-label">Schedule</div>
+                                        <div class="hc-date-pill">
+                                            <i class="bi bi-clock-history"></i> @apt.AppointmentDate.ToString("MMM dd, yyyy • h:mm tt")
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status & Actions -->
+                            <div class="col-12 col-lg-3 text-lg-end d-flex flex-column align-items-lg-end gap-2 border-start-lg border-2" id="status-container-@apt.Id">
+                                @if (apt.Status == "Pending")
+                                {
+                                    <span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
+                                }
+                                else if (apt.Status == "Confirmed")
+                                {
+                                    <span class="status-badge status-confirmed"><i class="bi bi-calendar-check-fill"></i> Confirmed</span>
+
+                                    <!-- Added BOTH id and appointmentId to avoid parameter mismatches -->
+                                    <form asp-controller="Vet" asp-action="UpdateAppointmentStatus" method="post" class="m-0 p-0 w-100 ajax-complete-form" style="max-width: 150px;">
+                                        <input type="hidden" name="id" value="@apt.Id" />
+                                        <input type="hidden" name="appointmentId" value="@apt.Id" />
+                                        <input type="hidden" name="status" value="Completed" />
+                                        <button type="submit" class="btn-action-complete mt-1 complete-btn">
+                                            <i class="bi bi-check2-circle fs-6"></i> Mark Complete
+                                        </button>
+                                    </form>
+                                }
+                                else if (apt.Status == "Cancelled")
+                                {
+                                    <span class="status-badge status-cancelled"><i class="bi bi-x-circle-fill"></i> Cancelled</span>
+                                }
+                                else if (apt.Status == "Completed")
+                                {
+                                    <span class="status-badge status-completed"><i class="bi bi-patch-check-fill"></i> Completed</span>
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.ajax-complete-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Stop page from navigating away
+
+                const btn = this.querySelector('.complete-btn');
+                const container = this.closest('div[id^="status-container-"]');
+
+                // Show loading spinner on the button
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...';
+                btn.disabled = true;
+
+                // Fire the post request in the background
+                fetch(this.action, {
+                    method: this.method,
+                    body: new FormData(this)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Success! Swap the section out for the blue "Completed" badge
+                        container.innerHTML = `<span class="status-badge status-completed"><i class="bi bi-patch-check-fill"></i> Completed</span>`;
+                    } else {
+                        // IF BACKEND CRASHES: Fallback to normal submission so you can see the server error page!
+                        HTMLFormElement.prototype.submit.call(form);
+                    }
+                })
+                .catch(error => {
+                    // IF NETWORK FAILS: Fallback to normal submission
+                    HTMLFormElement.prototype.submit.call(form);
+                });
+            });
+        });
+    </script>
+}

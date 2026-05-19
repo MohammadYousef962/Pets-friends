@@ -76,6 +76,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseDeveloperExceptionPage();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -86,7 +87,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Main}/{id?}");
 
 app.Run();
 

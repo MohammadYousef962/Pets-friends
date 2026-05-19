@@ -64,6 +64,38 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cVHJhbnNhY3Rpb25zLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Client/Appointments.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2xpZW50XEFwcG9pbnRtZW50cy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Client/Dashboard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2xpZW50XERhc2hib2FyZC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Client/EditProfile.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2xpZW50XEVkaXRQcm9maWxlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Client/MyPets.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2xpZW50XE15UGV0cy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Home/AvailablePets.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxBdmFpbGFibGVQZXRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Home/Clinics.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxDbGluaWNzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Home/Main.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxNYWluLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Home/Shelters.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxTaGVsdGVycy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Merchant/CreateProfile.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWVyY2hhbnRcQ3JlYXRlUHJvZmlsZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -136,6 +168,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WZXRMYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shelter/AddPet.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hlbHRlclxBZGRQZXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shelter/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hlbHRlclxDcmVhdGUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
@@ -146,6 +182,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shelter/Edit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hlbHRlclxFZGl0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shelter/InternalPets.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hlbHRlclxJbnRlcm5hbFBldHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shelter/Pets.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hlbHRlclxQZXRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Shelter/Profile.cshtml]
@@ -162,6 +206,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Store/Home.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3RvcmVcSG9tZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Vet/AddPatient.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVmV0XEFkZFBhdGllbnQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Vet/AppointmentHistory.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVmV0XEFwcG9pbnRtZW50SGlzdG9yeS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/wazed/source/repos/Pet friends/Pets friends/Views/Vet/Create.cshtml]

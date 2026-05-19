@@ -1,0 +1,588 @@
+﻿@model Pets_friends.Data.ViewModels.GlobalPetsVM
+
+@{
+    ViewData["Title"] = "Available Pets | PetFriends";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int startCount = Model.TotalPets == 0 ? 0 : ((Model.CurrentPage - 1) * 16) + 1;
+    int endCount = Math.Min(Model.CurrentPage * 16, Model.TotalPets);
+
+    // Ensure we know if the user is logged in for the modals!
+    bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --text-dark: #1A1A1A;
+            --text-muted: #6B7280;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --bg-card: #FFFFFF;
+            --border-light: #E5E7EB;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+        }
+
+        h1, h2, h3, h4, h5, h6, .section-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- PAGE HEADER --- */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        /* --- DARK PET SECTION --- */
+        .dark-section-card {
+            background: #1A0F08;
+            border-radius: 24px;
+            padding: 45px;
+            box-shadow: 0 20px 50px rgba(92, 61, 30, 0.15);
+            color: white;
+            margin-bottom: 24px;
+        }
+
+            .dark-section-card .section-title {
+                color: white;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+        .pet-count-badge {
+            background: rgba(200, 168, 130, 0.2);
+            color: var(--brand-accent);
+            font-size: 0.9rem;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* --- PET CARDS --- */
+        .pet-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+            .pet-card:hover {
+                transform: translateY(-8px);
+                background: rgba(255,255,255,0.1);
+                border-color: rgba(200, 168, 130, 0.4);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            }
+
+        .pet-img-wrapper {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            height: 240px;
+        }
+
+        .pet-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.6s ease;
+        }
+
+        .pet-card:hover .pet-img {
+            transform: scale(1.08);
+        }
+
+        .pet-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(26, 15, 8, 0.7);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(3px);
+        }
+
+        .pet-card:hover .pet-overlay {
+            opacity: 1;
+        }
+
+        .btn-overlay-adopt {
+            background: var(--brand-accent);
+            color: #2D1B0E;
+            font-weight: 800;
+            padding: 12px 28px;
+            border-radius: 20px;
+            border: none;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            width: 150px;
+            text-align: center;
+            text-decoration: none;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            box-shadow: 0 4px 15px rgba(200, 168, 130, 0.3);
+            cursor: pointer;
+        }
+
+            .btn-overlay-adopt:hover {
+                background: #fff;
+                color: #2D1B0E;
+                transform: scale(1.05);
+            }
+
+        .btn-overlay-view {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            font-weight: 700;
+            padding: 10px 28px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.4);
+            font-size: 0.9rem;
+            transition: 0.2s;
+            width: 150px;
+            text-align: center;
+            text-decoration: none;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+        }
+
+            .btn-overlay-view:hover {
+                background: #fff;
+                color: #2D1B0E;
+                border-color: #fff;
+                transform: scale(1.05);
+            }
+
+        .pet-info {
+            padding: 0 5px;
+            flex-grow: 1;
+        }
+
+        .shelter-label {
+            font-size: 0.75rem;
+            color: #C8A882;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pet-name {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+            color: white;
+        }
+
+        .pet-breed {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
+
+        /* --- MODALS --- */
+        .modal-content {
+            border-radius: 24px;
+            border: none;
+            box-shadow: 0 20px 50px rgba(92, 61, 30, 0.15);
+        }
+
+        .modal-header {
+            background: #FAF6F1;
+            border-bottom: 1px solid #EBE0D5;
+            padding: 25px 30px;
+            border-radius: 24px 24px 0 0;
+        }
+
+        .modal-body {
+            padding: 30px;
+            background: #ffffff;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #EBE0D5;
+            padding: 20px 30px;
+            background: #ffffff;
+            border-radius: 0 0 24px 24px;
+        }
+
+        .form-control {
+            border-radius: 12px;
+            padding: 14px 16px;
+            border: 2px solid #EBE0D5;
+            color: #1A1A1A;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+            box-shadow: none;
+        }
+
+            .form-control:focus {
+                border-color: #059669;
+                box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.15);
+                outline: none;
+            }
+
+        .btn-submit {
+            background: #059669;
+            color: white;
+            border-radius: 50px;
+            font-weight: 700;
+            padding: 12px 24px;
+            border: none;
+            transition: opacity 0.3s;
+        }
+
+            .btn-submit:hover:not(:disabled) {
+                opacity: 0.9;
+            }
+
+        /* Pet Details Inner Lock Styles */
+        .locked-field {
+            background: #F3F4F6;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .locked-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #9CA3AF;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* --- PREMIUM PAGINATION --- */
+        .pagination-container {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .custom-pagination {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            .custom-pagination .page-item .page-link {
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.1);
+                color: white;
+                border-radius: 12px;
+                padding: 10px 18px;
+                font-weight: 700;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                transition: all 0.3s ease;
+                text-decoration: none;
+            }
+
+                .custom-pagination .page-item .page-link:hover {
+                    background: rgba(255,255,255,0.15);
+                    border-color: var(--brand-accent);
+                    color: var(--brand-accent);
+                }
+
+            .custom-pagination .page-item.active .page-link {
+                background: var(--brand-accent);
+                border-color: var(--brand-accent);
+                color: #1A0F08;
+                box-shadow: 0 4px 15px rgba(200, 168, 130, 0.4);
+            }
+
+            .custom-pagination .page-item.disabled .page-link {
+                opacity: 0.5;
+                cursor: not-allowed;
+                background: transparent;
+                border-color: rgba(255,255,255,0.05);
+            }
+    </style>
+}
+
+<div class="container pt-5 pb-5" style="max-width: 1300px;">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success rounded-4 d-flex align-items-center border-0 shadow-sm mb-4" style="background: #ECFDF5; color: #065F46; padding: 16px 20px;">
+            <i class="bi bi-check-circle-fill me-3 fs-5" style="color: #10B981;"></i>
+            <div class="fw-bold">@TempData["SuccessMessage"]</div>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger rounded-4 d-flex align-items-center border-0 shadow-sm mb-4" style="background: #FEF2F2; color: #991B1B; padding: 16px 20px;">
+            <i class="bi bi-exclamation-triangle-fill me-3 fs-5" style="color: #EF4444;"></i>
+            <div class="fw-bold">@TempData["ErrorMessage"]</div>
+        </div>
+    }
+
+    <div class="page-header">
+        <h1 class="page-title">Find Your New Best Friend</h1>
+        <p class="page-subtitle">Browse available pets across our network of verified partner shelters and find the perfect addition to your family.</p>
+    </div>
+
+    <div class="dark-section-card">
+        <div class="section-title">
+            <div><i class="bi bi-hearts" style="color: #d9534f; margin-right: 10px;"></i> Available Pets</div>
+            <div class="pet-count-badge">Showing @startCount-@endCount of @Model.TotalPets</div>
+        </div>
+
+        @if (!Model.Pets.Any())
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-emoji-heart-eyes fs-1 d-block mb-3" style="color: var(--brand-accent);"></i>
+                <h4 class="text-white fw-bold">All pets have been adopted!</h4>
+                <p class="text-muted">Check back later for more friends looking for a home.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var pet in Model.Pets)
+                {
+                    // Clean strings to prevent JS breaking when passed into functions
+                    string cleanName = pet.Name?.Replace("'", "\\'") ?? "";
+                    string cleanBreed = pet.Breed?.Replace("'", "\\'") ?? "";
+                    string cleanGender = pet.Gender?.Replace("'", "\\'") ?? "";
+                    string cleanHistory = pet.MedicalHistory?.Replace("'", "\\'") ?? "";
+                    string cleanDesc = pet.Description?.Replace("'", "\\'") ?? "";
+
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <div class="pet-card">
+                            <div class="pet-img-wrapper">
+                                <img src="@pet.ImageUrl" class="pet-img" alt="@pet.Name" onerror="this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&q=80'">
+                                <div class="pet-overlay">
+                                    <button type="button" class="btn-overlay-adopt" onclick="openApplicationModal('@cleanName', '@pet.PetId')">Adopt Me</button>
+                                    <button type="button" class="btn-overlay-view" onclick="openDetailsModal('@cleanName', '@cleanBreed', '@pet.Age', '@cleanGender', '@pet.IsNeutered.ToString().ToLower()', '@cleanHistory', '@cleanDesc', '@pet.ImageUrl', '@pet.PetId')">View Details</button>
+                                </div>
+                            </div>
+                            <div class="pet-info">
+                                <div class="shelter-label">
+                                    <i class="bi bi-house-heart"></i> @pet.ShelterName
+                                </div>
+                                <div class="pet-name">@pet.Name</div>
+                                <div class="pet-breed">@pet.Breed • @pet.Age yrs</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <div class="pagination-container">
+                    <ul class="custom-pagination">
+
+                        <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="@(Model.CurrentPage == 1 ? "#" : Url.Action("AvailablePets", new { page = Model.CurrentPage - 1 }))" tabindex="-1" aria-disabled="@(Model.CurrentPage == 1 ? "true" : "false")">
+                                <i class="bi bi-chevron-left me-1"></i> Prev
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("AvailablePets", new { page = i })">@i</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                            <a class="page-link" href="@(Model.CurrentPage == Model.TotalPages ? "#" : Url.Action("AvailablePets", new { page = Model.CurrentPage + 1 }))">
+                                Next <i class="bi bi-chevron-right ms-1"></i>
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- ALL MODALS -->
+<!-- ============================================== -->
+<!-- 1. PET DETAILS MODAL -->
+<div class="modal fade" id="petDetailsModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content overflow-hidden p-0 border-0">
+            <div class="modal-body p-0">
+                <div class="row g-0">
+                    <div class="col-md-5">
+                        <img src="" id="modalImg" class="w-100 h-100 object-fit-cover" style="min-height:300px;">
+                    </div>
+                    <div class="col-md-7 p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h2 id="modalPetNameDisplay" class="fw-800 mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;">Name</h2>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle mt-1 px-2 py-1"><i class="bi bi-shield-check me-1"></i> Verified Rescue</span>
+                            </div>
+                            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                        </div>
+                        <p id="modalDesc" class="text-muted small" style="line-height: 1.6;">Desc</p>
+                        <hr style="border-color: #EBE0D5;">
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="locked-label">Breed</label>
+                                <div class="fw-bold text-dark" id="modalBreed" style="background: #F9FAFB; padding: 10px 15px; border-radius: 12px; border: 1px solid #EBE0D5;">...</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="locked-label">Age</label>
+                                <div class="fw-bold text-dark" id="modalAge" style="background: #F9FAFB; padding: 10px 15px; border-radius: 12px; border: 1px solid #EBE0D5;">...</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="locked-label">Gender</label>
+                                <div class="fw-bold text-dark" id="modalGender" style="background: #F9FAFB; padding: 10px 15px; border-radius: 12px; border: 1px solid #EBE0D5;">...</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="locked-label">Neutered/Spayed</label>
+                                <div class="fw-bold text-dark" id="modalNeutered" style="background: #F9FAFB; padding: 10px 15px; border-radius: 12px; border: 1px solid #EBE0D5;">...</div>
+                            </div>
+                        </div>
+                        <label class="locked-label">Medical History</label>
+                        <div class="fw-bold text-dark small mb-4" id="modalHistory" style="background: #F9FAFB; padding: 10px 15px; border-radius: 12px; border: 1px solid #EBE0D5; min-height: 60px;">...</div>
+
+                        <button type="button" class="btn btn-submit rounded-pill px-4 fw-bold w-100" onclick="triggerApplicationFromDetails()">Apply to Adopt</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. CLIENT ADOPTION APPLICATION MODAL -->
+<div class="modal fade" id="adoptionApplicationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#ECFDF5; border-bottom:1px solid #D1FAE5;">
+                <h5 class="fw-bold modal-title" style="color: #065F46;"><i class="bi bi-envelope-paper-heart-fill me-2" style="color:#059669;"></i> Adopt: <span id="adoptModalPetName">Pet</span></h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form asp-controller="Home" asp-action="SubmitAdoption" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="PetId" id="adoptPetIdField" />
+
+                <div class="modal-body p-4">
+                    @if (!isAuthenticated)
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-shield-lock fs-1 text-muted mb-3 d-block"></i>
+                            <h6 class="fw-bold">Sign In Required</h6>
+                            <p class="text-muted small">You need to be signed in to submit an adoption application.</p>
+                            <a href="/Account/Login" class="btn btn-dark rounded-pill mt-2 px-4 py-2 fw-bold" style="background: #059669; border: none;">Sign In Now</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-4">
+                            <label class="form-label">Why are you looking to adopt this pet? *</label>
+                            <textarea name="Motivation" class="form-control" rows="3" required placeholder="Explain your decision details..."></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Describe your current domestic infrastructure *</label>
+                            <textarea name="LivingSituation" class="form-control" rows="3" required placeholder="Specify yard status, residential context, rental lease boundaries if any..."></textarea>
+                        </div>
+                        <div class="alert" style="background: #FFFBEB; border: 2px solid #FDE68A; border-radius: 16px; padding: 15px; display: flex; align-items: flex-start; gap: 12px;">
+                            <input type="checkbox" name="AgreedToPolicy" value="true" required class="form-check-input" style="width:20px; height:20px; cursor: pointer; margin-top:3px;" />
+                            <p class="mb-0" style="color: #92400E; font-size: 0.9rem; line-height: 1.5; font-weight: 600;">I formally commit to returning the rescue to a verified shelter checkup hub once a week during month one, and twice a month for the successive context to safeguard proper adjustment.</p>
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer" style="background:#FAFAFA;">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    @if (isAuthenticated)
+                    {
+                        <button type="submit" class="btn btn-submit rounded-pill px-5 fw-bold" style="background:#059669;">Submit Request</button>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentAppPetName = '';
+        let currentAppPetId = '';
+
+        function openDetailsModal(name, breed, age, gender, isNeutered, history, desc, imgUrl, id) {
+            currentAppPetName = name;
+            currentAppPetId = id;
+            document.getElementById('modalPetNameDisplay').innerText = name;
+            document.getElementById('modalImg').src = imgUrl;
+            document.getElementById('modalDesc').innerText = desc || "A wonderful companion waiting for a home.";
+            document.getElementById('modalBreed').innerText = breed;
+            document.getElementById('modalAge').innerText = age + ' yrs';
+            document.getElementById('modalGender').innerText = gender;
+            document.getElementById('modalNeutered').innerText = (isNeutered === 'true' || isNeutered === true) ? "Yes" : "No";
+            document.getElementById('modalHistory').innerText = history || "No known medical issues.";
+            new bootstrap.Modal(document.getElementById('petDetailsModal')).show();
+        }
+
+        function triggerApplicationFromDetails() {
+            var detailsModal = bootstrap.Modal.getInstance(document.getElementById('petDetailsModal'));
+            if(detailsModal) { detailsModal.hide(); }
+            openApplicationModal(currentAppPetName, currentAppPetId);
+        }
+
+        function openApplicationModal(name, id) {
+            document.getElementById('adoptModalPetName').innerText = name;
+            document.getElementById('adoptPetIdField').value = id;
+            new bootstrap.Modal(document.getElementById('adoptionApplicationModal')).show();
+        }
+    </script>
+}

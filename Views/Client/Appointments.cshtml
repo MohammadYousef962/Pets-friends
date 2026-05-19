@@ -1,0 +1,682 @@
+﻿@model Pets_friends.Data.ViewModels.ClientAppointmentsVM
+@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@inject UserManager<UserAccount> UserManager
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Appointments | PetFriends</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --text-dark-blue: #002B49;
+            --text-dark: #1F2937;
+            --text-muted: #6B7280;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --bg-body: #F3F4F6;
+            --border-light: #EBE0D5;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Nunito', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- NAVBAR --- */
+        .main-nav {
+            padding: 20px 0;
+            background: rgba(250, 246, 241, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .nav-brand {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-decoration: none;
+            margin: 0 15px;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+
+            .nav-links a:hover, .nav-links a.active {
+                color: var(--brand-primary);
+            }
+
+        .user-profile-btn {
+            background: #FFFFFF;
+            border: 1px solid var(--border-light);
+            border-radius: 50px;
+            padding: 4px 16px 4px 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(92, 61, 30, 0.05);
+            outline: none;
+        }
+
+            .user-profile-btn:hover, .dropdown-toggle.show {
+                background: #FAF6F1;
+                border-color: var(--brand-accent);
+                box-shadow: 0 4px 12px rgba(92, 61, 30, 0.1);
+            }
+
+            .user-profile-btn::after {
+                display: none;
+            }
+
+        .nav-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: var(--border-light);
+        }
+
+        .nav-user-name {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .dropdown-chevron {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
+        }
+
+        .dropdown-toggle.show .dropdown-chevron {
+            transform: rotate(180deg);
+            color: var(--brand-primary);
+        }
+
+        .custom-user-dropdown {
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 15px 35px rgba(92, 61, 30, 0.1);
+            padding: 12px;
+            margin-top: 15px !important;
+            min-width: 220px;
+            animation: dropFade 0.2s ease-out forwards;
+            transform-origin: top right;
+        }
+        @@keyframes dropFade {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        .custom-user-dropdown .dropdown-item {
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+            .custom-user-dropdown .dropdown-item i {
+                color: var(--brand-accent);
+                font-size: 1.1rem;
+                width: 24px;
+            }
+
+            .custom-user-dropdown .dropdown-item:hover {
+                background: #FDFaf5;
+                color: var(--brand-primary);
+                transform: translateX(4px);
+            }
+
+                .custom-user-dropdown .dropdown-item:hover i {
+                    color: var(--brand-primary);
+                }
+
+        .custom-user-dropdown .dropdown-divider {
+            border-color: #EBE0D5;
+            margin: 8px 10px;
+            opacity: 1;
+        }
+
+        .logout-btn-item {
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+            .logout-btn-item:hover {
+                background: #FEF2F2 !important;
+                color: #DC2626 !important;
+            }
+
+                .logout-btn-item:hover i {
+                    color: #DC2626 !important;
+                }
+
+        /* --- PAGE CONTENT --- */
+        main {
+            flex: 1 0 auto;
+        }
+
+        .page-header {
+            max-width: 900px;
+            margin: 40px auto 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .page-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 2.4rem;
+            color: #2D1B0E;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .list-container {
+            max-width: 900px;
+            margin: 0 auto 60px;
+        }
+
+        .section-header {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--brand-primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(200, 168, 130, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- APPOINTMENT CARDS --- */
+        .apt-card {
+            background: #FFFFFF;
+            border-radius: 24px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            transition: all 0.3s ease;
+        }
+
+            .apt-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 15px 35px rgba(200, 168, 130, 0.15);
+                border-color: var(--brand-accent);
+            }
+
+            .apt-card.removing {
+                opacity: 0;
+                transform: scale(0.95);
+                pointer-events: none;
+            }
+
+        .apt-pet-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 20px;
+            object-fit: cover;
+            border: 1px solid var(--border-light);
+            background: #FAF6F1;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .info-block {
+            flex-grow: 1;
+        }
+
+        .apt-pet-name {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .apt-reason {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--brand-primary);
+            margin-bottom: 8px;
+        }
+
+        .apt-detail {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+            .apt-detail i {
+                color: var(--brand-accent);
+            }
+
+        .apt-datetime {
+            margin-top: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #FDFaf5;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--brand-primary);
+            border: 1px solid #EBE0D5;
+        }
+
+        .action-block {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-Confirmed {
+            background: #ECFDF5;
+            color: #059669;
+            border: 1px solid #A7F3D0;
+        }
+
+        .status-Pending {
+            background: #FFFBEB;
+            color: #D97706;
+            border: 1px solid #FDE68A;
+        }
+
+        .status-Completed {
+            background: #F3F4F6;
+            color: #6B7280;
+            border: 1px solid #E5E7EB;
+        }
+
+        .btn-cancel-apt {
+            background: transparent;
+            color: #EF4444;
+            border: 1px solid #FECACA;
+            border-radius: 12px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+            .btn-cancel-apt:hover {
+                background: #FEF2F2;
+                border-color: #EF4444;
+            }
+
+        @@media (max-width: 768px) {
+            .apt-card
+
+        {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 15px;
+        }
+
+        .apt-detail {
+            justify-content: center;
+        }
+
+        .action-block {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            border-top: 1px solid var(--border-light);
+            padding-top: 15px;
+        }
+
+        }
+
+        /* --- FOOTER --- */
+        .premium-footer {
+            background-color: #251408;
+            font-size: 0.9rem;
+            padding: 28px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        .footer-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .footer-copyright {
+            color: #A1A1AA;
+            font-weight: 400;
+            letter-spacing: 0.2px;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 25px;
+        }
+
+            .footer-links a {
+                color: #A1A1AA;
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.2s ease;
+            }
+
+                .footer-links a:hover {
+                    color: #FFFFFF !important;
+                }
+        @@media (max-width: 767px) {
+            .footer-wrap
+
+        {
+            flex-direction: column;
+            text-align: center;
+            justify-content: center;
+        }
+
+        }
+    </style>
+</head>
+<body>
+
+    @{
+        var currentPath = Context.Request.Path.ToString().ToLower();
+        var currentUser = await UserManager.GetUserAsync(User);
+        string userName = currentUser?.FullName ?? "User";
+        var encodedName = userName.Replace(" ", "+");
+        var profileImageUrlNav = $"https://ui-avatars.com/api/?name={encodedName}&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true";
+    }
+
+    <nav class="main-nav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/" class="nav-brand">PetFriends</a>
+            <div class="nav-links d-none d-md-flex">
+                <a href="/">Home</a>
+                <a href="/Store/Home">Marketplace</a>
+                <a href="/Home/Clinics">Vet Clinics</a>
+                <a href="/Home/Shelters">Shelters</a>
+            </div>
+            <div>
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <div class="dropdown">
+                        <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,15">
+                            <img src="@profileImageUrlNav" alt="Avatar" class="nav-avatar">
+                            <span class="nav-user-name">@userName</span>
+                            <i class="bi bi-chevron-down dropdown-chevron"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end custom-user-dropdown" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="/Client/Dashboard"><i class="bi bi-person-badge"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="/Client/MyPets"><i class="bi bi-heptagon-fill"></i> My Pets</a></li>
+                            <li><a class="dropdown-item" href="/Client/Appointments"><i class="bi bi-calendar-event"></i> Appointments</a></li>
+                            <li><a class="dropdown-item" href="/Order/MyOrders"><i class="bi bi-box-seam"></i> My Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 p-0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item logout-btn-item">
+                                        <i class="bi bi-box-arrow-right" style="color: #EF4444;"></i> Sign Out
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <main role="main">
+        <div class="container px-3">
+            @Html.AntiForgeryToken() <div class="page-header">
+                <div>
+                    <h1 class="page-title">Appointments</h1>
+                    <p style="color: #8C7560; margin: 5px 0 0; font-size: 1.05rem;">Keep track of your pets' scheduled medical visits.</p>
+                </div>
+            </div>
+
+            <div class="list-container">
+
+                <div class="section-header"><i class="bi bi-clock-history"></i> Upcoming Visits</div>
+
+                @if (Model.UpcomingAppointments != null && Model.UpcomingAppointments.Any())
+                {
+                    @foreach (var apt in Model.UpcomingAppointments)
+                    {
+                        <div class="apt-card" id="apt-@apt.Id">
+                            <img src="@apt.PetImageUrl" class="apt-pet-image" alt="@apt.PetName">
+
+                            <div class="info-block">
+                                <div class="apt-pet-name">@apt.PetName</div>
+                                <div class="apt-reason">@apt.Reason</div>
+                                <div class="apt-detail"><i class="bi bi-hospital"></i> @apt.ClinicName</div>
+                                <div class="apt-detail"><i class="bi bi-geo-alt"></i> @apt.ClinicAddress</div>
+                                <div class="apt-datetime">
+                                    <i class="bi bi-calendar-event-fill" style="color: var(--brand-accent);"></i> @apt.AppointmentDate.ToString("MMM dd, yyyy • hh:mm tt")
+                                </div>
+                            </div>
+
+                            <div class="action-block">
+                                <span class="status-badge status-@apt.Status.Replace(" ", "")">
+                                    <i class="bi @(apt.Status == "Confirmed" ? "bi-check-circle-fill" : "bi-hourglass-split")"></i> @apt.Status
+                                </span>
+                                <button class="btn-cancel-apt" data-bs-toggle="modal" data-bs-target="#cancelAptModal" onclick="setCancelTarget('@apt.Id')">Cancel Visit</button>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4" style="background: rgba(255,255,255,0.5); border-radius: 18px; border: 1px dashed var(--border-light);">
+                        <p class="text-muted mb-0 fw-bold">No upcoming appointments.</p>
+                    </div>
+                }
+
+                <div class="section-header mt-5"><i class="bi bi-journal-check"></i> Past History</div>
+
+                @if (Model.PastAppointments != null && Model.PastAppointments.Any())
+                {
+                    @foreach (var apt in Model.PastAppointments)
+                    {
+                        <div class="apt-card" style="opacity: 0.85;">
+                            <img src="@apt.PetImageUrl" class="apt-pet-image" alt="@apt.PetName" style="filter: grayscale(20%);">
+
+                            <div class="info-block">
+                                <div class="apt-pet-name" style="color: #4B5563;">@apt.PetName</div>
+                                <div class="apt-reason" style="color: #6B7280;">@apt.Reason</div>
+                                <div class="apt-detail"><i class="bi bi-hospital" style="color: #9CA3AF;"></i> @apt.ClinicName</div>
+                                <div class="apt-detail"><i class="bi bi-geo-alt" style="color: #9CA3AF;"></i> @apt.ClinicAddress</div>
+                                <div class="apt-datetime" style="background: #F3F4F6; border-color: transparent; color: #6B7280;">
+                                    <i class="bi bi-calendar-event-fill" style="color: #9CA3AF;"></i> @apt.AppointmentDate.ToString("MMM dd, yyyy • hh:mm tt")
+                                </div>
+                            </div>
+
+                            <div class="action-block justify-content-center">
+                                <span class="status-badge status-Completed"><i class="bi bi-check2-all"></i> @apt.Status</span>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4" style="background: rgba(255,255,255,0.5); border-radius: 18px; border: 1px dashed var(--border-light);">
+                        <p class="text-muted mb-0 fw-bold">No past appointments.</p>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="premium-footer">
+        <div class="container">
+            <div class="footer-wrap">
+                <div class="footer-copyright">&copy; 2026 petfriends.support@gmail.com. All Rights Reserved.</div>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="modal fade" id="cancelAptModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 24px; border: none; overflow: hidden; box-shadow: 0 20px 50px rgba(92, 61, 30, 0.15);">
+                <div class="modal-header" style="background: #FEF2F2; border-bottom: none; padding: 25px 30px;">
+                    <h5 class="modal-title fw-bold text-danger" style="font-family: 'Plus Jakarta Sans', sans-serif;"><i class="bi bi-exclamation-triangle-fill me-2"></i> Cancel Appointment?</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="fs-6 mb-0 text-dark fw-medium">Are you sure you want to cancel this visit?</p>
+                    <p class="text-muted small mt-2">The clinic will be notified immediately. This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer p-4 pt-0 border-0 d-flex gap-3 bg-white">
+                    <button type="button" class="btn btn-light flex-fill fw-bold py-3" style="border-radius: 12px; background: #F3F4F6;" data-bs-dismiss="modal">Keep It</button>
+                    <button type="button" class="btn btn-danger flex-fill fw-bold py-3" style="border-radius: 12px; background: #DC2626; border: none;" onclick="executeCancel()">Yes, Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1060;">
+        <div id="cancelToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: #059669; border-radius: 12px;">
+            <div class="d-flex">
+                <div class="toast-body fw-bold"><i class="bi bi-check-circle-fill me-2"></i> Appointment cancelled successfully.</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let aptIdToCancel = null;
+
+        function setCancelTarget(id) {
+            aptIdToCancel = id;
+        }
+
+        async function executeCancel() {
+            if (!aptIdToCancel) return;
+
+            var myModalEl = document.getElementById('cancelAptModal');
+            var modal = bootstrap.Modal.getInstance(myModalEl);
+            modal.hide();
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            try {
+                const response = await fetch('/Client/CancelAppointment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    },
+                    body: new URLSearchParams({ appointmentId: aptIdToCancel })
+                });
+
+                if (response.ok) {
+                    const card = document.getElementById('apt-' + aptIdToCancel);
+                    if (card) {
+                        card.classList.add('removing');
+                        setTimeout(() => { card.remove(); }, 300);
+                    }
+                    const toast = new bootstrap.Toast(document.getElementById('cancelToast'), { delay: 3000 });
+                    toast.show();
+                } else {
+                    alert('Error: Could not cancel appointment.');
+                }
+            } catch (error) {
+                console.error("Cancellation failed", error);
+            }
+        }
+    </script>
+</body>
+</html>

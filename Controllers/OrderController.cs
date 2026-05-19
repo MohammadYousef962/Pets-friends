@@ -38,7 +38,13 @@ namespace Pets_friends.Controllers
             var clientProfile = await _context.ClientProfiles
                 .FirstOrDefaultAsync(c => c.UserAccountId == user.Id);
 
-            if (clientProfile == null) return RedirectToAction("Index", "Home");
+            // FIX: Auto-create the buyer profile instead of redirecting away
+            if (clientProfile == null)
+            {
+                clientProfile = new ClientProfile { UserAccountId = user.Id };
+                _context.ClientProfiles.Add(clientProfile);
+                await _context.SaveChangesAsync();
+            }
 
             // Pull all orders placed strictly by this client
             var orders = await _context.Orders
@@ -155,7 +161,13 @@ namespace Pets_friends.Controllers
             var clientProfile = await _context.ClientProfiles
                 .FirstOrDefaultAsync(c => c.UserAccountId == user.Id);
 
-            if (clientProfile == null) return RedirectToAction("Home", "Store");
+            // FIX: Auto-create the buyer profile instead of redirecting away
+            if (clientProfile == null)
+            {
+                clientProfile = new ClientProfile { UserAccountId = user.Id };
+                _context.ClientProfiles.Add(clientProfile);
+                await _context.SaveChangesAsync();
+            }
 
             var cartItems = await _context.ShoppingCarts
                 .Include(c => c.Product)
@@ -173,7 +185,8 @@ namespace Pets_friends.Controllers
             {
                 FullName = user.FullName ?? string.Empty,
                 PhoneNumber = user.PhoneNumber ?? string.Empty,
-                StreetAddress = string.Empty,
+                // Automatically auto-loads saved street address into the input field if it exists in DB storage
+                StreetAddress = clientProfile.Address ?? string.Empty,
                 City = string.Empty,
 
                 CartItems = cartItems,
@@ -196,7 +209,13 @@ namespace Pets_friends.Controllers
             var clientProfile = await _context.ClientProfiles
                 .FirstOrDefaultAsync(c => c.UserAccountId == user.Id);
 
-            if (clientProfile == null) return RedirectToAction("Home", "Store");
+            // FIX: Auto-create the buyer profile instead of redirecting away
+            if (clientProfile == null)
+            {
+                clientProfile = new ClientProfile { UserAccountId = user.Id };
+                _context.ClientProfiles.Add(clientProfile);
+                await _context.SaveChangesAsync();
+            }
 
             var cartItems = await _context.ShoppingCarts
                 .Include(c => c.Product)
@@ -212,7 +231,15 @@ namespace Pets_friends.Controllers
                 await _userManager.UpdateAsync(user);
             }
 
-            // 2. Isolate independent vendor store drop shipments cleanly
+            // 2. Auto-save fresh street address permanently to DB if it is blank
+            if (ModelState.IsValid && string.IsNullOrWhiteSpace(clientProfile.Address) && !string.IsNullOrWhiteSpace(model.StreetAddress))
+            {
+                clientProfile.Address = model.StreetAddress.Trim();
+                _context.ClientProfiles.Update(clientProfile);
+                await _context.SaveChangesAsync();
+            }
+
+            // 3. Isolate independent vendor store drop shipments cleanly
             var merchantGroups = cartItems.GroupBy(c => c.Product.MerchantProfileId);
 
             foreach (var group in merchantGroups)
@@ -228,7 +255,7 @@ namespace Pets_friends.Controllers
                     MerchantProfileId = group.Key,
                     OrderDate = DateTime.Now,
                     Status = "Pending",
-                    // FIXED: Assigned pure decimal directly to match EF Core Model definitions perfectly
+                    // Assigned pure decimal directly to match EF Core Model definitions perfectly
                     TotalAmount = combinedTotal,
                     OrderItems = new List<OrderItem>()
                 };
@@ -254,7 +281,7 @@ namespace Pets_friends.Controllers
                 _context.Orders.Add(order);
             }
 
-            // 3. Purge bag cleanly to signal fulfillment loop execution
+            // 4. Purge bag cleanly to signal fulfillment loop execution
             _context.ShoppingCarts.RemoveRange(cartItems);
             await _context.SaveChangesAsync();
 

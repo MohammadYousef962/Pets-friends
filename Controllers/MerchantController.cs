@@ -57,6 +57,7 @@ namespace Pets_friends.Controllers
             if (user == null) return RedirectToAction("Login", "Account");
 
             var profile = await _context.MerchantProfiles
+                .AsNoTracking()
                 .Include(p => p.UserAccount)
                 .FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
 
@@ -65,21 +66,21 @@ namespace Pets_friends.Controllers
                 return RedirectToAction("CreateProfile");
             }
 
-            user.MerchantProfile = profile;
+            // Passes layout presentation strings safely to decouple async view context queries
+            ViewData["MerchantAvatar"] = profile.ImageUrl;
+            ViewData["MerchantName"] = user.FullName ?? profile.StoreName;
 
-            // Fetch Products belonging to this specific merchant
             var storeProducts = await _context.Products
+                .AsNoTracking()
                 .Where(p => p.MerchantProfileId == profile.Id)
                 .ToListAsync();
 
-            // Find items with stock of 5 or less
             var lowStock = storeProducts.Where(p => p.StockQuantity <= 5).ToList();
 
-            // Fetch Orders
             var storeOrders = await _context.Orders
+                .AsNoTracking()
                 .Include(o => o.ClientProfile)
                     .ThenInclude(c => c.UserAccount)
-                // .Where(o => o.MerchantProfileId == profile.Id) 
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
 
@@ -106,11 +107,14 @@ namespace Pets_friends.Controllers
         public async Task<IActionResult> CreateProfile()
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login", "Account");
 
             if (await _context.MerchantProfiles.AnyAsync(p => p.UserAccountId == user.Id))
             {
                 return RedirectToAction("Dashboard");
             }
+
+            ViewData["MerchantName"] = user.FullName ?? "Merchant";
 
             var vm = new MerchantProfileFormVM
             {
@@ -129,6 +133,7 @@ namespace Pets_friends.Controllers
             if (!ModelState.IsValid) return View(model);
 
             var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
 
             if (await _context.MerchantProfiles.AnyAsync(p => p.UserAccountId == user.Id))
             {
@@ -141,15 +146,13 @@ namespace Pets_friends.Controllers
                 uploadedImagePath = await SaveImageAsync(model.ImageFile);
             }
 
-            // 1. Update main UserAccount details (NOW INCLUDES EMAIL)
             user.FullName = model.FullName;
             user.Email = model.ContactEmail;
-            user.UserName = model.ContactEmail; // Keep login username synced
+            user.UserName = model.ContactEmail;
             user.PhoneNumber = model.PhoneNumber;
             user.IsProfileComplete = true;
             await _userManager.UpdateAsync(user);
 
-            // 2. Create Profile
             var profile = new MerchantProfile
             {
                 UserAccountId = user.Id,
@@ -171,9 +174,13 @@ namespace Pets_friends.Controllers
         public async Task<IActionResult> EditProfile()
         {
             var user = await _userManager.GetUserAsync(User);
-            var profile = await _context.MerchantProfiles.FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
+            if (user == null) return RedirectToAction("Login", "Account");
 
+            var profile = await _context.MerchantProfiles.FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
             if (profile == null) return RedirectToAction("CreateProfile");
+
+            ViewData["MerchantAvatar"] = profile.ImageUrl;
+            ViewData["MerchantName"] = user.FullName ?? profile.StoreName;
 
             var vm = new MerchantProfileFormVM
             {
@@ -196,8 +203,9 @@ namespace Pets_friends.Controllers
             if (!ModelState.IsValid) return View(model);
 
             var user = await _userManager.GetUserAsync(User);
-            var profile = await _context.MerchantProfiles.FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
+            if (user == null) return NotFound();
 
+            var profile = await _context.MerchantProfiles.FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
             if (profile == null) return RedirectToAction("CreateProfile");
 
             if (model.ImageFile != null)
@@ -205,14 +213,12 @@ namespace Pets_friends.Controllers
                 profile.ImageUrl = await SaveImageAsync(model.ImageFile);
             }
 
-            // Update User (NOW INCLUDES EMAIL)
             user.FullName = model.FullName;
             user.Email = model.ContactEmail;
-            user.UserName = model.ContactEmail; // Keep login username synced
+            user.UserName = model.ContactEmail;
             user.PhoneNumber = model.PhoneNumber;
             await _userManager.UpdateAsync(user);
 
-            // Update Store
             profile.StoreName = model.StoreName;
             profile.StoreAddress = model.StoreAddress;
 

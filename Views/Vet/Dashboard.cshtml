@@ -1,206 +1,581 @@
 ﻿@model Pets_friends.Data.ViewModels.VetDashboardVM
+@using System.Text.Json
+
+
 @{
-    ViewData["Title"] = "Vet Dashboard";
+    ViewData["Title"] = "Clinic Dashboard";
     Layout = "~/Views/Shared/_VetLayout.cshtml";
+
+    // 1. Group PENDING appointments for the left side Queue
+    var groupedRequests = Model?.PendingAppointments?
+        .Where(a => a.Status == "Pending")
+        .GroupBy(a => $"{a.ClientProfileId}_{a.AppointmentDate.Ticks}")
+        .OrderBy(g => g.First().AppointmentDate)
+        .ToList();
+
+    var pendingCount = groupedRequests?.Count() ?? 0;
+
+    // 2. Fetch UPCOMING (Confirmed) appointments from the ViewBag!
+    var now = DateTime.Now;
+    var upcomingData = ViewBag.UpcomingAppointments as IEnumerable<Pets_friends.Models.Appointment>;
+    
+    var upcomingAppointments = upcomingData?
+        .Select(a => new {
+            id = a.Id,
+            petName = a.Pet?.Name ?? "New Patient",
+            petBreed = a.Pet?.Breed ?? "Unverified",
+            ownerName = a.ClientProfile?.UserAccount?.FullName ?? "Client",
+            service = a.Service?.Name ?? "General Visit",
+            image = a.Pet?.ImageUrl ?? "https://placehold.co/100/EBE0D5/5C3D1E",
+            time = a.AppointmentDate.ToString("yyyy-MM-ddTHH:mm:ss"), 
+            isUrgent = a.IsUrgent || (a.AppointmentDate - now).TotalHours < 2 // Reads from DB or dynamic check
+        })
+        .ToList();
+
+    var upcomingJson = JsonSerializer.Serialize(upcomingAppointments ?? Enumerable.Empty<object>());
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .dashboard-list-item {
-            border-bottom: 1px solid #EDE0D0;
-            padding: 15px 0;
+        /* --- BRAND VARIABLES & BASE --- */
+        :root {
+            --text-dark: #1A1A1A;
+            --text-muted: #6B7280;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --vet-color: #059669; 
+            --bg-card: rgba(255, 255, 255, 0.95); 
+            --border-light: #EBE0D5;
         }
 
-            .dashboard-list-item:last-child {
-                border-bottom: none;
-            }
-
-        /* Interactive Action Buttons */
-        .btn-accept {
-            background: #e4f0e8;
-            color: #3a8a4f;
-            border: 1px solid #c3e6cb;
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            transition: 0.2s;
+        body {
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+            padding-bottom: 60px;
         }
 
-            .btn-accept:hover {
-                background: #3a8a4f;
-                color: white;
-                transform: translateY(-1px);
-            }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.5px; }
 
-        .btn-decline {
-            background: #f8d7da;
-            color: #d9534f;
-            border: 1px solid #f5c6cb;
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            transition: 0.2s;
+        .dashboard-wrapper { max-width: 1300px; margin: 0 auto; padding-top: 50px; }
+        .dashboard-header { display: flex; justify-content: flex-end; margin-bottom: 30px; }
+        
+        .btn-add-patient {
+            background: var(--vet-color); color: #fff; font-weight: 800; padding: 14px 28px;
+            border-radius: 50px; text-decoration: none; display: inline-flex; align-items: center;
+            gap: 10px; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(5, 150, 105, 0.25); font-size: 1.05rem; border: none; cursor: pointer;
         }
+        .btn-add-patient:hover { background: #047857; color: #fff; transform: translateY(-3px); box-shadow: 0 12px 25px rgba(5, 150, 105, 0.35); }
 
-            .btn-decline:hover {
-                background: #d9534f;
-                color: white;
-                transform: translateY(-1px);
-            }
+        /* --- COMPACT STAT CARDS --- */
+        .stat-card {
+            background: var(--bg-card); border-radius: 24px; padding: 24px; 
+            border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 20px rgba(92, 61, 30, 0.04);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            transition: transform 0.3s ease, border-color 0.3s ease; 
+        }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--brand-accent); box-shadow: 0 12px 30px rgba(92, 61, 30, 0.08); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 12px; } 
+        .stat-info { display: flex; flex-direction: column; align-items: center; }
+        .stat-info h5 { margin: 0; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; } 
+        .stat-info h2 { margin: 4px 0 0; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-dark); font-weight: 800; font-size: 2.2rem; line-height: 1; transition: all 0.3s ease;} 
+        
+        .update-pop { transform: scale(1.15); color: var(--vet-color) !important; }
+
+        /* --- MAIN PANELS --- */
+        .panel-container {
+            background: var(--bg-card); border-radius: 32px; border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.04); padding: 35px; height: 100%;
+        }
+        .panel-heading { font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-dark); font-weight: 800; font-size: 1.35rem; border-bottom: 1px solid var(--border-light); padding-bottom: 20px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; }
+
+        /* --- EXPANDABLE APPOINTMENT CARDS --- */
+        .apt-accordion-card {
+            background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 24px;
+            margin-bottom: 16px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            will-change: transform;
+        }
+        .apt-accordion-card:last-child { margin-bottom: 0; }
+        .apt-accordion-card.removing { opacity: 0; transform: translateX(50px); }
+        .apt-accordion-card:hover { border-color: var(--brand-accent); box-shadow: 0 8px 25px rgba(92, 61, 30, 0.06); transform: translateY(-2px); }
+        .apt-accordion-card.expanded { border-color: var(--vet-color); box-shadow: 0 8px 25px rgba(5, 150, 105, 0.08); background: #FAFAFA; }
+
+        .apt-summary { padding: 20px 24px; cursor: pointer; display: flex; flex-direction: column; gap: 12px; user-select: none; border-radius: 24px; z-index: 2; position: relative; background: inherit;}
+        @@media (min-width: 768px) { .apt-summary { flex-direction: row; justify-content: space-between; align-items: center; } }
+
+        .apt-owner-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--text-dark); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .apt-time-badge { display: inline-flex; align-items: center; gap: 6px; background: #FDFaf5; color: var(--brand-primary); border: 1px solid var(--border-light); padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+        .apt-request-stamp { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-left: 4px; }
+
+        .service-badge { background: #fff; color: #8C7560; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; border: 1px dashed var(--brand-accent); display: inline-block; margin-top: 8px;}
+        .service-badge.verify { background: #FFFBEB; color: #D97706; border-color: #FCD34D; }
+
+        .apt-actions { display: flex; align-items: center; gap: 8px; }
+        .btn-action { padding: 10px 20px; border-radius: 14px; font-weight: 700; font-size: 0.9rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; cursor: pointer; text-decoration: none;}
+        
+        .btn-accept { background: #ECFDF5; color: #059669; border-color: #D1FAE5; }
+        .btn-accept:hover { background: #10B981; color: #fff; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); }
+        
+        .btn-verify { background: #FFFBEB; color: #D97706; border-color: #FEF3C7; }
+        .btn-verify:hover { background: #F59E0B; color: #fff; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2); }
+
+        .btn-decline { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
+        .btn-decline:hover { background: #EF4444; color: #fff; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
+
+        .expand-indicator { color: var(--text-muted); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-size: 1.2rem; margin-left: 8px; }
+        .apt-accordion-card.expanded .expand-indicator { transform: rotate(180deg); color: var(--vet-color); }
+
+        /* --- CSS GRID ANIMATION --- */
+        .apt-details-wrapper { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .apt-accordion-card.expanded .apt-details-wrapper { grid-template-rows: 1fr; }
+        .apt-details-inner { overflow: hidden; }
+        .apt-details-content { padding: 0 24px 24px 24px; border-top: 1px dashed var(--border-light); margin-top: 10px; padding-top: 20px; opacity: 0; transition: opacity 0.3s ease; }
+        .apt-accordion-card.expanded .apt-details-content { opacity: 1; transition-delay: 0.1s; }
+
+        .detail-group { margin-bottom: 20px; }
+        .detail-label { font-size: 0.75rem; font-weight: 800; color: var(--brand-accent); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .client-note { background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 12px; padding: 16px; font-size: 0.95rem; color: #4B5563; font-style: italic; line-height: 1.5; }
+
+        .pet-badge-link { background: #fff; color: #5C3D1E; padding: 6px 14px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; border: 1px solid var(--border-light); display: inline-flex; align-items: center; gap: 6px; text-decoration: none !important; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .pet-badge-link:hover { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); transform: translateY(-2px); }
+        .pet-badge-static { background: #FDFaf5; color: #8C7560; padding: 6px 14px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; border: 1px solid var(--border-light); display: inline-flex; align-items: center; gap: 6px; }
+
+        /* --- DYNAMIC UPCOMING SCHEDULE TIMELINE --- */
+        .schedule-timeline { padding-top: 5px; }
+        .schedule-item { position: relative; padding-left: 28px; border-left: 2px dashed #EBE0D5; margin-bottom: 25px; padding-bottom: 5px; }
+        .schedule-item:last-child { margin-bottom: 0; border-left-color: transparent; }
+        .schedule-item::before { content: ''; position: absolute; left: -8px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid var(--vet-color); transition: all 0.3s;}
+        
+        .schedule-item.urgent::before { border-color: #EF4444; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2); animation: urgentPulse 1.5s infinite; }
+        @@keyframes urgentPulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        .schedule-time { font-weight: 800; font-size: 0.85rem; color: var(--vet-color); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .schedule-item.urgent .schedule-time { color: #DC2626; }
+        
+        .schedule-card { background: #fff; border: 1px solid var(--border-light); border-radius: 16px; padding: 16px; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .schedule-card:hover { border-color: var(--brand-accent); transform: translateX(4px); box-shadow: 0 6px 15px rgba(92, 61, 30, 0.05); }
+        
+        .sch-pet { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; color: var(--text-dark); font-size: 1.05rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+        .sch-owner { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .sch-service { display: inline-block; background: #F3F4F6; color: #4B5563; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-top: 10px; border: 1px solid #E5E7EB; }
+
+        .urgent-badge {
+            background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; padding: 2px 8px; border-radius: 6px;
+            font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-left: auto; letter-spacing: 0.5px;
+            animation: textPulse 2s infinite;
+        }
+        @@keyframes textPulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .empty-state { display: none; text-align: center; padding: 40px 20px; margin: auto; animation: fadeIn 0.5s;}
+        @@keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
     </style>
 }
 
-<div class="admin-wrapper">
-    <div class="container">
+<div class="container dashboard-wrapper pb-5">
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success rounded-4 d-flex align-items-center mb-4 border-0 shadow-sm" style="background: #ECFDF5; color: #065F46; padding: 16px 20px;">
+            <i class="bi bi-check-circle-fill me-3 fs-5" style="color: #10B981;"></i>
+            <div class="fw-bold">@TempData["SuccessMessage"]</div>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger rounded-4 d-flex align-items-center mb-4 border-0 shadow-sm" style="background: #FEF2F2; color: #991B1B; padding: 16px 20px;">
+            <i class="bi bi-exclamation-triangle-fill me-3 fs-5" style="color: #EF4444;"></i>
+            <div class="fw-bold">@TempData["ErrorMessage"]</div>
+        </div>
+    }
 
+    <div class="dashboard-header d-flex flex-wrap gap-3 justify-content-end mb-4">
+        <a asp-controller="Vet" asp-action="AppointmentHistory" class="btn" style="background: #fff; color: var(--text-dark); font-weight: 800; padding: 14px 28px; border-radius: 50px; border: 2px solid var(--border-light); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+            <i class="bi bi-clock-history text-muted"></i> View History
+        </a>
+        <a asp-controller="Vet" asp-action="AddPatient" class="btn-add-patient m-0">
+            <i class="bi bi-file-earmark-medical-fill"></i> Register New Patient
+        </a>
+    </div>
 
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success rounded-4" style="background: #d4edda; color: #155724; border:none;">
-                <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
-            </div>
-        }
-
-        <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <i class="bi bi-star-fill stat-icon"></i>
-                    <div class="stat-number">@Model.Profile.AverageRating.ToString("0.0")</div>
-                    <div class="stat-label">Average Rating</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <i class="bi bi-chat-quote-fill stat-icon"></i>
-                    <div class="stat-number">@Model.Profile.TotalReviews</div>
-                    <div class="stat-label">Patient Reviews</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <i class="bi bi-calendar-heart-fill stat-icon" style="color: #d9534f;"></i>
-                    <div class="stat-number">@Model.PendingAppointments.Count()</div>
-                    <div class="stat-label">Pending Requests</div>
+    <div class="row g-4 mb-4 justify-content-center">
+        <div class="col-sm-6 col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #FFF3CD; color: #D97706; border: 1px solid #FDE68A;"><i class="bi bi-star-fill"></i></div>
+                <div class="stat-info">
+                    <h5>Average Rating</h5>
+                    <h2>@(Model?.Profile?.AverageRating.ToString("0.0") ?? "0.0")</h2>
                 </div>
             </div>
         </div>
-
-        <div class="row g-4 mb-4">
-
-            <div class="col-lg-7">
-                <div class="glass-panel h-100" style="padding: 30px;">
-                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; border-bottom: 2px solid #EDE0D0; padding-bottom: 10px;">
-                        <i class="bi bi-inbox-fill me-2" style="color: #C8A882;"></i> Appointment Requests
-                    </h3>
-
-                    @if (!Model.PendingAppointments.Any())
-                    {
-                        <div class="text-center text-muted py-5">
-                            <i class="bi bi-cup-hot fs-1 d-block mb-2" style="color: #EDE0D0;"></i>
-                            You have no pending appointment requests.
-                        </div>
-                    }
-                    else
-                    {
-                        foreach (var apt in Model.PendingAppointments)
-                        {
-                            <div class="dashboard-list-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-bold" style="color: #5C3D1E; font-size: 1.05rem;">
-                                        @apt.Pet?.Name <span class="text-muted fw-normal" style="font-size: 0.9rem;">(Owner: @apt.ClientProfile?.UserAccount?.FullName)</span>
-                                    </div>
-                                    <div style="color: #8C7560; font-size: 0.9rem;">
-                                        <i class="bi bi-calendar-event me-1"></i> @apt.AppointmentDate.ToString("MMM dd, yyyy 'at' hh:mm tt")
-                                    </div>
-                                    <div style="color: #C8A882; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">
-                                        @apt.Service?.Name
-                                    </div>
-                                </div>
-
-                                <div class="d-flex gap-2">
-                                    <form asp-action="UpdateAppointmentStatus" method="post" class="m-0">
-                                        <input type="hidden" name="appointmentId" value="@apt.Id" />
-                                        <input type="hidden" name="newStatus" value="Confirmed" />
-                                        <button type="submit" class="btn-accept" title="Accept"><i class="bi bi-check-lg"></i></button>
-                                    </form>
-
-                                    <form asp-action="UpdateAppointmentStatus" method="post" class="m-0" onsubmit="return confirm('Are you sure you want to decline this appointment?');">
-                                        <input type="hidden" name="appointmentId" value="@apt.Id" />
-                                        <input type="hidden" name="newStatus" value="Cancelled" />
-                                        <button type="submit" class="btn-decline" title="Decline"><i class="bi bi-x-lg"></i></button>
-                                    </form>
-                                </div>
-                            </div>
-                        }
-                    }
+        <div class="col-sm-6 col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #E0F2FE; color: #0284C7; border: 1px solid #BDE4FF;"><i class="bi bi-chat-quote-fill"></i></div>
+                <div class="stat-info">
+                    <h5>Patient Reviews</h5>
+                    <h2>@(Model?.Profile?.TotalReviews ?? 0)</h2>
                 </div>
             </div>
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA;"><i class="bi bi-calendar-event-fill"></i></div>
+                <div class="stat-info">
+                    <h5>Pending Requests</h5>
+                    <h2 id="kpi-pending-count">@pendingCount</h2>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <div class="col-lg-5">
-                <div class="glass-panel h-100" style="padding: 30px;">
-                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; border-bottom: 2px solid #EDE0D0; padding-bottom: 10px;">
-                        <i class="bi bi-stars me-2" style="color: #C8A882;"></i> Recent Feedback
-                    </h3>
+    <div class="row g-4 align-items-start">
 
-                    @if (!Model.RecentReviews.Any())
+        <div class="col-lg-7">
+            <div class="panel-container">
+                <h3 class="panel-heading">
+                    <span><i class="bi bi-inbox-fill me-2" style="color: var(--brand-accent);"></i> Appointment Requests</span>
+                </h3>
+
+                <div id="queue-container">
+
+                    @if (groupedRequests == null || !groupedRequests.Any())
                     {
-                        <div class="text-center text-muted py-5">
-                            <i class="bi bi-chat-square-heart fs-1 d-block mb-2" style="color: #EDE0D0;"></i>
-                            No reviews yet. Check back later!
+                        <div class="text-center py-5 my-3">
+                            <i class="bi bi-check2-circle fs-1 d-block mb-3" style="color: #10B981;"></i>
+                            <h4 class="fw-bold text-dark">Schedule is clear</h4>
+                            <p class="text-muted mb-0">New patient booking requests will appear here instantly.</p>
                         </div>
                     }
                     else
                     {
-                        foreach (var review in Model.RecentReviews)
+                        foreach (var group in groupedRequests)
                         {
-                            <div class="dashboard-list-item">
-                                <div class="d-flex justify-content-between">
-                                    <div class="fw-bold" style="color: #5C3D1E; font-size: 0.95rem;">@review.Reviewer?.FullName</div>
-                                    <div style="color: #E8A838; font-size: 0.85rem;">
-                                        @for (int i = 0; i < review.Rating; i++)
+                            var firstApt = group.First();
+                            var clientName = firstApt.ClientProfile?.UserAccount?.FullName ?? "Unknown Client";
+                            var requestDate = firstApt.AppointmentDate;
+                            bool isNewPatient = firstApt.PetId == null;
+
+                            // Extraction Logic for New Patient Data hidden in Notes
+                            string displayPetName = "Unknown Pet";
+                            string displayBreed = "Unknown";
+                            string displayNotes = firstApt.Notes ?? "";
+
+                            if (isNewPatient && firstApt.Notes != null && firstApt.Notes.Contains("[NEW PATIENT VERIFICATION]"))
+                            {
+                                try {
+                                    var nameSpan = firstApt.Notes.Substring(firstApt.Notes.IndexOf("Pet Name:") + 9);
+                                    displayPetName = nameSpan.Substring(0, nameSpan.IndexOf("|")).Trim();
+                                    
+                                    var breedSpan = firstApt.Notes.Substring(firstApt.Notes.IndexOf("Breed:") + 6);
+                                    displayBreed = breedSpan.Substring(0, breedSpan.IndexOf("||")).Trim();
+
+                                    displayNotes = firstApt.Notes.Substring(firstApt.Notes.IndexOf("|| Additional Notes:") + 20).Trim();
+                                } catch {}
+                            }
+
+                            var uniquePets = group.Select(a => a.Pet).Where(p => p != null).GroupBy(p => p.Id).Select(g => g.First()).ToList();
+                            var uniqueServices = group.Select(a => a.Service).Where(s => s != null).GroupBy(s => s.Id).Select(g => g.First()).ToList();
+
+                            var appointmentIdsStr = string.Join(",", group.Select(a => a.Id));
+                            var groupDivId = $"apt-group-{firstApt.Id}";
+
+                            <div class="apt-accordion-card" id="@groupDivId">
+                                <div class="apt-summary" onclick="toggleDetails(this)">
+                                    <div>
+                                        <div class="apt-owner-name">
+                                            <i class="bi bi-person-circle text-muted me-2"></i> @clientName
+                                            @if (uniquePets.Count > 1)
+                                            {
+                                                <span class="badge bg-light text-dark border ms-2" style="font-size: 0.75rem; vertical-align: middle;">@uniquePets.Count Pets</span>
+                                            }
+                                            @if (isNewPatient)
+                                            {
+                                                <span class="badge bg-warning text-dark border ms-2" style="font-size: 0.75rem; vertical-align: middle;">New Patient</span>
+                                            }
+                                        </div>
+                                        <div class="apt-time-badge">
+                                            <i class="bi bi-calendar-check"></i> Booking for: @requestDate.ToString("MMM dd, yyyy • hh:mm tt")
+                                        </div>
+                                        <div class="apt-request-stamp mt-1">
+                                            <i class="bi bi-clock"></i> Requested on: @(requestDate.AddDays(-1).ToString("MMM dd, yyyy 'at' hh:mm tt"))
+                                        </div>
+                                    </div>
+
+                                    <div class="apt-actions">
+                                        @if (isNewPatient)
                                         {
-                                            <i class="bi bi-star-fill"></i>
+                                            <!-- NEW PATIENTS: ONLY showing the Verify Button -->
+                                            <a href="/Vet/AddPatient?apptId=@firstApt.Id" class="btn-action btn-verify" title="Verify Patient to Accept">
+                                                <i class="bi bi-person-plus-fill me-1"></i> Verify Pet
+                                            </a>
+
+                                            <!-- (Optional: I left a decline button here just in case a Vet is not accepting new clients and needs to clear the request. If you don't want it, you can delete this form) -->
+                                            <form asp-action="UpdateAppointmentGroupStatus" method="post" class="m-0" onsubmit="processRequest(event, '@groupDivId', this)">
+                                                <input type="hidden" name="appointmentIds" value="@appointmentIdsStr" />
+                                                <input type="hidden" name="newStatus" value="Cancelled" />
+                                                <button type="submit" class="btn-action btn-decline" title="Decline Request"><i class="bi bi-x-lg"></i></button>
+                                            </form>
                                         }
+                                        else
+                                        {
+                                            <!-- EXISTING PATIENTS: Shows Accept or Reject -->
+                                            <form asp-action="UpdateAppointmentGroupStatus" method="post" class="m-0" onsubmit="processRequest(event, '@groupDivId', this)">
+                                                <input type="hidden" name="appointmentIds" value="@appointmentIdsStr" />
+                                                <input type="hidden" name="newStatus" value="Confirmed" />
+                                                <button type="submit" class="btn-action btn-accept" title="Accept Request"><i class="bi bi-check-lg"></i></button>
+                                            </form>
+
+                                            <form asp-action="UpdateAppointmentGroupStatus" method="post" class="m-0" onsubmit="processRequest(event, '@groupDivId', this)">
+                                                <input type="hidden" name="appointmentIds" value="@appointmentIdsStr" />
+                                                <input type="hidden" name="newStatus" value="Cancelled" />
+                                                <button type="submit" class="btn-action btn-decline" title="Decline Request"><i class="bi bi-x-lg"></i></button>
+                                            </form>
+                                        }
+                                        <i class="bi bi-chevron-down expand-indicator"></i>
                                     </div>
                                 </div>
-                                <p style="color: #8C7560; font-size: 0.9rem; margin-top: 5px; margin-bottom: 0; line-height: 1.4;">
-                                    "@review.Comment"
-                                </p>
+
+                                <div class="apt-details-wrapper">
+                                    <div class="apt-details-inner">
+                                        <div class="apt-details-content">
+                                            <div class="row">
+                                                <div class="col-12 detail-group">
+                                                    @if (isNewPatient)
+                                                    {
+                                                        <div class="detail-label">Patients / Services</div>
+                                                        <div class="d-flex align-items-center gap-3 mt-2">
+                                                            <div class="pet-badge-static">
+                                                                <img src="https://placehold.co/100x100/FAF6F1/8C7560?text=New" style="width:24px; height:24px; border-radius:6px; object-fit:cover;">
+                                                                @displayPetName <span class="text-muted fw-normal ms-1">(@displayBreed)</span>
+                                                            </div>
+                                                            <span class="service-badge verify mb-0"><i class="bi bi-shield-exclamation me-1"></i> New Patient Verification</span>
+                                                        </div>
+                                                        @if (!string.IsNullOrWhiteSpace(displayNotes))
+                                                        {
+                                                            <div class="client-note mt-3">@displayNotes</div>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="detail-label">Registered Patients (Click to view records)</div>
+                                                        <div class="d-flex flex-wrap gap-2 mt-2">
+                                                            @foreach (var pet in uniquePets)
+                                                            {
+                                                                <a asp-controller="Vet" asp-action="PatientRecord" asp-route-id="@pet.Id" class="pet-badge-link" title="Click to view & edit medical history">
+                                                                    <img src="@(pet.ImageUrl ?? "https://placehold.co/100x100/FAF6F1/8C7560?text=Pet")" style="width:24px; height:24px; border-radius:6px; object-fit:cover;">
+                                                                    @pet.Name <span class="text-muted fw-normal ms-1">(@pet.Breed)</span>
+                                                                </a>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                                
+                                                @if (!isNewPatient)
+                                                {
+                                                    <div class="col-md-6 detail-group">
+                                                        <div class="detail-label">Requested Services</div>
+                                                        <div class="d-flex flex-wrap gap-2 mt-2">
+                                                            @foreach (var svc in uniqueServices)
+                                                            {
+                                                                <span class="service-badge">@svc.Name</span>
+                                                            }
+                                                            @if (!string.IsNullOrWhiteSpace(displayNotes))
+                                                            {
+                                                                <div class="client-note mt-3 w-100">@displayNotes</div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         }
                     }
+                    
+                    <div id="queue-empty-state" class="empty-state" style="display: none;">
+                        <i class="bi bi-check2-circle fs-1 d-block mb-3" style="color: #10B981;"></i>
+                        <h4 class="fw-bold text-dark">Inbox is clear</h4>
+                        <p class="text-muted mb-0">New patient booking requests will appear here instantly.</p>
+                    </div>
+
                 </div>
             </div>
         </div>
 
-        <div class="row g-4">
-            <div class="col-md-6">
-                <div class="action-card">
-                    <div>
-                        <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Public Profile</h3>
-                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">View how clients see your page.</p>
-                    </div>
-                    <a asp-action="Profile" class="btn-admin" style="background-color: #EDE0D0; color: #5C3D1E;">
-                        View Page <i class="bi bi-box-arrow-up-right ms-2"></i>
-                    </a>
-                </div>
-            </div>
+        <div class="col-lg-5">
+            <div class="panel-container" style="position: sticky; top: 100px;">
+                <h3 class="panel-heading">
+                    <span><i class="bi bi-calendar2-event-fill me-2" style="color: var(--brand-accent);"></i> Upcoming Schedule</span>
+                    <span class="badge bg-light text-dark border ms-2" style="font-size: 0.75rem; font-family: 'DM Sans', sans-serif;">Top 5</span>
+                </h3>
 
-            <div class="col-md-6">
-                <div class="action-card">
-                    <div>
-                        <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0;">Edit Details</h3>
-                        <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">Update your clinic info, services, and photo.</p>
+                <div class="schedule-timeline" id="schedule-timeline">
                     </div>
-                    <a asp-action="Edit" class="btn-admin">
-                        Edit Profile <i class="bi bi-pencil-square ms-2"></i>
-                    </a>
+
+                <div id="schedule-empty-state" class="empty-state" style="display: none;">
+                    <i class="bi bi-cup-hot fs-2 d-block mb-2" style="color: var(--border-light);"></i>
+                    <h6 class="fw-bold text-dark">No appointments yet</h6>
+                    <p class="text-muted small mb-0">Accepted requests will appear here.</p>
                 </div>
+
             </div>
         </div>
 
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // --- QUEUE UI LOGIC ---
+        function toggleDetails(element) {
+            const card = element.closest('.apt-accordion-card');
+            card.classList.toggle('expanded');
+        }
+
+        let pendingCount = @pendingCount;
+        
+        function processRequest(event, cardId, formElement) {
+            event.preventDefault(); // THE FIX: Pauses instant submission
+            
+            const card = document.getElementById(cardId);
+            card.classList.add('removing');
+            
+            setTimeout(() => {
+                card.style.display = 'none';
+                
+                pendingCount--;
+                const kpiCounter = document.getElementById('kpi-pending-count');
+                if (kpiCounter) {
+                    kpiCounter.innerText = pendingCount;
+                    kpiCounter.classList.add('update-pop');
+                    setTimeout(() => kpiCounter.classList.remove('update-pop'), 300);
+                }
+
+                if (pendingCount === 0) {
+                    document.getElementById('queue-empty-state').style.display = 'block';
+                }
+                
+                // Submit the form quietly behind the scenes AFTER the animation!
+                formElement.submit();
+            }, 300);
+        }
+
+        // ============================================================================
+        // --- LIVE DYNAMIC SCHEDULE ENGINE (Powered by C# Data) ---
+        // ============================================================================
+        
+        let upcomingAppointments = @Html.Raw(upcomingJson);
+        
+        upcomingAppointments.forEach(apt => {
+            apt.time = new Date(apt.time);
+        });
+
+        const scheduleContainer = document.getElementById('schedule-timeline');
+        const scheduleEmptyState = document.getElementById('schedule-empty-state');
+
+        function formatTimeDisplay(date) {
+            const currentTime = new Date();
+            const diffMs = date - currentTime;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffSecs = Math.floor(diffMs / 1000);
+
+            if (diffSecs <= 60 && diffSecs > 0) return `In ${diffSecs} seconds`;
+            if (diffMins < 60 && diffMins > 0) return `In ${diffMins} mins`;
+            
+            const isToday = date.getDate() === currentTime.getDate() && date.getMonth() === currentTime.getMonth() && date.getFullYear() === currentTime.getFullYear();
+            
+            const tomorrow = new Date(currentTime); 
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const isTomorrow = date.getDate() === tomorrow.getDate() && date.getMonth() === tomorrow.getMonth() && date.getFullYear() === tomorrow.getFullYear();
+            
+            const timeString = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+            if (isToday) return `Today at ${timeString}`;
+            if (isTomorrow) return `Tomorrow, ${timeString}`;
+            return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ` • ${timeString}`;
+        }
+
+        function renderSchedule() {
+            scheduleContainer.innerHTML = '';
+            
+            upcomingAppointments.sort((a, b) => a.time - b.time);
+            const top5 = upcomingAppointments.slice(0, 5);
+
+            if (top5.length === 0) {
+                scheduleEmptyState.style.display = 'block';
+                return;
+            }
+            
+            scheduleEmptyState.style.display = 'none';
+
+            top5.forEach((apt) => {
+                const timeDisplay = formatTimeDisplay(apt.time);
+                
+                const urgentClass = apt.isUrgent ? 'urgent' : '';
+                const urgentBadge = apt.isUrgent ? `<span class="urgent-badge"><i class="bi bi-exclamation-circle-fill"></i> Urgent</span>` : '';
+                const urgentCardStyle = apt.isUrgent ? 'border-color: #FCA5A5; background: #FEF2F2;' : '';
+                const urgentServiceStyle = apt.isUrgent ? 'background: #fff; border-color: #FECACA; color: #DC2626;' : '';
+                
+                const html = `
+                    <div class="schedule-item ${urgentClass}" id="apt-${apt.id}" style="transition: all 0.5s ease; opacity: 1; transform: translateX(0);">
+                        <div class="schedule-time">
+                            <i class="bi ${apt.isUrgent ? 'bi-clock-history' : 'bi-clock'}"></i> 
+                            <span class="time-text">${timeDisplay}</span>
+                        </div>
+                        <div class="schedule-card" style="${urgentCardStyle}">
+                            <div class="d-flex gap-3 align-items-center">
+                                <img src="${apt.image}" style="width: 45px; height: 45px; border-radius: 12px; object-fit: cover;" alt="Pet" />
+                                <div>
+                                    <div class="sch-pet">${apt.petName} <span class="text-muted fw-normal" style="font-size: 0.85rem;">(${apt.petBreed})</span>${urgentBadge}</div>
+                                    <div class="sch-owner"><i class="bi bi-person-fill"></i> ${apt.ownerName}</div>
+                                </div>
+                            </div>
+                            <div class="sch-service" style="${urgentServiceStyle}">${apt.service}</div>
+                        </div>
+                    </div>
+                `;
+                scheduleContainer.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // Initial Render
+        renderSchedule();
+
+        setInterval(() => {
+            let needsRender = false;
+            const currentTime = new Date();
+            
+            upcomingAppointments.forEach(apt => {
+                if (apt.time <= currentTime && !apt.expired) {
+                    apt.expired = true; 
+                    needsRender = true;
+                    
+                    const el = document.getElementById('apt-' + apt.id);
+                    if(el) {
+                        el.style.opacity = "0";
+                        el.style.transform = "translateX(50px)";
+                    }
+                }
+            });
+
+            if (needsRender) {
+                setTimeout(() => {
+                    upcomingAppointments = upcomingAppointments.filter(apt => !apt.expired);
+                    renderSchedule();
+                }, 500);
+            } else {
+                const top5 = upcomingAppointments.sort((a,b) => a.time - b.time).slice(0, 5);
+                top5.forEach(apt => {
+                    const el = document.getElementById('apt-' + apt.id);
+                    if(el) {
+                        const txt = el.querySelector('.time-text');
+                        if(txt) txt.innerText = formatTimeDisplay(apt.time);
+                    }
+                });
+            }
+        }, 1000);
+    </script>
+}

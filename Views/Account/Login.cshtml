@@ -16,19 +16,19 @@
             <div class="form-box">
 
                 <div class="logo">
-                    <div class="logo-circle">🐾</div>
                     <span class="logo-text">Pet Friends</span>
-                    <div class="logo-circle">🐾</div>
                 </div>
 
                 <div class="toggle">
-                    <a asp-controller="Account" asp-action="Register">Sign Up</a>
+                    <!-- Added asp-route-returnUrl here so they don't lose their place if they switch to Register -->
+                    <a asp-controller="Account" asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]">Sign Up</a>
                     <a class="active">Log In</a>
                 </div>
 
                 <h2>Welcome Back</h2>
 
-                <form asp-action="Login" method="post">
+                <!-- Added asp-route-returnUrl here to pass the URL to the POST method -->
+                <form asp-action="Login" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
                     <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
 
                     <div class="input-group">

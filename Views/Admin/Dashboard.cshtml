@@ -5,192 +5,228 @@
 }
 
 @section Styles {
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --text-dark: #5C3D1E;
-            --text-muted: #8C7560;
-            --bg-card: #FAF6F1;
-            --border-light: #EBE0D5;
-            --tan-accent: #C8A882;
-            --brown-button: #5C3D1E;
-        }
-
-        body {
+        /* Implements smooth font smoothing across the page */
+        .admin-dashboard-container {
             font-family: 'DM Sans', sans-serif;
-            color: var(--text-dark);
-            background-color: #fdfcfb;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        .admin-header {
+        /* Heading elements for ultra-soft, premium font structures */
+        .premium-title {
             font-family: 'Playfair Display', serif;
+            color: #5C3D1E;
             font-weight: 700;
             font-size: 2.4rem;
-            color: var(--text-dark);
-            margin-bottom: 0.2rem;
+            letter-spacing: -0.5px;
         }
 
-        .admin-subtitle {
-            color: var(--text-muted);
-            font-size: 1rem;
-            margin-bottom: 2rem;
+        .premium-subtitle {
+            font-family: 'DM Sans', sans-serif;
+            color: #8C7560;
+            font-size: 1.05rem;
+            font-weight: 400;
+            margin-bottom: 35px;
         }
 
-        /* Stat Cards */
-        .stat-card {
-            background-color: #fff;
-            border-radius: 20px;
-            padding: 30px 20px;
-            border: 1px solid var(--border-light);
-            box-shadow: 0 4px 12px rgba(92, 61, 30, 0.03);
+        /* Organic, bouncy, heavily curved stat card structures */
+        .dashboard-stat-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 32px; /* Very soft, organic corners */
+            padding: 35px 25px;
             text-align: center;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 15px 40px rgba(91, 62, 43, 0.04);
+            border: 1px solid #EDE0D0;
+            transition: all 0.40s cubic-bezier(0.165, 0.84, 0.44, 1);
             height: 100%;
-        }
-
-            .stat-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 12px 28px rgba(92, 61, 30, 0.08);
-            }
-
-        .stat-icon {
-            font-size: 2.2rem;
-            margin-bottom: 15px;
-            display: inline-block;
-        }
-
-        .stat-number {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.4rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            line-height: 1;
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Action Cards */
-        .action-card {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 20px;
-            border: 1px solid var(--border-light);
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-            .action-card:hover {
-                box-shadow: 0 8px 24px rgba(92, 61, 30, 0.06);
-            }
+        .dashboard-stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(91, 62, 43, 0.12);
+            border-color: #C8A882;
+            background: rgba(255, 255, 255, 1);
+        }
 
-        .btn-custom-outline {
-            background-color: var(--border-light);
-            color: var(--text-dark);
-            font-weight: 600;
+        /* Round squircle icon backgrounds */
+        .dashboard-icon-wrapper {
+            font-size: 1.7rem;
+            width: 64px;
+            height: 64px;
+            border-radius: 22px; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px;
+            transition: transform 0.35s ease;
+        }
+
+        .dashboard-stat-card:hover .dashboard-icon-wrapper {
+            transform: scale(1.1) rotate(-6deg);
+        }
+
+        /* Large numbers styled gracefully */
+        .dashboard-stat-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #5C3D1E;
+            line-height: 1.1;
+            margin-bottom: 6px;
+        }
+
+        .dashboard-stat-label {
+            font-family: 'DM Sans', sans-serif;
+            color: #8C7560;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1.2px;
+        }
+
+        /* Premium platform tax banner layout card */
+        .premium-tax-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 237, 225, 0.9) 100%);
+            border-radius: 36px;
+            border: 2px dashed #C8A882;
+            padding: 40px;
+            box-shadow: 0 15px 45px rgba(91, 62, 43, 0.05);
+            transition: all 0.35s ease;
+        }
+
+        .premium-tax-card:hover {
+            box-shadow: 0 20px 50px rgba(91, 62, 43, 0.12);
+            transform: translateY(-3px);
+        }
+
+        .tax-indicator-title {
+            font-family: 'DM Sans', sans-serif;
+            color: #8C7560;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .tax-amount-display {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.2rem;
+            font-weight: 700;
+            color: #5C3D1E;
+            line-height: 1;
+        }
+
+        .badge-soft-info {
+            background-color: rgba(200, 168, 130, 0.15);
+            color: #5C3D1E;
             border-radius: 12px;
-            padding: 12px 24px;
-            text-decoration: none;
-            transition: 0.2s;
+            font-size: 0.9rem;
+            padding: 10px 18px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
         }
 
-            .btn-custom-outline:hover {
-                background-color: var(--tan-accent);
-                color: #fff;
-            }
-
-        .btn-custom-solid {
-            background-color: var(--brown-button);
-            color: #fff;
-            font-weight: 600;
-            border-radius: 12px;
-            padding: 12px 24px;
-            text-decoration: none;
-            transition: 0.2s;
+        /* Circular layout decorative icon illustration */
+        .tax-card-illustration {
+            width: 100px;
+            height: 100px;
+            background: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 15px 35px rgba(91, 62, 43, 0.04);
+            border: 1px solid #EDE0D0;
+            color: #C8A882;
+            font-size: 3rem;
+            transition: all 0.35s ease;
         }
 
-            .btn-custom-solid:hover {
-                background-color: #4A3118;
-                color: #fff;
-            }
+        .premium-tax-card:hover .tax-card-illustration {
+            transform: rotate(10deg) scale(1.05);
+            color: #7b4f2c;
+            border-color: #C8A882;
+        }
     </style>
 }
 
-<div class="container py-5" style="max-width: 1200px;">
-
-    <div class="mb-5">
-        <h1 class="admin-header">Master Admin Portal</h1>
-        <p class="admin-subtitle">Monitor platform activity, manage user roles, and oversee all operations.</p>
-    </div>
-
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success rounded-4 mb-4" style="background: #E4F0E8; color: #2D6A3F; border: 1px solid #C3E6CB; padding: 15px 20px;">
-            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+<div class="glass-panel admin-dashboard-container">
+    
+    <div class="row align-items-center mb-5">
+        <div class="col-md-8 text-start">
+            <h1 class="premium-title">Master Control Center</h1>
+            <p class="premium-subtitle mb-0">Monitor active user volumes, verify system-wide purchases, and track service appointments.</p>
         </div>
-    }
+        <div class="col-md-4 text-md-end text-start mt-3 mt-md-0">
+            <span class="badge-soft-info py-2 px-3">
+                <i class="bi bi-shield-check-fill me-2" style="color: #7b4f2c;"></i> System Dashboard Active
+            </span>
+        </div>
+    </div>
 
     <div class="row g-4 mb-5">
         <div class="col-md-6 col-lg-3">
-            <div class="stat-card">
-                <i class="bi bi-people-fill stat-icon" style="color: var(--tan-accent);"></i>
-                <div class="stat-number">@Model.TotalUsers</div>
-                <div class="stat-label">Total Users</div>
+            <div class="dashboard-stat-card">
+                <div class="dashboard-icon-wrapper" style="background: rgba(92, 107, 192, 0.08); color: #5C6BC0;">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="dashboard-stat-number">@Model.TotalUsers</div>
+                <div class="dashboard-stat-label">Total Users</div>
             </div>
         </div>
+
         <div class="col-md-6 col-lg-3">
-            <div class="stat-card">
-                <i class="bi bi-calendar-check-fill stat-icon" style="color: #6C8EBF;"></i>
-                <div class="stat-number">@Model.TotalAppointments</div>
-                <div class="stat-label">Appointments</div>
+            <div class="dashboard-stat-card">
+                <div class="dashboard-icon-wrapper" style="background: rgba(2, 132, 199, 0.08); color: #0284C7;">
+                    <i class="bi bi-calendar2-heart-fill"></i>
+                </div>
+                <div class="dashboard-stat-number">@Model.TotalAppointments</div>
+                <div class="dashboard-stat-label">Active Appointments</div>
             </div>
         </div>
+
         <div class="col-md-6 col-lg-3">
-            <div class="stat-card">
-                <i class="bi bi-box-seam-fill stat-icon" style="color: #E8A838;"></i>
-                <div class="stat-number">@Model.TotalOrders</div>
-                <div class="stat-label">Product Orders</div>
+            <div class="dashboard-stat-card">
+                <div class="dashboard-icon-wrapper" style="background: rgba(217, 119, 6, 0.08); color: #D97706;">
+                    <i class="bi bi-box2-heart-fill"></i>
+                </div>
+                <div class="dashboard-stat-number">@Model.TotalOrders</div>
+                <div class="dashboard-stat-label">Active Orders</div>
             </div>
         </div>
+
         <div class="col-md-6 col-lg-3">
-            <div class="stat-card">
-                <i class="bi bi-currency-dollar stat-icon" style="color: #5D8A66;"></i>
-                <div class="stat-number">@Model.TotalRevenue.ToString("C")</div>
-                <div class="stat-label">Total Revenue</div>
+            <div class="dashboard-stat-card">
+                <div class="dashboard-icon-wrapper" style="background: rgba(5, 150, 105, 0.08); color: #059669;">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+                <div class="dashboard-stat-number">@Model.TotalRevenue.ToString("C")</div>
+                <div class="dashboard-stat-label">Gross Purchases</div>
             </div>
         </div>
     </div>
 
     <div class="row g-4">
-        <div class="col-md-6">
-            <div class="action-card">
-                <div>
-                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0; font-size: 1.3rem;">Manage Users</h3>
-                    <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">View, edit roles, or delete user accounts.</p>
+        <div class="col-12">
+            <div class="premium-tax-card p-4 p-md-5 d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-4">
+                <div class="text-start">
+                    <span class="tax-indicator-title">Purchase Tax Revenue (8%)</span>
+                    <div class="tax-amount-display mt-2 mb-3">@Model.TotalTax.ToString("C")</div>
+                    <div class="badge-soft-info">
+                        <i class="bi bi-info-circle-fill me-2" style="color: #7b4f2c;"></i> Calculated exclusively from completed client purchases. Appointments are provided free of charge.
+                    </div>
                 </div>
-                <a asp-controller="Admin" asp-action="ManageUsers" class="btn-custom-outline">
-                    User Directory <i class="bi bi-arrow-right ms-2"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="action-card">
-                <div>
-                    <h3 style="font-family: 'Playfair Display'; color: #5C3D1E; font-weight: 700; margin: 0 0 5px 0; font-size: 1.3rem;">Financials & History</h3>
-                    <p style="color: #8C7560; margin: 0; font-size: 0.95rem;">View all store orders and service payments.</p>
+                <div class="tax-card-illustration d-none d-md-flex">
+                    <i class="bi bi-bank2"></i>
                 </div>
-                <a asp-controller="Admin" asp-action="Transactions" class="btn-custom-solid">
-                    View Ledger <i class="bi bi-receipt-cutoff ms-2"></i>
-                </a>
             </div>
         </div>
     </div>

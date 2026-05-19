@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace Pets_friends.Controllers
 {
+    // 1. BASE RULE: Only these 3 roles can execute actions in this controller by default
     [Authorize(Roles = "Client,Vet,Shelter")]
     public class StoreController : Controller
     {
@@ -28,17 +29,13 @@ namespace Pets_friends.Controllers
         // 1. GET: MAIN MULTI-VENDOR CATALOG (Public Entrance)
         // ====================================================================
         [HttpGet]
-        [AllowAnonymous]
+        [AllowAnonymous] // Overrides the base rule: Guests, Admins, and Merchants can LOOK, but they can't touch.
         public async Task<IActionResult> Home()
         {
-            // Intercept Admin & Merchant: Pass their previous URL to AccessDenied
-            if (User.Identity?.IsAuthenticated == true)
+            // Cleanly route Admins & Merchants away from the buyer storefront if they wander in
+            if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || User.IsInRole("Merchant")))
             {
-                if (User.IsInRole("Admin") || User.IsInRole("Merchant"))
-                {
-                    string previousUrl = Request.Headers["Referer"].ToString();
-                    return RedirectToAction("AccessDenied", "Account", new { returnUrl = previousUrl });
-                }
+                return RedirectToAction("AccessDenied", "Account");
             }
 
             var products = await _context.Products
@@ -57,14 +54,9 @@ namespace Pets_friends.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Details(int id)
         {
-            // Intercept Admin & Merchant: Pass their previous URL to AccessDenied
-            if (User.Identity?.IsAuthenticated == true)
+            if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || User.IsInRole("Merchant")))
             {
-                if (User.IsInRole("Admin") || User.IsInRole("Merchant"))
-                {
-                    string previousUrl = Request.Headers["Referer"].ToString();
-                    return RedirectToAction("AccessDenied", "Account", new { returnUrl = previousUrl });
-                }
+                return RedirectToAction("AccessDenied", "Account");
             }
 
             var product = await _context.Products
@@ -75,20 +67,12 @@ namespace Pets_friends.Controllers
 
             if (product == null) return NotFound();
 
-            double avgScore = 0;
-            int reviewCount = product.Reviews?.Count ?? 0;
-
-            if (reviewCount > 0)
-            {
-                avgScore = product.Reviews!.Average(r => r.Rating);
-            }
-
             var viewModel = new ProductDetailsVM
             {
                 Product = product,
                 Reviews = product.Reviews?.OrderByDescending(r => r.ReviewDate).ToList() ?? new List<ProductReview>(),
-                AverageRating = Math.Round(avgScore, 1),
-                TotalReviews = reviewCount,
+                AverageRating = product.Reviews != null && product.Reviews.Any() ? Math.Round(product.Reviews.Average(r => r.Rating), 1) : 0,
+                TotalReviews = product.Reviews?.Count ?? 0,
                 SelectedQuantity = 1
             };
 
@@ -100,6 +84,8 @@ namespace Pets_friends.Controllers
         // ====================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
+        // No [AllowAnonymous] here! If a guest clicks Add to Cart, ASP.NET natively bounces them to Login.
+        // If an Admin/Merchant bypasses the UI and posts here, ASP.NET natively bounces them to AccessDenied.
         public async Task<IActionResult> AddToCart(int productId, int quantity)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -117,13 +103,12 @@ namespace Pets_friends.Controllers
             }
             else
             {
-                var cartItem = new ShoppingCart()
+                _context.ShoppingCarts.Add(new ShoppingCart
                 {
                     ProductId = productId,
                     UserAccountId = user.Id,
                     Quantity = quantity
-                };
-                _context.ShoppingCarts.Add(cartItem);
+                });
             }
 
             await _context.SaveChangesAsync();
@@ -154,8 +139,7 @@ namespace Pets_friends.Controllers
                     Quantity = c.Quantity
                 }).ToListAsync();
 
-            var viewModel = new CartVM { Items = cartItems };
-            return View(viewModel);
+            return View(new CartVM { Items = cartItems });
         }
 
         // ====================================================================
@@ -215,9 +199,8 @@ namespace Pets_friends.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetCartCount()
         {
-            if (User.Identity?.IsAuthenticated != true) return Json(0);
-
-            if (User.IsInRole("Admin") || User.IsInRole("Merchant")) return Json(0);
+            if (User.Identity?.IsAuthenticated != true || User.IsInRole("Admin") || User.IsInRole("Merchant"))
+                return Json(0);
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Json(0);
@@ -259,22 +242,47 @@ namespace Pets_friends.Controllers
             }
             else
             {
-                var newReview = new ProductReview
+                _context.ProductReviews.Add(new ProductReview
                 {
                     ProductId = ProductId,
                     ClientProfileId = clientProfile.Id,
                     Rating = Rating,
                     Comment = Comment,
                     ReviewDate = DateTime.Now
-                };
-                _context.ProductReviews.Add(newReview);
+                });
                 TempData["ReviewConfirmation"] = "Published";
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction("Details", new { id = ProductId });
         }
+        // ====================================================================
+        // 10. POST: DELETE PRODUCT REVIEW
+        // ====================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteReview(int ProductId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
 
+            var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == user.Id);
+            if (clientProfile != null)
+            {
+                var existingReview = await _context.ProductReviews
+                    .FirstOrDefaultAsync(r => r.ProductId == ProductId && r.ClientProfileId == clientProfile.Id);
+
+                if (existingReview != null)
+                {
+                    _context.ProductReviews.Remove(existingReview);
+                    await _context.SaveChangesAsync();
+
+                    // This links to the popup modal script we added to Details.cshtml
+                    TempData["ReviewConfirmation"] = "Deleted";
+                }
+            }
+            return RedirectToAction("Details", new { id = ProductId });
+        }
         // ====================================================================
         // 9. POST: BACKGROUND AJAX "ADD TO CART"
         // ====================================================================
@@ -296,13 +304,12 @@ namespace Pets_friends.Controllers
             }
             else
             {
-                var cartItem = new ShoppingCart()
+                _context.ShoppingCarts.Add(new ShoppingCart
                 {
                     ProductId = productId,
                     UserAccountId = user.Id,
                     Quantity = quantity
-                };
-                _context.ShoppingCarts.Add(cartItem);
+                });
             }
 
             await _context.SaveChangesAsync();

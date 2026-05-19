@@ -81,12 +81,19 @@
         }
 
         h4.card-title {
-            font-family: 'Playfair Display', serif;
+            font-family: 'DM Sans', sans-serif;
             font-weight: 700;
             color: var(--text-dark);
             border-bottom: 2px solid var(--tan-medium);
             padding-bottom: 15px;
             margin-bottom: 25px;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            margin-bottom: 6px;
         }
 
         .form-control, .form-select {
@@ -100,11 +107,14 @@
             .form-control:focus, .form-select:focus {
                 border-color: var(--tan-accent);
                 box-shadow: 0 0 0 0.25rem rgba(200, 168, 130, 0.15);
+                outline: none;
             }
 
+        /* Expanded layout scaling secures native platform labels properly */
         .time-input {
             width: 100%;
-            max-width: 140px;
+            max-width: 150px;
+            padding: 10px 12px;
             text-align: center;
         }
 
@@ -242,7 +252,7 @@
     </style>
 }
 
-<div class="container py-5" style="max-width: 1200px;">
+<div class="container py-5" style="max-width: 1200px; margin: 0 auto;">
     <form asp-action="Edit" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
 
@@ -251,13 +261,13 @@
 
         <div class="pfp-upload-container">
             @{
-                var fallbackImg = "https://placehold.co/150x150/C8A882/white?text=Vet&font=Playfair+Display";
+                var fallbackImg = "https://placehold.co/150x150/C8A882/white?text=Vet&font=DM+Sans";
                 var imgSrc = string.IsNullOrEmpty(Model.ExistingImageUrl) ? fallbackImg : Model.ExistingImageUrl;
             }
             <div class="pfp-preview-circle">
                 <img id="imgPreview" src="@imgSrc" onerror="this.onerror=null; this.src='@fallbackImg';" alt="Profile">
             </div>
-            <h3 style="font-family: 'Playfair Display'; font-weight: 700; margin-bottom: 25px;">Edit Profile Photo</h3>
+            <h3 style="font-family: 'DM Sans', sans-serif; font-weight: 700; margin-bottom: 25px;">Edit Profile Photo</h3>
             <div class="upload-drop-zone" onclick="document.getElementById('fileInput').click()">
                 <i class="bi bi-camera-fill" style="font-size: 3rem; color: var(--tan-accent);"></i>
                 <p class="mb-0 mt-2" style="color: var(--text-muted); font-weight: 500;">Click or drag to change photo</p>
@@ -271,8 +281,14 @@
                     <h4 class="card-title">Professional Details</h4>
 
                     <div class="mb-3">
+                        <label asp-for="FullName" class="form-label">Doctor's Full Name</label>
+                        <input asp-for="FullName" class="form-control" maxlength="25" required />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
                         <label asp-for="ClinicName" class="form-label">Clinic Name</label>
-                        <input asp-for="ClinicName" class="form-control" maxlength="100" required />
+                        <input asp-for="ClinicName" class="form-control" maxlength="50" required />
                         <span asp-validation-for="ClinicName" class="text-danger"></span>
                     </div>
 
@@ -287,7 +303,6 @@
                             <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
                             
                             <div style="display: flex; align-items: stretch; border: 1px solid var(--tan-medium); border-radius: 12px; background: #fff; overflow: hidden; box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);">
-                                
                                 <div style="background-color: #f8f9fa; border-right: 1px solid #EBE0D5; display: flex;">
                                     <select id="countryCodeSelect" style="border: none; background: transparent; outline: none; padding: 12px; font-size: 1rem; color: var(--text-dark); cursor: pointer; text-align: center; width: auto; min-width: 90px; appearance: none; -webkit-appearance: none;">
                                         <option value="+962">JO +962</option>
@@ -298,7 +313,6 @@
                                         <option value="+44">UK +44</option>
                                     </select>
                                 </div>
-
                                 <input type="tel" id="localPhoneInput" placeholder="791234567" maxlength="12" style="flex-grow: 1; border: none; outline: none; padding: 12px 16px; font-size: 1rem; color: var(--text-dark); background: transparent;" />
                             </div>
 
@@ -386,7 +400,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content" style="border-radius: 24px; border: none; overflow: hidden; box-shadow: 0 15px 35px rgba(92, 61, 30, 0.15);">
                     <div class="modal-header" style="background-color: var(--validation-error); color: white; border-bottom: none; padding: 25px 30px;">
-                        <h4 class="modal-title" id="deleteModalLabel" style="font-family: 'Playfair Display', serif; font-weight: 700;"><i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Profile</h4>
+                        <h4 class="modal-title" id="deleteModalLabel" style="font-family: 'DM Sans', sans-serif; font-weight: 700;"><i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Profile</h4>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body" style="padding: 35px 30px; color: var(--text-dark);">
@@ -439,34 +453,27 @@
         const countrySelect = document.getElementById('countryCodeSelect');
         const localInput = document.getElementById('localPhoneInput');
 
-        // Function to combine the code and number
         function updateHiddenPhone() {
             if(localInput.value.trim() === '') {
-                hiddenPhone.value = ''; // If empty, clear it so Required validation catches it
+                hiddenPhone.value = ''; 
             } else {
                 hiddenPhone.value = countrySelect.value + localInput.value;
             }
         }
 
-        // Restrict local input to NUMBERS ONLY, block leading zeros, and update hidden field
         localInput.addEventListener('input', function (e) {
-        let cleaned = this.value.replace(/\D/g, ''); // Strips out non-digits
-    
-            cleaned = cleaned.replace(/^0+/, ''); // Removes any '0' if it is the very first character
-
+            let cleaned = this.value.replace(/\D/g, ''); 
+            cleaned = cleaned.replace(/^0+/, ''); 
             this.value = cleaned;
              updateHiddenPhone();
         });
 
-        // Update hidden field if they change the country code
         countrySelect.addEventListener('change', updateHiddenPhone);
 
-        // INITIALIZATION: If editing an existing profile, split the DB number into the dropdown and text box
         if (hiddenPhone.value) {
             let fullNumber = hiddenPhone.value;
             let matchedCode = "";
             
-            // Look for the matching country code
             for (let i = 0; i < countrySelect.options.length; i++) {
                 let code = countrySelect.options[i].value;
                 if (fullNumber.startsWith(code) && code.length > matchedCode.length) {
@@ -474,12 +481,10 @@
                 }
             }
             
-            // If found, set the dropdown and put the rest in the text box
             if (matchedCode) {
                 countrySelect.value = matchedCode;
                 localInput.value = fullNumber.substring(matchedCode.length);
             } else {
-                // Fallback if country code isn't in our list
                 localInput.value = fullNumber.replace(/\D/g, ''); 
             }
         }
@@ -497,11 +502,8 @@
          function toggleWork(checkbox) {
              const row = checkbox.closest('.day-row');
              const hiddenIsOff = row.querySelector('.hidden-is-off');
-
-             // inputs[0] is OpenTime, inputs[1] is CloseTime
              const inputs = row.querySelectorAll('.time-input');
 
-             // Sync the hidden DB input: If visually checked (working), IsOff is false
              hiddenIsOff.value = checkbox.checked ? "false" : "true";
 
              inputs.forEach((input, index) => {
@@ -510,20 +512,17 @@
                  input.style.backgroundColor = checkbox.checked ? "#fff" : "#F5F5F5";
 
                  if (!checkbox.checked) {
-                     // Clear the time if they toggle the day OFF
                      input.value = "";
                  } else if (input.value === "") {
-                     // If they toggle it ON and the box is empty, set default 9 to 5
                      if (index === 0) {
-                         input.value = "09:00"; // Default Open (9 AM)
+                         input.value = "09:00"; 
                      } else if (index === 1) {
-                         input.value = "17:00"; // Default Close (5 PM)
+                         input.value = "17:00"; 
                      }
                  }
              });
          }
 
-         // Initialize UI on load
          document.querySelectorAll('.work-toggle').forEach(t => {
              const row = t.closest('.day-row');
              const inputs = row.querySelectorAll('.time-input');

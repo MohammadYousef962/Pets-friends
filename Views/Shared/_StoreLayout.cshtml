@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - PetFriends Market</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -69,7 +69,6 @@
             font-size: 1.1rem;
         }
 
-        /* --- UI UPGRADE: Flex gap spaces elements out and aligns them far right --- */
         .nav-actions {
             display: flex;
             align-items: center;
@@ -94,7 +93,6 @@
                 color: #C8A882;
             }
 
-        /* --- UI UPGRADE: Adjusted to attach directly to the icon container --- */
         .cart-badge {
             position: absolute;
             top: -8px;
@@ -114,60 +112,51 @@
                 transform: scale(1.3);
             }
 
-        /* --- PREMIUM RIGHT-ALIGNED DROPDOWN --- */
-        .dropdown-menu-custom {
-            border-radius: 16px;
-            border: 1px solid #EBE0D5;
-            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.08);
-            padding: 10px 0;
-            margin-top: 15px !important;
+        /* --- PREMIUM RIGHT-ALIGNED DROPDOWN (UPGRADED) --- */
+        .user-profile-btn { 
+            background: #FFFFFF; border: 1px solid #EBE0D5; border-radius: 50px; 
+            padding: 5px 16px 5px 5px; display: flex; align-items: center; gap: 8px; 
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 8px rgba(92, 61, 30, 0.05); 
+            height: 44px; outline: none;
         }
-
-        .dropdown-item-custom {
-            padding: 10px 24px;
-            font-weight: 600;
-            color: #5C3D1E;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        
+        .user-profile-btn:hover, .user-profile-btn[aria-expanded="true"] { 
+            background: #FDFaf5; border-color: #C8A882; box-shadow: 0 4px 15px rgba(92, 61, 30, 0.12); 
         }
+        
+        .user-profile-btn::after { display: none; } /* Hides Bootstrap Arrow */
 
-            .dropdown-item-custom:hover {
-                background-color: #FAF6F1;
-                color: #C8A882;
-            }
-
-            .dropdown-item-custom i {
-                color: #8C7560;
-                font-size: 1.1rem;
-            }
-
-            .dropdown-item-custom:hover i {
-                color: #C8A882;
-            }
-
-        .dropdown-divider-custom {
-            border-top: 1px solid #EBE0D5;
-            margin: 8px 0;
+        .nav-avatar { 
+            width: 32px; height: 32px; border-radius: 50%; object-fit: cover; 
+            background: #FAF6F1; border: 1px solid #EBE0D5; 
         }
+        
+        .nav-user-name { font-family: 'Nunito', sans-serif; font-weight: 700; color: #1A1A1A; font-size: 0.95rem; margin-right: 4px; }
+        .dropdown-chevron { color: #8C7560; font-size: 0.8rem; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .user-profile-btn[aria-expanded="true"] .dropdown-chevron { transform: rotate(180deg); color: #5C3D1E; }
 
-        .logout-text {
-            color: #d9534f !important;
+        /* THE FIX: Opacity-only animation prevents Popper.js alignment bugs */
+        .dropdown-menu-custom { 
+            border-radius: 20px; border: 1px solid #EBE0D5; box-shadow: 0 20px 40px rgba(92, 61, 30, 0.12); 
+            padding: 10px; min-width: 240px; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px);
+            animation: dropFade 0.2s ease forwards;
         }
+        
+        @@keyframes dropFade { from { opacity: 0; } to { opacity: 1; } }
 
-            .logout-text i {
-                color: #d9534f !important;
-            }
+        .dropdown-item-custom { 
+            border-radius: 12px; padding: 12px 16px; font-weight: 600; color: #1A1A1A; 
+            font-size: 0.95rem; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px; 
+        }
+        
+        .dropdown-item-custom i { color: #C8A882; font-size: 1.2rem; transition: color 0.2s; }
+        .dropdown-item-custom:hover { background: #FDFaf5; color: #5C3D1E; transform: translateX(4px); }
+        .dropdown-item-custom:hover i { color: #5C3D1E; }
+        .dropdown-divider-custom { border-top: 1px solid #EBE0D5; margin: 8px 10px; opacity: 0.5; }
 
-            .logout-text:hover {
-                background-color: #FFF5F5 !important;
-                color: #c9302c !important;
-            }
-
-                .logout-text:hover i {
-                    color: #c9302c !important;
-                }
+        .logout-text { border: none; background: transparent; width: 100%; text-align: left; }
+        .logout-text:hover { background: #FEF2F2 !important; color: #DC2626 !important; }
+        .logout-text:hover i { color: #DC2626 !important; }
     </style>
 
     @if (IsSectionDefined("Styles"))
@@ -181,23 +170,23 @@
     @using Pets_friends.Models
     @inject UserManager<UserAccount> UserManager
     @{
-        string dashController = "Client";
-        string dashAction = "Dashboard";
+        // THE FIX: Set default routing for standard clients to Home/Main
+        string dashController = "Home";
+        string dashAction = "Main";
         string firstName = "Member";
         string avatarUrl = "";
 
         if (User.Identity?.IsAuthenticated == true)
         {
-            // Parse First Name safely
             var currentUser = await UserManager.GetUserAsync(User);
             var fullName = currentUser?.FullName ?? "Member";
             firstName = fullName.Split(' ')[0];
             avatarUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(firstName)}&background=FAF6F1&color=5C3D1E&bold=true";
 
+            // If they are a staff member, override the default routing
             if (User.IsInRole("Merchant")) { dashController = "Merchant"; dashAction = "Dashboard"; }
             else if (User.IsInRole("Vet")) { dashController = "Vet"; dashAction = "Dashboard"; }
             else if (User.IsInRole("Shelter")) { dashController = "Shelter"; dashAction = "Dashboard"; }
-            else { dashController = "Client"; dashAction = "Dashboard"; }
         }
     }
 
@@ -226,15 +215,16 @@
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <div class="dropdown">
-                        <a class="nav-action-btn dropdown-toggle align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="@avatarUrl" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #EBE0D5;" alt="User">
-                            <span class="d-none d-sm-inline ms-2 fw-bold">@firstName</span>
-                        </a>
+                        <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,15">
+                            <img src="@avatarUrl" class="nav-avatar" alt="User">
+                            <span class="d-none d-sm-inline nav-user-name">@firstName</span>
+                            <i class="bi bi-chevron-down dropdown-chevron"></i>
+                        </button>
 
-                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom">
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom" aria-labelledby="userDropdown">
                             <li>
                                 <a class="dropdown-item dropdown-item-custom" asp-controller="@dashController" asp-action="@dashAction">
-                                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                                    <i class="bi bi-person-badge"></i> Home
                                 </a>
                             </li>
                             <li>

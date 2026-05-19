@@ -313,8 +313,6 @@
 }
 
 <div class="container py-4" style="max-width: 1200px;">
-    <h1 class="page-title">Complete Your Order</h1>
-    <p class="checkout-subtitle">Securely verify your logistics instructions and payment framework below.</p>
 
     <form asp-controller="Order" asp-action="Checkout" method="post" id="checkoutForm">
         @Html.AntiForgeryToken()

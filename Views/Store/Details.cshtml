@@ -18,7 +18,6 @@
     
     if (currentUser != null && Model.Reviews != null)
     {
-        // Finds if the active user already has a review in the loaded list
         myExistingReview = Model.Reviews.FirstOrDefault(r => r.ClientProfile?.UserAccountId == currentUser.Id);
     }
     
@@ -94,7 +93,6 @@
         }
         .btn-add-cart:hover { background-color: #C8A882; transform: translateY(-2px); color: #fff; }
 
-        /* --- UPGRADED PREMIUM REVIEWS UI --- */
         .reviews-section {
             background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
             border-radius: 24px; padding: 40px; border: 1px solid rgba(255, 255, 255, 0.8);
@@ -109,7 +107,7 @@
 
         .review-card-premium {
             background: #fff; border-radius: 18px; padding: 25px; border: 1px solid #EBE0D5;
-            margin-bottom: 20px; transition: all 0.2s; display: flex; gap: 18px;
+            margin-bottom: 20px; transition: all 0.2s; display: flex; gap: 18px; flex-direction: column;
         }
         .review-card-premium:hover { border-color: #C8A882; transform: translateY(-2px); }
 
@@ -218,7 +216,6 @@
             
             @if (User.Identity?.IsAuthenticated == true)
             {
-                // Button text changes dynamically based on Edit Mode detection
                 string btnDisplay = myExistingReview != null ? "Edit Your Review" : "Write a Review";
                 string btnIcon = myExistingReview != null ? "bi-pencil-fill" : "bi-pencil-square";
 
@@ -236,17 +233,21 @@
 
         @if (User.Identity?.IsAuthenticated == true)
         {
-            // Pre-opens the form if they already have a review so they know they can edit it immediately
-            string collapseState = myExistingReview != null ? "collapse show" : "collapse";
-            
-            <div class="@collapseState mb-5" id="reviewFormCollapse">
+            // The hidden delete form for Store Review
+            @if(myExistingReview != null)
+            {
+                <form id="deleteStoreReviewForm" asp-controller="Store" asp-action="DeleteReview" method="post" style="display:none;">
+                    <input type="hidden" name="ProductId" value="@Model.Product.Id" />
+                </form>
+            }
+
+            <div class="collapse mb-5" id="reviewFormCollapse">
                 <div class="review-form-card">
                     <h5 class="fw-bold mb-3" style="color: #2D1B0E;">@formTitle</h5>
                     
                     <form asp-controller="Store" asp-action="SubmitReview" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="ProductId" value="@Model.Product.Id" />
-                        
                         <input type="hidden" name="Rating" id="interactiveRating" value="@initialStars" />
 
                         <div class="mb-4">
@@ -268,11 +269,19 @@
                             <textarea name="Comment" class="form-control p-3 fw-medium" rows="3" placeholder="What did you and your pet think about this product?" required style="border-radius: 14px; border: 2px solid #EBE0D5; outline: none; color: #2D1B0E;">@initialComment</textarea>
                         </div>
 
-                        <div class="d-flex justify-content-end gap-2">
-                            <button type="button" class="btn btn-light fw-bold px-4" data-bs-toggle="collapse" data-bs-target="#reviewFormCollapse" style="border-radius: 12px;">Close Panel</button>
-                            <button type="submit" class="btn-outline-custom" style="background-color: #5C3D1E; color: #fff; border: none;">
-                                @submitBtnText
-                            </button>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                @if(myExistingReview != null)
+                                {
+                                    <button type="button" class="btn btn-outline-danger fw-bold px-4" style="border-radius: 12px;" onclick="if(confirm('Are you sure you want to permanently delete your review?')) document.getElementById('deleteStoreReviewForm').submit();">Delete Review</button>
+                                }
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-light fw-bold px-4" data-bs-toggle="collapse" data-bs-target="#reviewFormCollapse" style="border-radius: 12px;">Close</button>
+                                <button type="submit" class="btn-outline-custom" style="background-color: #5C3D1E; color: #fff; border: none; margin: 0;">
+                                    @submitBtnText
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -285,7 +294,7 @@
         }
         else
         {
-            @foreach (var review in Model.Reviews)
+            @foreach (var review in Model.Reviews.OrderByDescending(r => r.ReviewDate))
             {
                 string reviewerFullName = review.ClientProfile?.UserAccount?.FullName ?? "Valued Buyer";
                 string avatarUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(reviewerFullName)}&background=FAF6F1&color=5C3D1E&bold=true";
@@ -295,30 +304,32 @@
                 string cardOutline = isMyCard ? "border: 2px solid #C8A882; background: #FFFCF9;" : "";
 
                 <div class="review-card-premium" style="@cardOutline">
-                    <img src="@avatarUrl" class="reviewer-avatar" alt="Avatar" />
-                    
-                    <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <div>
-                                <div class="reviewer-name">
-                                    @reviewerFullName
-                                    @if(isMyCard) { <span class="badge bg-secondary ms-2" style="font-size:0.7rem;">Your Review</span> }
+                    <div class="d-flex gap-3 w-100">
+                        <img src="@avatarUrl" class="reviewer-avatar" alt="Avatar" />
+                        
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <div>
+                                    <div class="reviewer-name">
+                                        @reviewerFullName
+                                        @if(isMyCard) { <span class="badge bg-secondary ms-2" style="font-size:0.7rem;">Your Review</span> }
+                                    </div>
+                                    <div class="review-date">Verified Buyer • @review.ReviewDate.ToString("MMM dd, yyyy")</div>
                                 </div>
-                                <div class="review-date">Verified Buyer • @review.ReviewDate.ToString("MMM dd, yyyy")</div>
+                                
+                                <div class="stars-container">
+                                    @for(int i = 1; i <= 5; i++)
+                                    {
+                                        if(i <= review.Rating) { <i class="bi bi-star-fill"></i> }
+                                        else { <i class="bi bi-star"></i> }
+                                    }
+                                </div>
                             </div>
-                            
-                            <div class="stars-container">
-                                @for(int i = 1; i <= 5; i++)
-                                {
-                                    if(i <= review.Rating) { <i class="bi bi-star-fill"></i> }
-                                    else { <i class="bi bi-star"></i> }
-                                }
-                            </div>
-                        </div>
 
-                        <p class="mb-0 mt-2 fw-medium" style="color: #5C3D1E; font-size: 1.02rem; line-height: 1.5;">
-                            @review.Comment
-                        </p>
+                            <p class="mb-0 mt-2 fw-medium" style="color: #5C3D1E; font-size: 1.02rem; line-height: 1.5;">
+                                @review.Comment
+                            </p>
+                        </div>
                     </div>
                 </div>
             }
@@ -349,7 +360,8 @@
 
 @if (TempData["ReviewConfirmation"] != null)
 {
-    string confirmActionText = TempData["ReviewConfirmation"]?.ToString() == "Updated" ? "updated" : "published";
+    string state = TempData["ReviewConfirmation"]?.ToString() ?? "";
+    string confirmActionText = state == "Updated" ? "updated" : state == "Deleted" ? "deleted" : "published";
 
     <div class="modal fade" id="reviewConfirmedModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

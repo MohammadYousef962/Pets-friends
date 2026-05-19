@@ -1,0 +1,542 @@
+﻿@model IEnumerable<Pets_friends.Data.ViewModels.MyPetDisplayVM>
+
+@{
+    ViewData["Title"] = "Boarding & Internal Residents";
+    Layout = "~/Views/Shared/_ShelterLayout.cshtml";
+
+    var ownerMap = ViewBag.OwnerMap as Dictionary<int, string> ?? new Dictionary<int, string>();
+    var hasOwnerMap = ViewBag.HasOwnerMap as Dictionary<int, bool> ?? new Dictionary<int, bool>();
+    var publiclyListedMap = ViewBag.PubliclyListedMap as Dictionary<int, bool> ?? new Dictionary<int, bool>();
+}
+
+@section Styles {
+    <style>
+        :root {
+            --text-dark-blue: #002B49;
+            --text-dark: #1F2937;
+            --text-muted: #6B7280;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --bg-body: #F3F4F6;
+            --border-light: #EBE0D5;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            background-image: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
+            background-attachment: fixed !important;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            max-width: 1000px;
+            margin: 40px auto 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .page-title {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 2.5rem;
+            color: #2D1B0E;
+            margin: 0;
+        }
+
+        .grid-container {
+            max-width: 1000px;
+            margin: 0 auto 60px;
+        }
+
+        .my-pet-card {
+            background: #FFFFFF;
+            border-radius: 28px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .my-pet-card:hover {
+                transform: translateY(-8px);
+                border-color: var(--brand-accent);
+            }
+
+        .my-pet-img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 18px;
+            margin-bottom: 16px;
+            transition: transform 0.5s;
+        }
+
+        .my-pet-card:hover .my-pet-img {
+            transform: scale(1.05);
+        }
+
+        .my-pet-name {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--text-dark-blue);
+            padding: 0 8px;
+        }
+
+        .my-pet-meta {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 0 8px 8px;
+        }
+
+        .owner-badge {
+            background: #FFFBEB;
+            color: #D97706;
+            border: 1px solid #FEF3C7;
+        }
+
+        .internal-listed-badge {
+            background: #ECFDF5;
+            color: #059669;
+            border: 1px solid #A7F3D0;
+        }
+
+        .internal-unlisted-badge {
+            background: #F3F4F6;
+            color: #4B5563;
+            border: 1px solid #E5E7EB;
+        }
+
+        .pet-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(45, 27, 14, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 28px;
+            backdrop-filter: blur(2px);
+        }
+
+        .my-pet-card:hover .pet-overlay {
+            opacity: 1;
+        }
+
+        .btn-overlay-view {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            font-weight: 700;
+            padding: 12px 28px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.8);
+        }
+
+        .modal-content {
+            border-radius: 24px;
+            border: none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            background: #FFFFFF;
+            border-bottom: 1px solid var(--border-light);
+            padding: 24px 30px;
+        }
+
+        .medical-lock-banner {
+            background: #F0FDF4;
+            color: #065F46;
+            padding: 12px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #D1FAE5;
+        }
+
+        .locked-field {
+            background: #F3F4F6;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #4B5563;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .locked-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #9CA3AF;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .editable-input {
+            background: #FFFFFF;
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .editable-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: var(--brand-accent);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .pfp-upload-wrap {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            cursor: pointer;
+            border: 4px solid #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+            .pfp-upload-wrap img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .pfp-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .pfp-upload-wrap:hover .pfp-overlay {
+            opacity: 1;
+        }
+
+        .btn-save-modal {
+            background: var(--brand-primary);
+            color: white;
+            border-radius: 12px;
+            font-weight: 700;
+            padding: 12px 30px;
+            border: none;
+        }
+
+            .btn-save-modal:hover {
+                background: var(--brand-accent);
+                transform: translateY(-2px);
+            }
+
+        /* Filter Dropdown */
+        .btn-outline-sm {
+            background: #fff;
+            color: var(--text-dark);
+            border: 2px solid var(--border-light);
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .btn-outline-sm:hover {
+                background: #FAF6F1;
+                border-color: var(--brand-accent);
+                color: var(--brand-primary);
+            }
+
+        .dropdown-menu {
+            border-radius: 20px !important;
+            border: 1px solid var(--border-light) !important;
+            padding: 10px !important;
+            box-shadow: 0 10px 30px rgba(92, 61, 30, 0.08) !important;
+        }
+
+        .dropdown-item {
+            border-radius: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+            transition: 0.2s;
+        }
+
+            .dropdown-item:hover {
+                background: #FAF6F1;
+                color: var(--brand-primary);
+            }
+    </style>
+}
+
+<div class="container px-3 pb-5">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success rounded-4 mt-4 mb-0 d-flex align-items-center border-0 shadow-sm mx-auto" style="background: #ECFDF5; color: #065F46; padding: 16px 20px; max-width: 1000px;">
+            <i class="bi bi-check-circle-fill me-3 fs-5" style="color: #10B981;"></i>
+            <div class="fw-bold">@TempData["SuccessMessage"]</div>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger rounded-4 mt-4 mb-0 d-flex align-items-center border-0 shadow-sm mx-auto" style="background: #FEF2F2; color: #991B1B; padding: 16px 20px; max-width: 1000px;">
+            <i class="bi bi-exclamation-triangle-fill me-3 fs-5" style="color: #DC2626;"></i>
+            <div class="fw-bold">@TempData["ErrorMessage"]</div>
+        </div>
+    }
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Internal & Boarding Pets</h1>
+            <p class="text-muted fw-bold mb-0">Manage client pets currently boarding, or internal shelter pets not up for adoption.</p>
+        </div>
+
+        <!-- Filter Dropdown -->
+        <div class="dropdown">
+            <button class="btn-outline-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-filter"></i> Filter
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0">
+                <li><a class="dropdown-item fw-bold rounded-3" href="#" onclick="filterPets('all')">Show All</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item rounded-3" href="#" onclick="filterPets('shelter')">Shelter Residents Only</a></li>
+                <li><a class="dropdown-item rounded-3" href="#" onclick="filterPets('boarded')">Boarded (Owned) Only</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="grid-container">
+        @if (Model != null && Model.Any())
+        {
+            <div class="row g-4" id="petGrid">
+                @foreach (var pet in Model)
+                {
+                    string ownerText = ownerMap.ContainsKey(pet.Id) ? ownerMap[pet.Id] : "";
+                    bool hasOwner = hasOwnerMap.ContainsKey(pet.Id) && hasOwnerMap[pet.Id];
+                    bool isListed = publiclyListedMap.ContainsKey(pet.Id) && publiclyListedMap[pet.Id];
+
+                    string badgeClass = hasOwner ? "owner-badge" : (isListed ? "internal-listed-badge" : "internal-unlisted-badge");
+
+                    // Assign a data-type for the javascript filter
+                    string filterType = hasOwner ? "boarded" : "shelter";
+
+                    <div class="col-md-4 col-sm-6 pet-item" data-type="@filterType">
+                        <div class="my-pet-card" data-bs-toggle="modal" data-bs-target="#editModal-@pet.Id">
+                            <div class="position-relative" style="border-radius: 18px; overflow: hidden; margin-bottom: 16px;">
+                                <img src="@pet.ImageUrl" class="my-pet-img m-0" alt="@pet.Name" onerror="this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
+                                <div class="pet-overlay">
+                                    <span class="btn-overlay-view"><i class="bi bi-pencil-square me-1"></i> Edit Medical File</span>
+                                </div>
+                            </div>
+                            <div class="my-pet-name">@pet.Name</div>
+                            <div class="my-pet-meta">
+                                @pet.Breed
+                                <div class="mt-2">
+                                    <span class="@badgeClass" style="font-size: 0.8rem; padding: 4px 10px; border-radius: 8px; font-weight: 800; display: inline-block;">@ownerText</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MODAL SPECIFIC TO EACH PET -->
+                        <div class="modal fade" id="editModal-@pet.Id" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title fw-bold">@pet.Name's Secure File</h5>
+                                        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                                    </div>
+
+                                    <div class="medical-lock-banner">
+                                        <i class="bi bi-shield-check fs-5"></i>
+                                        You have clearance to update medical history and reproductive status for this pet while they are in your care.
+                                    </div>
+
+                                    <!-- Form 1: Edit Medical Profile -->
+                                    <form id="editPetForm-@pet.Id" asp-action="UpdateShelterPet" asp-controller="Shelter" method="post" enctype="multipart/form-data">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="PetId" value="@pet.Id" />
+                                        <input type="hidden" name="ExistingImageUrl" value="@pet.ImageUrl" />
+
+                                        <div class="modal-body p-4">
+                                            <div class="row g-4">
+                                                <div class="col-md-6 border-end pe-md-4">
+                                                    <h6 class="fw-bold mb-4" style="color: var(--brand-primary); font-family: 'Nunito', sans-serif;">Pet Details</h6>
+
+                                                    <div class="pfp-upload-wrap" onclick="document.getElementById('file-@pet.Id').click()">
+                                                        <img src="@pet.ImageUrl" id="preview-@pet.Id" alt="@pet.Name" onerror="this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
+                                                        <div class="pfp-overlay"><i class="bi bi-camera"></i></div>
+                                                        <input name="ImageFile" type="file" id="file-@pet.Id" hidden accept="image/*" onchange="previewImage(this, 'preview-@pet.Id')">
+                                                    </div>
+
+                                                    <label class="editable-label">Pet Name</label>
+                                                    @if (hasOwner)
+                                                    {
+                                                        <div class="locked-field mb-1" style="padding: 10px 16px; margin-bottom: 5px;">@pet.Name</div>
+                                                        <input type="hidden" name="Name" value="@pet.Name" />
+                                                        <div style="font-size: 0.75rem; color: #9CA3AF; margin-bottom: 15px;"><i class="bi bi-lock-fill"></i> Name is locked for client-owned pets.</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <input type="text" name="Name" class="editable-input" value="@pet.Name" required>
+                                                    }
+
+                                                    <label class="editable-label">Notes / Description</label>
+                                                    <textarea name="Description" class="editable-input" rows="4">@pet.Description</textarea>
+                                                </div>
+
+                                                <div class="col-md-6 ps-md-4">
+                                                    <h6 class="fw-bold mb-4" style="color: var(--text-muted); font-family: 'Nunito', sans-serif;">Medical Operations</h6>
+
+                                                    <div class="locked-label">Breed / Species <i class="bi bi-lock-fill ms-1"></i></div>
+                                                    <div class="locked-field">@pet.Breed</div>
+
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <div class="locked-label">Age <i class="bi bi-lock-fill ms-1"></i></div>
+                                                            <div class="locked-field">@(DateTime.Now.Year - pet.DateOfBirth.Year) years</div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <div class="locked-label">Gender <i class="bi bi-lock-fill ms-1"></i></div>
+                                                            <div class="locked-field">@pet.Gender</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <label class="editable-label">Reproductive Status</label>
+                                                    <select name="IsNeutered" class="editable-input">
+                                                        @if (pet.IsNeutered)
+                                                        {
+                                                            <option value="true" selected>Neutered / Spayed</option>
+                                                            <option value="false">Intact</option>
+                                                        }
+                                                        else
+                                                        {
+                                                            <option value="true">Neutered / Spayed</option>
+                                                            <option value="false" selected>Intact</option>
+                                                        }
+                                                    </select>
+
+                                                    <label class="editable-label">Medical History</label>
+                                                    <textarea name="MedicalHistory" class="editable-input" rows="4">@pet.MedicalHistory</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form> <!-- FORM 1 CLOSES HERE -->
+
+                                    <div class="modal-footer" style="background: #FAFAFA; display:flex; justify-content:space-between; align-items:center;">
+                                        <div class="d-flex gap-2">
+                                            <!-- Form 2: Toggle Adoptability & Form 3: Delete Pet (Only shown if pet has NO owner) -->
+                                            @if (!hasOwner)
+                                            {
+                                                <form asp-action="ToggleAdoptability" asp-controller="Shelter" method="post" class="m-0">
+                                                    <input type="hidden" name="id" value="@pet.Id" />
+                                                    @if (isListed)
+                                                    {
+                                                        <button type="submit" class="btn btn-outline-warning fw-bold" style="border-radius: 12px;" onclick="return confirm('Remove @pet.Name from public adoption list?');">
+                                                            <i class="bi bi-eye-slash-fill me-1"></i> Unlist Adoption
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button type="submit" class="btn btn-outline-success fw-bold" style="border-radius: 12px;" onclick="return confirm('List @pet.Name for public adoption?');">
+                                                            <i class="bi bi-eye-fill me-1"></i> List for Adoption
+                                                        </button>
+                                                    }
+                                                </form>
+
+                                                <!-- Form 3: Delete Pet -->
+                                                <form asp-action="DeleteShelterPet" asp-controller="Shelter" method="post" class="m-0">
+                                                    <input type="hidden" name="id" value="@pet.Id" />
+                                                    <button type="submit" class="btn btn-outline-danger fw-bold" style="border-radius: 12px;" onclick="return confirm('Are you sure you want to permanently delete @pet.Name? This action cannot be undone.');">
+                                                        <i class="bi bi-trash3-fill me-1"></i> Delete Record
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" form="editPetForm-@pet.Id" class="btn-save-modal m-0">Save Medical File</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Empty State for JS Filtering -->
+            <div id="empty-state" class="text-center py-5 rounded-4 mt-3" style="display: none; background: #FFFFFF; border: 2px dashed #EBE0D5;">
+                <i class="bi bi-funnel fs-1 text-muted d-block mb-3"></i>
+                <h4 class="fw-bold" style="color: #2D1B0E; font-family: 'Nunito', sans-serif;">No matching pets</h4>
+                <p class="text-muted mb-0">Try changing your filter to see more pets.</p>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 rounded-4" style="background: #FFFFFF; border: 2px dashed #EBE0D5;">
+                <i class="bi bi-calendar2-check fs-1 text-muted d-block mb-3"></i>
+                <h4 class="fw-bold" style="color: #2D1B0E; font-family: 'Nunito', sans-serif;">No internal pets found</h4>
+                <p class="text-muted mb-0">There are currently no boarded pets or internal shelter residents.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => document.getElementById(targetId).src = e.target.result;
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function filterPets(type) {
+            event.preventDefault();
+            const pets = document.querySelectorAll('.pet-item');
+            let visibleCount = 0;
+
+            pets.forEach(pet => {
+                if (type === 'all' || pet.getAttribute('data-type') === type) {
+                    pet.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    pet.style.display = 'none';
+                }
+            });
+
+            // Show empty state message if everything is hidden
+            const emptyState = document.getElementById('empty-state');
+            if (emptyState) {
+                emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+        }
+    </script>
+}

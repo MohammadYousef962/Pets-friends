@@ -1,171 +1,362 @@
 ﻿@model IEnumerable<Pets_friends.Data.ViewModels.ManageUserVM>
-
 @{
     ViewData["Title"] = "Manage Accounts";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 @section Styles {
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/Admin.css" asp-append-version="true" />
     <style>
-        .btn-delete {
-            background-color: #fff8f8;
-            color: #d9534f;
-            border: 1px solid #f5c6cb;
-            border-radius: 10px;
-            padding: 8px 12px;
-            transition: 0.2s;
+        /* Implements smooth font smoothing across the page */
+        .admin-users-container {
+            font-family: 'DM Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-            .btn-delete:hover {
-                background-color: #d9534f;
-                color: white;
-            }
+        /* Heading elements for ultra-soft, premium font structures */
+        .premium-title {
+            font-family: 'Playfair Display', serif;
+            color: #5C3D1E;
+            font-weight: 700;
+            font-size: 2.4rem;
+            letter-spacing: -0.5px;
+        }
 
+        .premium-subtitle {
+            font-family: 'DM Sans', sans-serif;
+            color: #8C7560;
+            font-size: 1.05rem;
+            font-weight: 400;
+            margin-bottom: 35px;
+        }
+
+        /* Interactive floating rows style structure */
+        .table-floating { 
+            width: 100%; 
+            border-collapse: separate; 
+            border-spacing: 0 12px; 
+            margin-top: -12px; 
+        }
+
+        .table-floating th { 
+            border: none; 
+            color: #8C7560; 
+            font-size: 0.85rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1.2px; 
+            padding: 0 24px 5px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: color 0.25s ease;
+        }
+
+        .table-floating th:hover { 
+            color: #C8A882; 
+        }
+
+        /* Micro Sorting Chevron Styling */
+        .sort-icon-small {
+            font-size: 0.65rem;
+            color: #C8A882;
+            opacity: 0.7;
+            vertical-align: middle;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .table-floating th:hover .sort-icon-small {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+
+        .table-floating tbody tr { 
+            background: #FFFFFF; 
+            box-shadow: 0 6px 18px rgba(92, 61, 30, 0.02); 
+            transition: all 0.35s cubic-bezier(0.165, 0.84, 0.44, 1); 
+        }
+
+        .table-floating tbody tr:hover { 
+            transform: scale(1.008) translateY(-3px); 
+            box-shadow: 0 12px 30px rgba(92, 61, 30, 0.07); 
+        }
+
+        .table-floating td { 
+            padding: 18px 24px; 
+            vertical-align: middle; 
+            border-top: 1px solid #EDE0D0; 
+            border-bottom: 1px solid #EDE0D0; 
+            font-weight: 500; 
+            font-size: 0.95rem; 
+        }
+
+        .table-floating td:first-child { 
+            border-left: 1px solid #EDE0D0; 
+            border-radius: 20px 0 0 20px; 
+        }
+
+        .table-floating td:last-child { 
+            border-right: 1px solid #EDE0D0; 
+            border-radius: 0 20px 20px 0; 
+        }
+
+        .tr-avatar { 
+            width: 46px; 
+            height: 46px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 2px solid #EDE0D0;
+        }
+
+        /* Refined system indicator badges */
+        .badge-soft { 
+            padding: 8px 16px; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.8px; 
+            display: inline-block;
+        }
         
+        .badge-client { background: rgba(107, 114, 128, 0.1); color: #4B5563; }
+        .badge-vet { background: rgba(2, 132, 199, 0.1); color: #0284C7; }
+        .badge-shelter { background: rgba(190, 24, 93, 0.1); color: #BE185D; }
+        .badge-merchant { background: rgba(217, 119, 6, 0.1); color: #D97706; }
+        .badge-admin { background: #5C3D1E; color: #FFF; }
+
+        /* Unified workspace contextual filter layouts */
+        .filter-bar { 
+            background: #FFFFFF; 
+            padding: 18px; 
+            border-radius: 24px; 
+            box-shadow: 0 10px 25px rgba(92, 61, 30, 0.03); 
+            border: 1px solid #EDE0D0; 
+            display: flex; 
+            gap: 16px; 
+            align-items: center; 
+            margin-bottom: 35px; 
+            flex-wrap: wrap; 
+        }
+
+        .search-input, .filter-select { 
+            background: #FAF8F5; 
+            border: 2px solid transparent; 
+            border-radius: 16px; 
+            font-weight: 500; 
+            color: #5C3D1E;
+            transition: all 0.3s ease; 
+        }
+
+        .search-input { 
+            width: 100%; 
+            padding: 12px 20px 12px 48px; 
+        }
+
+        .search-input:focus, .filter-select:focus, .table-select:focus { 
+            background: #FFFFFF; 
+            border-color: #C8A882; 
+            outline: none; 
+            box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.15);
+        }
+
+        /* Removed appearance:none and custom SVG arrow layout */
+        .filter-select { 
+            padding: 12px 20px; 
+            cursor: pointer; 
+        }
+
+        /* Removed appearance:none and custom SVG arrow layout */
+        .table-select {
+            background: #FAF8F5; 
+            border: 1px solid #EDE0D0;
+            border-radius: 12px; 
+            font-weight: 600; 
+            color: #5C3D1E;
+            padding: 8px 14px; 
+            cursor: pointer; 
+            font-size: 0.85rem;
+            min-width: 125px;
+            transition: all 0.25s ease;
+        }
+        
+        /* Tactical security deletion icon configuration */
+        .btn-delete-soft { 
+            background: #FDF2F2; 
+            color: #EF4444; 
+            border: 1px solid rgba(239, 68, 68, 0.1); 
+            padding: 9px 13px; 
+            border-radius: 12px; 
+            transition: all 0.25s ease; 
+        }
+
+        .btn-delete-soft:hover { 
+            background: #EF4444; 
+            color: #FFFFFF; 
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.2);
+        }
     </style>
 }
 
-
-<div class="admin-wrapper">
-    <div class="container">
-
-                <a asp-action="Dashboard" class="btn-back">
-                    <i class="bi bi-arrow-left"> </i> Back to Dashboard
-                </a>
-
-                <div class="glass-panel">
-
-        <div class="glass-panel">
-            <h2 style="font-family: 'Playfair Display', serif; color: #5C3D1E; font-weight: 700; margin-bottom: 5px;">
-                <i class="bi bi-shield-lock-fill" style="color: #C8A882; margin-right: 10px;"></i>Account Management
-            </h2>
-            <p style="color: #8C7560; margin-bottom: 25px;">Assign system roles or remove bad actors.</p>
-
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-                    <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
-                </div>
-            }
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-                    <i class="bi bi-exclamation-octagon-fill me-2"></i>@TempData["ErrorMessage"]
-                </div>
-            }
-
-            <div class="table-responsive">
-                <table class="table table-custom">
-                    <thead>
-                        <tr>
-                            <th>User Details</th>
-                            <th>Email Address</th>
-                            <th>Role</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var user in Model)
-                        {
-                            <tr>
-                                <td class="fw-bold">@user.FullName</td>
-                                <td>@user.Email</td>
-                                <td>
-                                    <span class="role-badge @(user.CurrentRole == "Admin" ? "admin-badge" : "")">
-                                        @user.CurrentRole
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    @if (user.CurrentRole == "Admin")
-                                    {
-                                        <span style="color: #A0805A; font-style: italic; font-size: 0.9rem;">Master Account</span>
-                                    }
-                                    else
-                                    {
-                                        <div class="d-flex justify-content-end gap-2 align-items-center">
-                                            <form asp-action="ChangeRole" method="post" class="d-flex gap-2 m-0">
-                                                <input type="hidden" name="userId" value="@user.UserId" />
-                                                <select name="newRole" class="custom-select">
-                                                    <option value="Client" selected="@(user.CurrentRole == "Client")">Client</option>
-                                                    <option value="Vet" selected="@(user.CurrentRole == "Vet")">Vet</option>
-                                                    <option value="Merchant" selected="@(user.CurrentRole == "Merchant")">Merchant</option>
-                                                    <option value="Shelter" selected="@(user.CurrentRole == "Shelter")">Shelter</option>
-                                                </select>
-                                                <button type="submit" class="btn-update">Update</button>
-                                            </form>
-
-                                            <form asp-action="DeleteUser" method="post" class="m-0 delete-form" data-name="@user.FullName">
-                                                <input type="hidden" name="userId" value="@user.UserId" />
-                                                <button type="button" class="btn-delete" title="Delete User">
-                                                    <i class="bi bi-trash3-fill"></i> Remove
-                                                </button>
-                                            </form>
-                                        </div>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-
+<div class="glass-panel admin-users-container">
+    
+    <div class="row align-items-center mb-5">
+        <div class="col-md-8 text-start">
+            <h1 class="premium-title">Account Directory</h1>
+            <p class="premium-subtitle mb-0">Verify ecosystem partners, modify platform clearance tiers, and supervise active client profiles.</p>
         </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="position-relative flex-grow-1" style="min-width: 280px;">
+            <i class="bi bi-search position-absolute" style="left: 20px; top: 50%; transform: translateY(-50%); color: #C8A882; font-size: 1.05rem;"></i>
+            <input type="text" id="userSearch" class="search-input" placeholder="Search profiles by name or email address...">
+        </div>
+
+        <select id="userRoleFilter" class="filter-select" style="min-width: 160px;">
+            <option value="All">All Roles</option>
+            <option value="Admin">Admin</option>
+            <option value="Vet">Veterinarian</option>
+            <option value="Shelter">Shelter</option>
+            <option value="Merchant">Merchant</option>
+            <option value="Client">Client</option>
+        </select>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-floating" id="userTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0, 'userTable')" title="Sort by Name">
+                        User Profile <i class="bi bi-chevron-expand sort-icon-small ms-1"></i>
+                    </th>
+                    <th onclick="sortTable(1, 'userTable')" title="Sort by Email">
+                        Email Address <i class="bi bi-chevron-expand sort-icon-small ms-1"></i>
+                    </th>
+                    <th onclick="sortTable(2, 'userTable')" title="Sort by Role">
+                        Assigned Role <i class="bi bi-chevron-expand sort-icon-small ms-1"></i>
+                    </th>
+                    <th class="text-end" style="padding-right: 24px; cursor: default;">Administrative Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    string badgeClass = "badge-client";
+                    string avatarColor = "6B7280";
+                    if (user.CurrentRole == "Admin") { badgeClass = "badge-admin"; avatarColor = "5C3D1E"; }
+                    else if (user.CurrentRole == "Vet") { badgeClass = "badge-vet"; avatarColor = "0284C7"; }
+                    else if (user.CurrentRole == "Shelter") { badgeClass = "badge-shelter"; avatarColor = "BE185D"; }
+                    else if (user.CurrentRole == "Merchant") { badgeClass = "badge-merchant"; avatarColor = "D97706"; }
+
+                    <tr class="user-row" data-name="@user.FullName.ToLower()" data-email="@user.Email.ToLower()" data-role="@user.CurrentRole">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(user.FullName)&background=FAF6F1&color=@avatarColor&bold=true&size=100" class="tr-avatar me-3" alt="Avatar">
+                                <div>
+                                    <div class="fw-bold" style="font-size:1.05rem; color: #5C3D1E;">@user.FullName</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="color: #8C7560; font-weight: 500;">@user.Email</td>
+                        <td><span class="badge-soft @badgeClass">@user.CurrentRole</span></td>
+                        <td class="text-end" style="padding-right: 24px;">
+                            @if (user.CurrentRole == "Admin")
+                            {
+                                <span style="color: #C8A882; font-style: italic; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.5px;">
+                                    <i class="bi bi-patch-check-fill me-1"></i> Master Profile
+                                </span>
+                            }
+                            else
+                            {
+                                <div class="d-flex justify-content-end gap-2 align-items-center">
+                                    <form asp-action="ChangeRole" method="post" class="m-0">
+                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                        <select name="newRole" class="table-select" onchange="this.form.submit()">
+                                            <option value="Client" selected="@(user.CurrentRole == "Client")">Client</option>
+                                            <option value="Vet" selected="@(user.CurrentRole == "Vet")">Vet</option>
+                                            <option value="Merchant" selected="@(user.CurrentRole == "Merchant")">Merchant</option>
+                                            <option value="Shelter" selected="@(user.CurrentRole == "Shelter")">Shelter</option>
+                                        </select>
+                                    </form>
+
+                                    <form asp-action="DeleteUser" method="post" class="m-0" onsubmit="return confirm('🚨 DANGER ZONE 🚨\n\nPermanently delete this user?\nThis will permanently clear ALL their associated database records (pets, appointments, store checkout histories).\n\nProceed with removal operation?');">
+                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                        <button type="submit" class="btn-delete-soft" title="Delete System User Profile">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div id="userNoResults" class="text-center py-5" style="display:none;">
+        <i class="bi bi-person-x-fill text-muted mb-3 d-block" style="font-size: 3rem; color: #8C7560 !important;"></i>
+        <p class="text-muted fw-bold mb-0">No accounts match your custom search or selected filters.</p>
     </div>
 </div>
 
-<div id="customDeleteModal" class="custom-modal-overlay">
-    <div class="custom-modal">
-        <i class="bi bi-exclamation-octagon custom-modal-icon"></i>
-        <h3 class="custom-modal-title">Delete Account</h3>
-        <p class="custom-modal-text" id="customDeleteText">
-            Are you sure you want to permanently delete this? This cannot be undone.
-        </p>
-        <div class="custom-modal-actions">
-            <button type="button" class="btn-modal-cancel" id="btnCancelDelete">Cancel</button>
-            <button type="button" class="btn-modal-confirm" id="btnConfirmDelete">Yes, Delete</button>
-        </div>
-    </div>
-</div>
+@section Scripts {
+    <script>
+        // Real-time UI data filtering routine
+        function filterUsers() {
+            const search = document.getElementById('userSearch').value.toLowerCase();
+            const roleFilter = document.getElementById('userRoleFilter').value;
+            let visibleCount = 0;
+            
+            document.querySelectorAll('.user-row').forEach(row => {
+                const rName = row.getAttribute('data-name');
+                const rEmail = row.getAttribute('data-email');
+                const rRole = row.getAttribute('data-role');
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const modal = document.getElementById('customDeleteModal');
-        const modalText = document.getElementById('customDeleteText');
-        const btnCancel = document.getElementById('btnCancelDelete');
-        const btnConfirm = document.getElementById('btnConfirmDelete');
+                const matchSearch = rName.includes(search) || rEmail.includes(search);
+                const matchRole = roleFilter === 'All' || rRole === roleFilter;
 
-        let formToSubmit = null; // Memory slot for the form we want to submit
-
-        // 1. Listen for clicks on ALL our custom delete buttons
-        document.querySelectorAll('.delete-form .btn-delete').forEach(button => {
-            button.addEventListener('click', function () {
-                // Find the form this button belongs to
-                formToSubmit = this.closest('.delete-form');
-
-                // Get the name from the data-name attribute we added
-                const name = formToSubmit.getAttribute('data-name');
-
-                // Update the text dynamically!
-                modalText.innerHTML = `Are you sure you want to permanently delete <strong>${name}</strong>? This action cannot be undone.`;
-
-                // Show the modal
-                modal.classList.add('active');
+                if (matchSearch && matchRole) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
             });
-        });
+            
+            document.getElementById('userNoResults').style.display = visibleCount === 0 ? 'block' : 'none';
+        }
 
-        // 2. If they click Cancel, hide the modal and clear the memory
-        btnCancel.addEventListener('click', function () {
-            modal.classList.remove('active');
-            formToSubmit = null;
-        });
+        document.getElementById('userSearch').addEventListener('input', filterUsers);
+        document.getElementById('userRoleFilter').addEventListener('change', filterUsers);
 
-        // 3. If they click Confirm, submit the form behind the scenes!
-        btnConfirm.addEventListener('click', function () {
-            if (formToSubmit) {
-                formToSubmit.submit();
+        // Client-side alphabet table-sorting compilation logic 
+        function sortTable(n, tableId) {
+            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById(tableId);
+            switching = true;
+            dir = "asc"; 
+            while (switching) {
+                switching = false;
+                rows = table.querySelectorAll("tbody tr.user-row");
+                for (i = 0; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].querySelectorAll("td")[n];
+                    y = rows[i + 1].querySelectorAll("td")[n];
+                    if (dir == "asc") {
+                        if (x.innerText.toLowerCase() > y.innerText.toLowerCase()) { shouldSwitch = true; break; }
+                    } else if (dir == "desc") {
+                        if (x.innerText.toLowerCase() < y.innerText.toLowerCase()) { shouldSwitch = true; break; }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount ++;      
+                } else {
+                    if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; }
+                }
             }
-        });
-    });
-</script>
+        }
+    </script>
+}

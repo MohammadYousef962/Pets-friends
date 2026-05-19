@@ -1,0 +1,1117 @@
+﻿@model Pets_friends.Data.ViewModels.HomeVM
+@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@inject UserManager<UserAccount> UserManager
+
+@{
+    Layout = null; // Hides the standard internal layout
+
+    var currentPath = Context.Request.Path.ToString().ToLower();
+    var currentUser = await UserManager.GetUserAsync(User);
+    string userName = currentUser?.FullName ?? "User";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetFriends | The Complete Pet Ecosystem</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --text-dark: #2D1B0E;
+            --text-muted: #8C7560;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --bg-light: #FAF6F1;
+            --bg-white: #FFFFFF;
+            --border-light: #EBE0D5;
+            --adopt-color: #10B981;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Nunito', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- NAVBAR --- */
+        .main-nav {
+            padding: 20px 0;
+            background: transparent;
+            position: absolute;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .nav-brand {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-decoration: none;
+            margin: 0 15px;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+
+            .nav-links a:hover {
+                color: var(--brand-primary);
+            }
+
+        .btn-nav {
+            background: var(--text-dark);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+            .btn-nav:hover {
+                background: var(--brand-accent);
+                color: white;
+                transform: translateY(-2px);
+            }
+
+        /* --- USER DROPDOWN UI --- */
+        .user-profile-btn {
+            background: #FFFFFF;
+            border: 1px solid var(--border-light);
+            border-radius: 50px;
+            padding: 4px 16px 4px 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(92, 61, 30, 0.05);
+        }
+
+            .user-profile-btn:hover, .user-profile-btn:focus, .dropdown-toggle.show {
+                background: #FAF6F1;
+                border-color: var(--brand-accent);
+                box-shadow: 0 4px 12px rgba(92, 61, 30, 0.1);
+            }
+
+            .user-profile-btn::after {
+                display: none;
+            }
+
+        .nav-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: var(--border-light);
+        }
+
+        .nav-user-name {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .dropdown-chevron {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dropdown-toggle.show .dropdown-chevron {
+            transform: rotate(180deg);
+            color: var(--brand-primary);
+        }
+
+        .custom-user-dropdown {
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 15px 35px rgba(92, 61, 30, 0.1);
+            padding: 12px;
+            margin-top: 25px !important; 
+            min-width: 220px;
+            background: #fff;
+            animation: dropFade 0.2s ease forwards;
+            transform-origin: top right;
+        }
+
+        @@keyframes dropFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .custom-user-dropdown .dropdown-item {
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+            .custom-user-dropdown .dropdown-item i {
+                color: var(--brand-accent);
+                font-size: 1.1rem;
+                width: 24px;
+            }
+
+            .custom-user-dropdown .dropdown-item:hover {
+                background: #FDFaf5;
+                color: var(--brand-primary);
+                transform: translateX(4px);
+            }
+
+                .custom-user-dropdown .dropdown-item:hover i {
+                    color: var(--brand-primary);
+                }
+
+        .custom-user-dropdown .dropdown-divider {
+            border-color: #EBE0D5;
+            margin: 8px 10px;
+            opacity: 1;
+        }
+
+        .logout-btn-item {
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+            .logout-btn-item:hover {
+                background: #FEF2F2 !important;
+                color: #DC2626 !important;
+            }
+
+                .logout-btn-item:hover i {
+                    color: #DC2626 !important;
+                }
+
+        /* --- HERO SECTION --- */
+        .hero-section {
+            padding: 160px 0 100px;
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
+        }
+
+        .hero-pill {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-light);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .hero-title {
+            font-family: 'Nunito', sans-serif;
+            font-size: 4.2rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+
+            .hero-title span {
+                color: var(--brand-accent);
+            }
+
+        .hero-text {
+            font-size: 1.1rem;
+            color: #6E5033;
+            margin-bottom: 35px;
+            line-height: 1.6;
+            max-width: 90%;
+            font-weight: 500;
+        }
+
+        .btn-hero-primary {
+            background: var(--text-dark);
+            color: white;
+            padding: 16px 36px;
+            border-radius: 30px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+            .btn-hero-primary:hover {
+                background: var(--brand-accent);
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(200, 168, 130, 0.3);
+            }
+
+        .btn-hero-outline {
+            background: transparent;
+            color: var(--text-dark);
+            border: 2px solid var(--text-dark);
+            padding: 14px 36px;
+            border-radius: 30px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+            .btn-hero-outline:hover {
+                background: var(--brand-primary);
+                border-color: var(--brand-primary);
+                color: #ffffff;
+            }
+
+        .hero-img-container {
+            position: relative;
+            padding: 20px;
+        }
+
+        .hero-img-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 95%;
+            border-radius: 40px;
+            background: url('https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=800&q=80') center/cover;
+            box-shadow: 0 20px 50px rgba(92, 61, 30, 0.15);
+        }
+
+        .floating-badge {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(92, 61, 30, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: float 6s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        .badge-1 { top: -10px; left: 0px; animation-delay: 0s; }
+        .badge-2 { bottom: 30px; left: -20px; animation-delay: 2s; }
+        .badge-3 { bottom: 60px; right: -10px; animation-delay: 4s; }
+
+        @@keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .avatar-group { display: flex; align-items: center; }
+        .avatar-group img {
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 2px solid white; margin-left: -10px; object-fit: cover;
+        }
+        .avatar-group img:first-child { margin-left: 0; }
+        .avatar-plus {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--brand-accent); color: white; display: flex;
+            align-items: center; justify-content: center; font-size: 0.7rem;
+            font-weight: bold; border: 2px solid white; margin-left: -10px; z-index: 4;
+        }
+
+        /* --- FEATURES GRID --- */
+        .features-section { padding: 100px 0; background: var(--bg-white); }
+        .section-subtitle {
+            font-family: 'Nunito', sans-serif; text-transform: uppercase;
+            color: var(--brand-accent); font-weight: 800; letter-spacing: 1.5px;
+            font-size: 0.9rem; margin-bottom: 10px;
+        }
+        .section-title {
+            font-family: 'Nunito', sans-serif; font-size: 3rem;
+            font-weight: 800; margin-bottom: 15px; color: var(--text-dark);
+        }
+
+        .feature-card {
+            background: var(--bg-light); border-radius: 24px; padding: 40px 30px;
+            text-align: center; height: 100%; transition: all 0.3s;
+            border: 1px solid var(--border-light);
+        }
+            .feature-card:hover {
+                transform: translateY(-5px); box-shadow: 0 15px 30px rgba(92, 61, 30, 0.05);
+                border-color: var(--brand-accent);
+            }
+            .feature-card.dark {
+                background: var(--text-dark); color: white;
+                border-color: var(--text-dark); box-shadow: 0 15px 30px rgba(45, 27, 14, 0.2);
+            }
+                .feature-card.dark .feature-title { color: white; }
+                .feature-card.dark .feature-text { color: rgba(255,255,255,0.85); font-weight: 400; }
+
+        .feature-icon-box {
+            width: 55px; height: 55px; border-radius: 16px; display: inline-flex;
+            align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 25px;
+        }
+        .bg-red-light { background: #FFEBEE; color: #D32F2F; }
+        .bg-orange-light { background: #FFF3E0; color: #F57C00; }
+        .bg-tan-light { background: #FDFaf5; color: #C8A882; border: 1px solid #EBE0D5; }
+        .bg-blue-light { background: #E0F2FE; color: #0284C7; }
+        .feature-card.dark .feature-icon-box { background: rgba(255, 255, 255, 0.1); color: var(--brand-accent); }
+
+        .feature-title {
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.35rem;
+            margin-bottom: 12px; color: var(--text-dark); letter-spacing: -0.3px;
+        }
+        .feature-text { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; }
+
+        /* --- SHOWCASE SECTION (Pets) --- */
+        .showcase-section {
+            background: #1A0F08; padding: 100px 0; color: white;
+            border-radius: 40px; margin: 0 20px;
+        }
+
+        .pet-card {
+            background: rgba(255,255,255,0.05); border-radius: 20px; padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            transition: transform 0.3s; height: 100%; display: flex; flex-direction: column;
+        }
+            .pet-card:hover {
+                transform: translateY(-5px); background: rgba(255,255,255,0.1);
+                border-color: rgba(200, 168, 130, 0.3);
+            }
+
+        .pet-img-wrapper { position: relative; border-radius: 12px; overflow: hidden; margin-bottom: 15px; height: 220px; }
+        .pet-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s; }
+        .pet-card:hover .pet-img { transform: scale(1.05); }
+
+        .pet-overlay {
+            position: absolute; inset: 0; background: rgba(26, 15, 8, 0.6);
+            display: flex; flex-direction: column; gap: 12px; align-items: center;
+            justify-content: center; opacity: 0; transition: opacity 0.3s ease; backdrop-filter: blur(2px);
+        }
+        .pet-card:hover .pet-overlay { opacity: 1; }
+
+        .btn-overlay-adopt, .btn-overlay-view {
+            font-weight: 700; padding: 8px 24px; border-radius: 20px; font-size: 0.9rem;
+            transition: 0.2s; width: 130px; text-align: center; text-decoration: none; font-family: 'Nunito', sans-serif;
+        }
+        .btn-overlay-adopt { background: var(--brand-accent); color: #2D1B0E; border: none; }
+        .btn-overlay-adopt:hover { background: #fff; color: #2D1B0E; }
+        
+        .btn-overlay-view { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.5); }
+        .btn-overlay-view:hover { background: #fff; color: #2D1B0E; border-color: #fff; }
+
+        .pet-info { padding: 0 5px; flex-grow: 1; }
+        .pet-name { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.35rem; margin-bottom: 3px; }
+        .pet-breed { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+        .shelter-label {
+            font-size: 0.75rem; color: var(--brand-accent); font-weight: 700;
+            text-transform: uppercase; margin-bottom: 4px; display: block;
+        }
+
+        /* --- TOP VETS SECTION --- */
+        .vets-section { padding: 100px 0; background: var(--bg-white); }
+        .vet-card {
+            background: var(--bg-light); border-radius: 24px; padding: 35px 20px;
+            border: 1px solid var(--border-light); text-align: center; height: 100%;
+            display: flex; flex-direction: column; align-items: center;
+        }
+            .vet-card:hover {
+                transform: translateY(-5px); box-shadow: 0 15px 30px rgba(92, 61, 30, 0.05);
+                border-color: var(--brand-accent);
+            }
+
+        .vet-avatar {
+            width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
+            border: 3px solid #fff; box-shadow: 0 5px 15px rgba(92, 61, 30, 0.08); margin-bottom: 15px;
+        }
+        .vet-name-small { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.35rem; color: var(--text-dark); margin-bottom: 6px; }
+        
+        .vet-stars { color: #8C7560; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; }
+        .vet-stars i { color: #F59E0B; margin-right: 2px; }
+
+        .vet-spec { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; }
+
+        .btn-vet-view {
+            background: #fff; color: var(--text-dark); border: 2px solid var(--border-light);
+            border-radius: 12px; padding: 10px 20px; font-weight: 700; font-size: 0.95rem;
+            text-decoration: none; transition: 0.2s; width: 100%; display: inline-block;
+        }
+            .btn-vet-view:hover { background: var(--brand-accent); color: #fff; border-color: var(--brand-accent); }
+
+        /* --- TRENDING PRODUCTS SECTION --- */
+        .products-section { padding: 100px 0; background: var(--bg-light); }
+        .prod-card {
+            background: #fff; border-radius: 24px; border: 1px solid var(--border-light);
+            overflow: hidden; transition: all 0.3s; height: 100%; display: flex; flex-direction: column;
+        }
+            .prod-card:hover {
+                transform: translateY(-5px); box-shadow: 0 15px 30px rgba(92, 61, 30, 0.05);
+                border-color: var(--brand-accent);
+            }
+
+        .prod-img {
+            height: 220px; background: #FAF6F1; display: flex; align-items: center;
+            justify-content: center; padding: 20px; border-bottom: 1px solid var(--border-light); position: relative;
+        }
+            .prod-img img { max-height: 100%; max-width: 100%; object-fit: contain; transition: transform 0.4s; }
+        .prod-card:hover .prod-img img { transform: scale(1.05); }
+
+        .prod-info { padding: 25px; display: flex; flex-direction: column; flex-grow: 1; }
+        .prod-store {
+            font-size: 0.75rem; font-weight: 700; color: #A89582;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+        }
+        .prod-title {
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.15rem;
+            color: var(--text-dark); margin-bottom: 5px; line-height: 1.3;
+        }
+        .prod-price { font-size: 1.4rem; font-weight: 700; color: var(--text-dark); }
+
+        .btn-prod-view {
+            background: #fff; color: var(--text-dark); border: 2px solid var(--border-light);
+            border-radius: 12px; padding: 6px 16px; font-weight: 700; font-size: 0.9rem;
+            text-decoration: none; transition: 0.2s; display: inline-block;
+        }
+            .btn-prod-view:hover { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); }
+
+        /* --- CARD REVIEW SNIPPET CLASS --- */
+        .card-review-snippet {
+            font-size: 0.85rem; color: #8C7560; font-style: italic; display: -webkit-box;
+            -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            flex-grow: 1; line-height: 1.5; margin-bottom: 20px;
+        }
+        .card-review-snippet::before, .card-review-snippet::after { content: '"'; }
+
+        /* --- TESTIMONIALS --- */
+        .testimonial-section { padding: 100px 0; background: var(--bg-white); }
+        .rating-block {
+            background: url('https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=600&q=80') center/cover;
+            border-radius: 24px; padding: 40px; height: 100%; min-height: 350px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: relative; overflow: hidden; box-shadow: 0 15px 30px rgba(92, 61, 30, 0.1);
+        }
+            .rating-block::before { content: ''; position: absolute; inset: 0; background: rgba(45, 27, 14, 0.65); }
+
+        .rating-content { position: relative; z-index: 2; text-align: center; color: white; }
+        .rating-number { font-family: 'Nunito', sans-serif; font-size: 5.5rem; font-weight: 900; line-height: 1; margin-bottom: 10px; }
+        .rating-stars { color: #FFC107; font-size: 1.4rem; margin-bottom: 10px; letter-spacing: 2px; }
+
+        .review-card {
+            background: var(--bg-light); border: 1px solid var(--border-light);
+            border-radius: 24px; padding: 35px; height: 100%; display: flex; flex-direction: column;
+        }
+            .review-card.tan { background: #F8F2E8; border-color: #EBE0D5; }
+
+        .review-text {
+            font-size: 1.05rem; color: var(--text-dark); line-height: 1.7;
+            margin-bottom: 30px; font-weight: 500; font-style: italic; flex-grow: 1;
+        }
+        .review-author { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--text-dark); }
+        .review-role { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+        /* --- FOOTER --- */
+        .footer-cta { background: var(--text-dark); color: white; padding-top: 80px; text-align: center; margin-top: 0px; }
+            .footer-cta h2 { font-family: 'Nunito', sans-serif; font-size: 3rem; font-weight: 800; margin-bottom: 15px; }
+            .footer-cta p { color: rgba(255,255,255,0.7); margin-bottom: 30px; font-size: 1.1rem; }
+
+        .partner-link-card {
+            display: flex; flex-direction: column; align-items: center; padding: 35px 25px;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; text-decoration: none; color: white; transition: all 0.3s ease; height: 100%;
+        }
+            .partner-link-card:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--brand-accent); transform: translateY(-5px); }
+
+        .partner-icon {
+            width: 65px; height: 65px; background: rgba(200, 168, 130, 0.15); color: var(--brand-accent);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+            margin-bottom: 20px; transition: all 0.3s ease;
+        }
+        .partner-link-card:hover .partner-icon { background: var(--brand-accent); color: var(--text-dark); transform: scale(1.1); }
+        .partner-link-card h4 { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.35rem; margin-bottom: 10px; color: white; }
+        .partner-link-card p { font-size: 0.95rem; color: rgba(255, 255, 255, 0.6); margin-bottom: 25px; line-height: 1.5; flex-grow: 1; }
+
+        .partner-link-text { font-weight: 700; color: var(--brand-accent); font-size: 0.95rem; display: flex; align-items: center; gap: 5px; transition: gap 0.2s; }
+        .partner-link-card:hover .partner-link-text { gap: 10px; }
+
+        .footer-bottom { margin-top: 80px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 25px 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); }
+        .footer-bottom a { color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s ease; }
+        .footer-bottom a:hover { color: white; }
+
+        /* --- MODAL UI --- */
+        .modal-content { border-radius: 24px; border: none; box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden; }
+        .modal-header { background: #FFFFFF; border-bottom: 1px solid var(--border-light); padding: 24px 30px; }
+        .medical-lock-banner {
+            background: #F0FDF4; color: #065F46; padding: 12px 20px; font-size: 0.9rem;
+            font-weight: 600; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #D1FAE5;
+        }
+        .locked-field {
+            background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 12px;
+            padding: 12px 16px; color: #4B5563; font-weight: 600; margin-bottom: 15px;
+        }
+        .locked-label {
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;
+            font-weight: 800; color: #9CA3AF; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .pet-desc-box {
+            background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 12px;
+            padding: 16px; color: #1F2937; font-size: 0.95rem; line-height: 1.6; font-weight: 500;
+        }
+        .modal-pet-img { width: 100%; height: 250px; border-radius: 16px; object-fit: cover; margin-bottom: 20px; border: 1px solid var(--border-light); }
+        .form-control-custom {
+            width: 100%; padding: 14px 16px; border-radius: 12px; border: 2px solid #EBE0D5;
+            background: #fff; font-weight: 500; margin-bottom: 20px; color: #2D1B0E; font-size: 0.95rem;
+        }
+        .terms-box {
+            background: #FFFBEB; border: 2px solid #FDE68A; border-radius: 16px;
+            padding: 15px; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px;
+        }
+        .btn-adopt-modal {
+            background: var(--adopt-color); color: white; border-radius: 12px;
+            font-weight: 700; padding: 12px 30px; border: none; transition: 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="main-nav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/" class="nav-brand">PetFriends</a>
+            <div class="nav-links d-none d-md-flex">
+                <a href="/" class="active">Home</a>
+                <a href="/Store/Home">Marketplace</a>
+                <a href="/Home/Clinics">Vet Clinics</a>
+                <a href="/Home/Shelters">Shelters</a>
+            </div>
+            <div>
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <div class="dropdown">
+                        <!-- Updated Dropdown Offset -->
+                        <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,30">
+                            <img src="https://ui-avatars.com/api/?name=@userName&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true" alt="Avatar" class="nav-avatar">
+                            <span class="nav-user-name">@userName</span>
+                            <i class="bi bi-chevron-down dropdown-chevron"></i>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end custom-user-dropdown" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="/Client/Dashboard"><i class="bi bi-person-badge"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="/Client/MyPets"><i class="bi bi-heptagon-fill"></i> My Pets</a></li>
+                            <li><a class="dropdown-item" href="/Client/Appointments"><i class="bi bi-calendar-event"></i> Appointments</a></li>
+                            <li><a class="dropdown-item" href="/Order/MyOrders"><i class="bi bi-box-seam"></i> My Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 p-0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item logout-btn-item">
+                                        <i class="bi bi-box-arrow-right" style="color: #EF4444;"></i> Sign Out
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a href="/Account/Login" class="btn-nav">Sign In</a>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <div class="hero-pill"><i class="bi bi-stars text-warning me-1"></i> The All-in-One Pet Platform</div>
+                    <h1 class="hero-title">Everything Your Pet Needs, <span>Together.</span></h1>
+                    <p class="hero-text">Shop premium supplies, book top-rated veterinarians, and open your heart to shelter adoptions—all from a single, unified community dashboard.</p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="#features" class="btn-hero-primary">Explore Platform <i class="bi bi-arrow-down"></i></a>
+                        <a href="/Account/Register" class="btn-hero-outline">Join Community</a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-img-container">
+                        <div class="hero-img-wrapper">
+                            <div class="floating-badge badge-1">
+                                <div style="background: #FFF3E0; color: #F57C00; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800;">ADOPT</div>
+                                <div style="font-weight: 700; font-size: 0.9rem; color: #2D1B0E;">Looking for Love</div>
+                            </div>
+                            <div class="floating-badge badge-2">
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #8C7560; font-weight: 700; margin-bottom: 2px;">Happy Shoppers</div>
+                                    <div class="avatar-group">
+                                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Avatar">
+                                        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=100&q=80" alt="Avatar">
+                                        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=100&q=80" alt="Avatar">
+                                        <div class="avatar-plus">+10k</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="floating-badge badge-3">
+                                <i class="bi bi-patch-check-fill fs-2" style="color: #10B981;"></i>
+                                <div><div style="font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.95rem; line-height: 1.2; color: #2D1B0E;">Verified<br>Clinics</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features-section">
+        <div class="container" style="max-width: 1100px;">
+            <div class="section-subtitle text-center">Why Choose Us</div>
+            <h2 class="section-title text-center">One Hub For <span>Pet Parents</span></h2>
+            <p class="section-desc text-center text-muted mx-auto mb-5" style="max-width: 600px; font-size: 1.05rem; line-height: 1.6;">We've eliminated the hassle of managing multiple apps. PetFriends brings shopping, medical care, and adoptions under one roof.</p>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon-box bg-tan-light"><i class="bi bi-shop"></i></div>
+                        <h4 class="feature-title">Multi-Vendor Store</h4>
+                        <p class="feature-text">Shop premium food, toys, and accessories from verified local merchants and national brands.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon-box bg-blue-light"><i class="bi bi-calendar-heart"></i></div>
+                        <h4 class="feature-title">Seamless Booking</h4>
+                        <p class="feature-text">View schedules and book appointments instantly with top-rated veterinary clinics in your area.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon-box bg-orange-light"><i class="bi bi-house-heart"></i></div>
+                        <h4 class="feature-title">Shelter Adoptions</h4>
+                        <p class="feature-text">Connect with local shelters, submit adoption applications, and find your family's newest member.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon-box bg-red-light"><i class="bi bi-chat-square-heart"></i></div>
+                        <h4 class="feature-title">Verified Reviews</h4>
+                        <p class="feature-text">Read authentic feedback from real pet parents before you buy a product or book a new vet.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card dark">
+                        <div class="feature-icon-box"><i class="bi bi-shield-check"></i></div>
+                        <h4 class="feature-title">Secure & Trusted</h4>
+                        <p class="feature-text">We strictly vet every merchant, clinic, and shelter on our platform to ensure your pet gets the absolute best care.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon-box bg-tan-light"><i class="bi bi-people-fill"></i></div>
+                        <h4 class="feature-title">Community First</h4>
+                        <p class="feature-text">Manage all your pet's records, orders, and appointments from a single, beautiful dashboard.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="showcase-section">
+        <div class="container" style="max-width: 1100px;">
+            <div class="section-subtitle" style="color: var(--brand-accent);">Meet Our Friends</div>
+            <h2 class="showcase-title text-start mb-2">Pets Looking for Love</h2>
+            <p class="showcase-desc text-start mb-5" style="margin-left: 0;">Partner shelters across the network are looking for loving homes. Could you be the one to give them a forever family?</p>
+
+            <div class="row g-4" id="realtimePetsGrid">
+            </div>
+
+            <div class="text-start mt-4 pt-2">
+                <a href="/Home/AvailablePets" class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold" style="border-width: 2px;">
+                    View All Pets <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="vets-section">
+        <div class="container" style="max-width: 1100px;">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 gap-3">
+                <div>
+                    <div class="section-subtitle">Premium Care</div>
+                    <h2 class="section-title mb-0" style="border: none; padding: 0;">Top Rated Clinics</h2>
+                </div>
+                <a href="/Home/Clinics" class="btn-hero-outline" style="padding: 10px 24px; font-size: 0.9rem;">View All Vets</a>
+            </div>
+
+            <div class="row g-4">
+                @foreach (var vet in Model.TopClinics)
+                {
+                    <div class="col-md-4">
+                        <div class="vet-card">
+                            <img src="@vet.ImageUrl" class="vet-avatar" alt="Vet">
+                            <h4 class="vet-name-small">@vet.ClinicName</h4>
+                            
+                            <!-- Dynamic Vet Stars based on real rating -->
+                            <div class="vet-stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= Math.Round(vet.Rating)) { <i class="bi bi-star-fill"></i> }
+                                    else { <i class="bi bi-star" style="color: #EBE0D5;"></i> }
+                                }
+                                <span class="review-count" style="color: #8C7560; margin-left: 5px;">@vet.Rating.ToString("0.0") (@vet.ReviewCount)</span>
+                            </div>
+                            
+                            <p class="vet-spec">@vet.Specialties</p>
+                            
+                            <!-- Dynamic Review Snippet -->
+                            <div class="card-review-snippet text-center">@vet.RecentReview</div>
+                            
+                            <a href="/Vet/Profile?id=@vet.Id" class="btn-vet-view w-100 mt-auto">View Clinic</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="products-section">
+        <div class="container" style="max-width: 1100px;">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 gap-3">
+                <div>
+                    <div class="section-subtitle">Marketplace</div>
+                    <h2 class="section-title mb-0" style="border: none; padding: 0;">Featured Products</h2>
+                </div>
+                <a href="/Store/Home" class="btn-hero-outline" style="padding: 10px 24px; font-size: 0.9rem;">Shop All</a>
+            </div>
+
+            <div class="row g-4">
+                @foreach (var prod in Model.FeaturedProducts)
+                {
+                    <div class="col-md-4">
+                        <div class="prod-card">
+                            <div class="prod-img">
+                                <img src="@prod.ImageUrl" alt="@prod.Title">
+                            </div>
+                            <div class="prod-info">
+                                <div class="prod-store"><i class="bi bi-shop"></i> @prod.StoreName</div>
+                                <h4 class="prod-title">@prod.Title</h4>
+                                
+                                <!-- Dynamic Product Star Rating Instead of Comments -->
+                                <div class="vet-stars mt-2 mb-3" style="font-size: 0.85rem; flex-grow: 1;">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= Math.Round(prod.Rating)) { <i class="bi bi-star-fill"></i> }
+                                        else { <i class="bi bi-star" style="color: #EBE0D5;"></i> }
+                                    }
+                                    <span style="color: #8C7560; margin-left: 5px;">@prod.Rating.ToString("0.0") (@prod.ReviewCount)</span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top" style="border-color: #EBE0D5 !important;">
+                                    <div class="prod-price mb-0 mt-1">$@prod.Price.ToString("0.00")</div>
+                                    <a href="/Store/Details?id=@prod.Id" class="btn-prod-view mt-1">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonial-section">
+        <div class="container" style="max-width: 1100px;">
+            <div class="section-subtitle">Happy Stories</div>
+            <h2 class="section-title text-start mb-5" style="border: none; padding: 0;">What Our Pet Owners Say</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="rating-block">
+                        <div class="rating-content">
+                            <!-- Show Actual Average Vet Rating -->
+                            <div class="rating-number">@Model.OverallVetAverageRating.ToString("0.0")</div>
+                            <div class="rating-stars">★★★★★</div>
+                            <!-- Show Actual Total Vet Reviews -->
+                            <p class="mb-4 fw-bold" style="font-size: 1.1rem;">@(Model.TotalVetReviews) Verified Reviews</p>
+                            <a href="/Account/Register" class="btn btn-light rounded-pill fw-bold text-dark px-4 py-2">Join the Community</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Use the 1st actual review fetched from DB -->
+                <div class="col-lg-4">
+                    <div class="review-card">
+                        <div class="rating-stars mb-3" style="font-size: 1.2rem; color: #F59E0B;">
+                            @for(int i = 0; i < Model.RecentTestimonials[0].Rating; i++) { <span>★</span> }
+                        </div>
+                        <p class="review-text">"@Model.RecentTestimonials[0].Comment"</p>
+                        <div>
+                            <div class="review-author">@Model.RecentTestimonials[0].AuthorName</div>
+                            <div class="review-role">@Model.RecentTestimonials[0].Role</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Use the 2nd actual review fetched from DB -->
+                <div class="col-lg-4">
+                    <div class="review-card tan">
+                        <div class="rating-stars mb-3" style="font-size: 1.2rem; color: #F59E0B;">
+                            @for(int i = 0; i < Model.RecentTestimonials[1].Rating; i++) { <span>★</span> }
+                        </div>
+                        <p class="review-text">"@Model.RecentTestimonials[1].Comment"</p>
+                        <div>
+                            <div class="review-author">@Model.RecentTestimonials[1].AuthorName</div>
+                            <div class="review-role">@Model.RecentTestimonials[1].Role</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer-cta">
+        <div class="container" style="max-width: 1000px;">
+            <h2>Join the PetFriends Network</h2>
+            <p>Are you a licensed veterinarian, a registered shelter, or a pet supply merchant?<br>Select your specialty below to launch your official partner profile today.</p>
+
+            <div class="row g-4 mt-4">
+
+                <!-- Veterinarians Card -->
+                <div class="col-md-4">
+                    <!-- Option 1: Standard URL (Replace YOUR_LINK_HERE) -->
+                    <a href="https://forms.gle/CyoEBEJrMxhD4pTc9" class="partner-link-card">
+                        <div class="partner-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+                        <h4>Veterinarians</h4>
+                        <p>Launch your clinic profile, accept bookings, and manage your schedule.</p>
+                        <span class="partner-link-text">Apply Now <i class="bi bi-arrow-right"></i></span>
+                    </a>
+                </div>
+
+                <!-- Animal Shelters Card -->
+                <div class="col-md-4">
+                    <!-- Option 2: ASP.NET Core Routing (Fill in the Controller and Action) -->
+                    <a href="https://forms.gle/zR852v7rYruGx4V87" class="partner-link-card">
+                        <div class="partner-icon"><i class="bi bi-house-heart-fill"></i></div>
+                        <h4>Animal Shelters</h4>
+                        <p>Process adoptions and manage intake requests seamlessly.</p>
+                        <span class="partner-link-text">Apply Now <i class="bi bi-arrow-right"></i></span>
+                    </a>
+                </div>
+
+                <!-- Pet Merchants Card -->
+                <div class="col-md-4">
+                    <a href="https://forms.gle/Jn5KVegEBP4za1qXA" class="partner-link-card">
+                        <div class="partner-icon"><i class="bi bi-shop"></i></div>
+                        <h4>Pet Merchants</h4>
+                        <p>Open your digital storefront and manage your inventory easily.</p>
+                        <span class="partner-link-text">Apply Now <i class="bi bi-arrow-right"></i></span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3" style="max-width: 1100px;">
+                <div class="mb-0">© 2026 petfriends.support@@gmail.com. All Rights Reserved.</div>
+                <div class="d-flex gap-4">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="modal fade" id="petDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="color: var(--text-dark); text-align: left;">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="detailsModalTitle">Pet Profile</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="medical-lock-banner">
+                    <i class="bi bi-shield-check fs-5"></i>
+                    <div>This file context contains strict verified health records from our partner clinics.</div>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6 border-end pe-md-4">
+                            <img src="" id="modalImg" class="modal-pet-img" alt="Pet Image Target">
+                            <h3 id="modalPetNameDisplay" class="fw-bold mt-2 mb-3">Name</h3>
+                            <label class="form-label font-weight-bold" style="color: var(--brand-accent);">Personality Profile</label>
+                            <div class="pet-desc-box" id="modalDesc">Details.</div>
+                        </div>
+                        <div class="col-md-6 ps-md-4">
+                            <h6 class="fw-bold mb-4" style="color: var(--text-muted);">Verified Medical ID</h6>
+                            <div class="locked-label">Breed / Species <i class="bi bi-patch-check-fill text-success"></i></div>
+                            <div class="locked-field" id="modalBreed">Breed</div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="locked-label">Age</div>
+                                    <div class="locked-field" id="modalAge">Age</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="locked-label">Gender</div>
+                                    <div class="locked-field" id="modalGender">Gender</div>
+                                </div>
+                            </div>
+                            <div class="locked-label">Medical History</div>
+                            <div class="locked-field mb-0" id="modalHistory" style="min-height: 100px;">History logs</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn-adopt-modal rounded-pill px-4 text-white" style="border:none;" onclick="triggerApplicationFromDetails()">Adopt Me</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="adoptionApplicationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="color: var(--text-dark); text-align: left;">
+                <div class="modal-header" style="background: #ECFDF5; border-bottom: 1px solid #D1FAE5;">
+                    <h5 class="modal-title fw-bold" style="color: #065F46;"><i class="bi bi-envelope-paper-heart-fill me-2"></i> Adoption Inquiry Form</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="adoptionApplicationForm" onsubmit="event.preventDefault(); alert('Application successfully recorded into the shelter intake queue!'); bootstrap.Modal.getInstance(document.getElementById('adoptionApplicationModal')).hide();">
+                    <div class="modal-body p-4">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Why are you looking to adopt this pet? *</label>
+                            <textarea class="form-control-custom" rows="3" required placeholder="Tell the shelter about your choice..."></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Describe your home infrastructure *</label>
+                            <textarea class="form-control-custom" rows="3" required placeholder="Yard tracking details, resident pet details, active schedules..."></textarea>
+                        </div>
+                        <div class="terms-box">
+                            <input type="checkbox" required style="width:20px; height:20px; cursor: pointer; margin-top:3px;" />
+                            <p class="terms-text">I commit to bringing this pet back for verified post-adoption safety checkups once a week for month one, and twice a month for the subsequent observation periods.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold" style="background:#10B981; border:none;">Submit Application</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const allDatabasePets = @Html.Raw(Json.Serialize(Model.AdoptablePets));
+        let activePetIdContext = 0;
+        let activePetNameContext = "";
+
+        function getShuffleIndexSequence() {
+            if (!allDatabasePets || allDatabasePets.length === 0) return [];
+            if (allDatabasePets.length <= 3) {
+                return allDatabasePets.map((_, i) => i);
+            }
+
+            const globalTimeChunk = Math.floor(Date.now() / 10000);
+            let indexes = Array.from({ length: allDatabasePets.length }, (_, i) => i);
+
+            let seed = globalTimeChunk;
+            for (let i = indexes.length - 1; i > 0; i--) {
+                seed = (seed * 9301 + 49297) % 233280;
+                const j = Math.floor((seed / 233280) * (i + 1));
+                let temp = indexes[i];
+                indexes[i] = indexes[j];
+                indexes[j] = temp;
+            }
+            return indexes.slice(0, 3);
+        }
+
+        function drawRealtimeShuffleGrid() {
+            const grid = document.getElementById('realtimePetsGrid');
+            if (!grid || !allDatabasePets || allDatabasePets.length === 0) return;
+
+            const indices = getShuffleIndexSequence();
+            grid.innerHTML = '';
+
+            indices.forEach(idx => {
+                const pet = allDatabasePets[idx];
+                const cardHTML = `
+                    <div class="col-md-4 col-12">
+                        <div class="pet-card">
+                            <div class="pet-img-wrapper">
+                                <img src="${pet.imageUrl}" class="pet-img" alt="${pet.name}">
+                                <div class="pet-overlay">
+                                    <button type="button" class="btn-overlay-adopt" onclick="launchAdoptionForm(${pet.id}, '${pet.name}')">Adopt Me</button>
+                                    <button type="button" class="btn-overlay-view" onclick="launchDetailsModal(${pet.id}, '${pet.name}', '${pet.breed}', ${pet.age}, '${pet.gender}', '${pet.medicalHistory.replace(/'/g, "\\'")}', '${pet.description.replace(/'/g, "\\'")}', '${pet.shelterName.replace(/'/g, "\\'")}')">View Details</button>
+                                </div>
+                            </div>
+                            <div class="pet-info">
+                                <span class="shelter-label"><i class="bi bi-house-heart"></i> ${pet.shelterName}</span>
+                                <div class="pet-name">${pet.name}</div>
+                                <div class="pet-breed">${pet.breed} • ${pet.age} yrs</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        }
+
+        function launchDetailsModal(id, name, breed, age, gender, history, desc, shelter) {
+            activePetIdContext = id;
+            activePetNameContext = name;
+
+            document.getElementById('detailsModalTitle').innerText = `${name}'s Verified Record`;
+            document.getElementById('modalPetNameDisplay').innerText = name;
+            document.getElementById('modalBreed').innerText = breed;
+            document.getElementById('modalAge').innerText = age + " years";
+            document.getElementById('modalGender').innerText = gender;
+            document.getElementById('modalHistory').innerText = history;
+            document.getElementById('modalDesc').innerText = desc;
+
+            const targetedPet = allDatabasePets.find(p => p.id === id);
+            document.getElementById('modalImg').src = targetedPet ? targetedPet.imageUrl : "";
+
+            new bootstrap.Modal(document.getElementById('petDetailsModal')).show();
+        }
+
+        function triggerApplicationFromDetails() {
+            bootstrap.Modal.getInstance(document.getElementById('petDetailsModal')).hide();
+            launchAdoptionForm(activePetIdContext, activePetNameContext);
+        }
+
+        function launchAdoptionForm(id, name) {
+            document.getElementById('appPetName').innerText = name;
+            new bootstrap.Modal(document.getElementById('applicationModal')).show();
+        }
+
+        drawRealtimeShuffleGrid();
+        setInterval(drawRealtimeShuffleGrid, 1000); 
+    </script>
+</body>
+</html>

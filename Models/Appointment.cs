@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// Models/Appointment.cs
+using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Pets_friends.Models
@@ -12,20 +14,23 @@ namespace Pets_friends.Models
         [ForeignKey("ClientProfileId")]
         public virtual ClientProfile ClientProfile { get; set; } = null!;
 
-        public int PetId { get; set; }
+        // ── MAKE THESE TWO LINES NULLABLE (?) ──
+        public int? PetId { get; set; }
         [ForeignKey("PetId")]
-        public virtual Pet Pet { get; set; } = null!;
+        public virtual Pet? Pet { get; set; }
 
-        public int ServiceId { get; set; }
+        public int? ServiceId { get; set; }
         [ForeignKey("ServiceId")]
-        public virtual Service Service { get; set; } = null!;
+        public virtual Service? Service { get; set; }
 
-        // ── ADD THESE TWO LINES ──
         public int VetProfileId { get; set; }
         [ForeignKey("VetProfileId")]
         public virtual VetProfile VetProfile { get; set; } = null!;
 
         public DateTime AppointmentDate { get; set; }
         public string Status { get; set; } = "Pending";
+
+        public string? Notes { get; set; }
+        public bool IsUrgent { get; set; }
     }
 }
