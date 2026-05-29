@@ -43,7 +43,7 @@ namespace Pets_friends.Controllers
             ViewData["VetImageUrl"] = profile.ImageUrl;
             ViewData["VetName"] = user.FullName ?? "Veterinarian";
 
-            // 1. PENDING APPOINTMENTS (For the Left Queue)
+            // 1. PENDING APPOINTMENTS
             var pendingAppointments = await _context.Appointments
                 .Include(a => a.ClientProfile).ThenInclude(c => c.UserAccount)
                 .Include(a => a.Pet)
@@ -52,7 +52,7 @@ namespace Pets_friends.Controllers
                 .OrderBy(a => a.AppointmentDate)
                 .ToListAsync();
 
-            // 2. THE FIX: CONFIRMED UPCOMING (For the Right Side Schedule Panel)
+            // 2. CONFIRMED UPCOMING
             var now = DateTime.Now;
             var upcomingAppointments = await _context.Appointments
                 .Include(a => a.ClientProfile).ThenInclude(c => c.UserAccount)
@@ -60,10 +60,9 @@ namespace Pets_friends.Controllers
                 .Include(a => a.Service)
                 .Where(a => a.VetProfileId == profile.Id && a.Status == "Confirmed" && a.AppointmentDate >= now)
                 .OrderBy(a => a.AppointmentDate)
-                .Take(15) // Pull top 15 closest appointments
+                .Take(15)
                 .ToListAsync();
 
-            // Pass the upcoming appointments directly to the View via ViewBag
             ViewBag.UpcomingAppointments = upcomingAppointments;
 
             var vm = new VetDashboardVM
@@ -78,6 +77,37 @@ namespace Pets_friends.Controllers
 
             return View(vm);
         }
+
+        // --------------------------------------------------------
+        // DASHBOARD: SILENT AJAX SAVE FOR PET MEDICAL RECORD
+        // --------------------------------------------------------
+        [HttpPost]
+        [Authorize(Roles = "Vet")]
+        public async Task<IActionResult> UpdateMedicalRecordAjax([FromForm] int PetId, [FromForm] bool IsNeutered, [FromForm] string MedicalHistory)
+        {
+            try
+            {
+                var pet = await _context.Pets.FindAsync(PetId);
+
+                if (pet != null)
+                {
+                    pet.IsNeutered = IsNeutered;
+                    pet.MedicalHistory = string.IsNullOrWhiteSpace(MedicalHistory) ? "No history recorded." : MedicalHistory;
+
+                    await _context.SaveChangesAsync();
+
+                    // Respond with pure JSON so JS can intercept it silently
+                    return Json(new { success = true });
+                }
+
+                return Json(new { success = false, message = "Pet not found in the database." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         // --------------------------------------------------------
         // PUBLIC PROFILE VIEW
         // --------------------------------------------------------
@@ -170,7 +200,6 @@ namespace Pets_friends.Controllers
                 return RedirectToAction("Profile", new { id = vetId });
             }
 
-            // --- THE FIX: Separate REAL pets from the New Pet (0) Placeholder ---
             var realPetIds = petIds.Where(id => id > 0).ToList();
 
             // Only create a New Patient Request if they passed 0 AND selected no real pets
@@ -198,7 +227,7 @@ namespace Pets_friends.Controllers
                     {
                         VetProfileId = vetId,
                         ClientProfileId = clientProfile.Id,
-                        PetId = pId, // Assigns the REAL pet!
+                        PetId = pId,
                         AppointmentDate = appointmentDate,
                         Status = "Pending",
                         Notes = $"Service: {serviceName} | Notes: {notes}",
@@ -283,13 +312,11 @@ namespace Pets_friends.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            // 1. Check if the user already has a review for this specific Vet
             var existingReview = await _context.VetReviews
                 .FirstOrDefaultAsync(r => r.VetProfileId == vetId && r.ReviewerId == user.Id);
 
             if (existingReview != null)
             {
-                // 2. UPDATE mode: Just change the text, stars, and refresh the date
                 existingReview.Rating = rating;
                 existingReview.Comment = comment;
                 existingReview.CreatedAt = DateTime.Now;
@@ -298,7 +325,6 @@ namespace Pets_friends.Controllers
             }
             else
             {
-                // 3. CREATE mode: Add a brand new review
                 var review = new VetReview
                 {
                     VetProfileId = vetId,
@@ -612,7 +638,7 @@ namespace Pets_friends.Controllers
 
             var clients = await _context.ClientProfiles
                 .Include(c => c.UserAccount)
-                .Where(c => !excludedUserIds.Contains(c.UserAccountId)) 
+                .Where(c => !excludedUserIds.Contains(c.UserAccountId))
                 .Where(c =>
                     (c.UserAccount.FullName != null && EF.Functions.Like(c.UserAccount.FullName, searchTerm)) ||
                     (c.UserAccount.Email != null && EF.Functions.Like(c.UserAccount.Email, searchTerm)) ||
@@ -650,7 +676,6 @@ namespace Pets_friends.Controllers
                     ViewBag.PreselectedClientName = apt.ClientProfile.UserAccount?.FullName + " (" + apt.ClientProfile.UserAccount?.Email + ")";
                     ViewBag.PendingApptId = apptId.Value;
 
-                    // Parse the new pet details out of the Notes field!
                     if (apt.Notes != null && apt.Notes.Contains("[NEW PATIENT VERIFICATION]"))
                     {
                         try
@@ -664,7 +689,7 @@ namespace Pets_friends.Controllers
                             vm.Name = nameExtracted;
                             vm.Breed = breedExtracted;
                         }
-                        catch { } // Failsafe if string parsing breaks
+                        catch { }
                     }
                 }
             }
@@ -733,7 +758,6 @@ namespace Pets_friends.Controllers
             var vetProfile = await _context.VetProfiles.FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
             if (vetProfile == null) return RedirectToAction("Dashboard");
 
-            // Fetch the appointment, ensuring it actually belongs to this specific Vet
             var appointment = await _context.Appointments
                 .FirstOrDefaultAsync(a => a.Id == id && a.VetProfileId == vetProfile.Id);
 
@@ -744,12 +768,11 @@ namespace Pets_friends.Controllers
                 TempData["SuccessMessage"] = "Appointment marked as completed!";
             }
 
-            // This return works flawlessly with BOTH the background AJAX script and a normal page load
             return RedirectToAction(nameof(AppointmentHistory));
         }
 
         // --------------------------------------------------------
-        // APPOINTMENT HISTORY (NEW)
+        // APPOINTMENT HISTORY 
         // --------------------------------------------------------
         [Authorize(Roles = "Vet")]
         public async Task<IActionResult> AppointmentHistory(string status = "All", string sortOrder = "desc")
@@ -770,22 +793,23 @@ namespace Pets_friends.Controllers
                 .Include(a => a.Service)
                 .Where(a => a.VetProfileId == profile.Id);
 
-            // 1. Apply Status Filter
+            // Apply Status Filter
             if (!string.IsNullOrEmpty(status) && status != "All")
             {
                 query = query.Where(a => a.Status == status);
             }
 
-            // 2. Apply Sorting Filter
+            // Apply Sorting Filter
             if (sortOrder == "asc")
             {
-                query = query.OrderBy(a => a.AppointmentDate); // Oldest/Closest first
+                query = query.OrderBy(a => a.AppointmentDate);
             }
             else
             {
-                query = query.OrderByDescending(a => a.AppointmentDate); // Newest/Furthest first
+                query = query.OrderByDescending(a => a.AppointmentDate);
             }
 
+            // CORRECT - Fetches the Overall History with no limit!
             var appointments = await query.ToListAsync();
 
             ViewBag.CurrentStatus = status;
@@ -793,6 +817,7 @@ namespace Pets_friends.Controllers
 
             return View(appointments);
         }
+
         // --------------------------------------------------------
         // HELPER: FILE UPLOAD
         // --------------------------------------------------------

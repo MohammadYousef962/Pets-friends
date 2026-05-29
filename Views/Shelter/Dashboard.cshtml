@@ -183,7 +183,7 @@
             }
 
         .apt-img {
-            width: 65px; height: 65px; border-radius: 50%; object-fit: cover; border: 2px solid #FAF6F1; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            width: 65px; height: 65px; border-radius: 12px; object-fit: cover; border: 2px solid #FAF6F1; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .apt-details { flex-grow: 1; }
@@ -438,7 +438,13 @@
                                 }
                                 else if (item.Type == "Adoption" && item.Status == "Pending")
                                 {
-                                    <button type="button" class="btn-action-sm" onclick="openReviewModal(@item.Id, '@item.ApplicantName', '@item.PetName', '@item.PetInfo', '@item.PetImageUrl')">Review</button>
+                                    <button type="button" class="btn-action-sm" 
+                                            data-id="@item.Id"
+                                            data-applicant="@item.ApplicantName"
+                                            data-pet="@item.PetName"
+                                            data-info="@item.PetInfo"
+                                            data-img="@item.PetImageUrl"
+                                            onclick="openReviewModal(this)">Review</button>
                                 }
                                 else if (item.Type == "Adoption" && item.Status == "Approved")
                                 {
@@ -486,7 +492,7 @@
                             {
                                 typeClass = "type-dropoff"; cardClass = "card-dropoff"; iconClass = "bi-box-arrow-in-right"; timeColor = "color: #2563EB;";
                             }
-                            else if (log.StatusType == "Active")
+                            else if (log.StatusType == "Boarding")
                             {
                                 typeClass = "type-active"; cardClass = "card-active"; iconClass = "bi-record-circle"; timeColor = "color: #059669;";
                             }
@@ -495,12 +501,24 @@
                                 typeClass = "type-pickup"; cardClass = "card-pickup"; iconClass = "bi-box-arrow-right"; timeColor = "color: #D97706;";
                             }
 
-                            <div class="timeline-item @typeClass" data-time="@log.ScheduledDate.ToString("O")">
+                            // Use PickUpDate for timeline if it exists, otherwise fall back to ScheduledDate
+                            DateTime timelineDate = (log.StatusType == "PickUp" && log.PickUpDate.HasValue) ? log.PickUpDate.Value : log.ScheduledDate;
+
+                            <div class="timeline-item @typeClass" data-time="@timelineDate.ToString("O")">
                                 <div class="timeline-time" style="@timeColor"><i class="bi @iconClass me-1"></i> @log.TimeLabel</div>
 
                                 <div class="timeline-content @cardClass">
                                     <div class="board-actions">
-                                        <button type="button" class="btn-icon" title="Edit" onclick="openEditModal(@log.Id, '@log.PetName', '@log.PetBreed', '@(log.OwnerName ?? "")', '@log.ScheduledDate.ToString("yyyy-MM-ddTHH:mm")', '@log.StatusType', '@log.SpecialNotes')">
+                                        <button type="button" class="btn-icon" title="Edit" 
+                                                data-id="@log.Id" 
+                                                data-petname="@log.PetName" 
+                                                data-petbreed="@log.PetBreed" 
+                                                data-ownername="@(log.OwnerName ?? "")" 
+                                                data-date="@log.ScheduledDate.ToString("yyyy-MM-ddTHH:mm")" 
+                                                data-pickupdate="@(log.PickUpDate.HasValue ? log.PickUpDate.Value.ToString("yyyy-MM-ddTHH:mm") : "")"
+                                                data-status="@log.StatusType" 
+                                                data-notes="@log.SpecialNotes"
+                                                onclick="openEditModal(this)">
                                             <i class="bi bi-pencil"></i>
                                         </button>
 
@@ -537,17 +555,14 @@
 <div class="modal fade" id="reviewAdoptionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <div class="modal-header">
                 <h5 class="modal-title fw-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
                     <i class="bi bi-file-earmark-person me-2" style="color: var(--brand-accent);"></i> Review Application
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body">
                 <h6 class="fw-bold text-uppercase mb-3" style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px;">Applicant Details</h6>
-
                 <div class="d-flex align-items-center gap-3 mb-4">
                     <div style="width: 50px; height: 50px; background: #FAF6F1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--brand-primary); border: 1px solid #EBE0D5;">
                         <i class="bi bi-person-fill"></i>
@@ -559,7 +574,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="d-flex align-items-center justify-content-between p-3 mb-4" style="background: #fff; border: 1px solid #EBE0D5; border-radius: 16px;">
                     <div class="d-flex align-items-center gap-3">
                         <img id="modalPetImage" src="" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;" alt="Pet">
@@ -569,26 +583,19 @@
                         </div>
                     </div>
                 </div>
-
                 <h6 class="fw-bold text-uppercase mb-2" style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px;">Internal Actions</h6>
                 <div style="background: #fff; border: 1px solid #EBE0D5; border-radius: 16px; padding: 15px; font-size: 0.95rem; color: #4B5563; font-style: italic; line-height: 1.6;">
                     Ensure you have contacted the applicant to verify their living situation before approving this adoption request.
                 </div>
             </div>
-
             <div class="modal-footer" style="display: flex; gap: 10px;">
                 <form asp-action="DeclineApplication" method="post" class="flex-fill m-0">
                     <input type="hidden" name="id" id="modalDeclineId" />
-                    <button type="submit" class="btn w-100" style="background: #fff; color: #d9534f; border: 2px solid #F5C6CB; border-radius: 12px; font-weight: 700; padding: 12px;">
-                        Decline
-                    </button>
+                    <button type="submit" class="btn w-100" style="background: #fff; color: #d9534f; border: 2px solid #F5C6CB; border-radius: 12px; font-weight: 700; padding: 12px;">Decline</button>
                 </form>
-
                 <form asp-action="ApproveAdoption" method="post" class="flex-fill m-0">
                     <input type="hidden" name="id" id="modalApproveId" />
-                    <button type="submit" class="btn w-100" style="background: #10B981; color: #fff; border: none; border-radius: 12px; font-weight: 700; padding: 12px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-                        Approve Application <i class="bi bi-check-circle-fill ms-1"></i>
-                    </button>
+                    <button type="submit" class="btn w-100" style="background: #10B981; color: #fff; border: none; border-radius: 12px; font-weight: 700; padding: 12px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">Approve Application <i class="bi bi-check-circle-fill ms-1"></i></button>
                 </form>
             </div>
         </div>
@@ -619,14 +626,18 @@
                             <input type="text" name="OwnerName" class="form-control" placeholder="Leave blank if shelter pet" />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small text-muted text-uppercase">Time / Date</label>
+                            <label class="form-label fw-bold small text-muted text-uppercase">Drop-off Time</label>
                             <input type="datetime-local" name="ScheduledDate" class="form-control" required />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small text-muted text-uppercase">Type</label>
+                            <label class="form-label fw-bold small text-muted text-uppercase">Pick-up Time</label>
+                            <input type="datetime-local" name="PickUpDate" class="form-control" />
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Status</label>
                             <select name="Status" class="form-select" required>
                                 <option value="DropOff">Drop-off</option>
-                                <option value="Active">Active Boarding</option>
+                                <option value="Boarding">Active Boarding</option>
                                 <option value="PickUp">Pick-up</option>
                             </select>
                         </div>
@@ -669,16 +680,23 @@
                             <label class="form-label fw-bold small text-muted text-uppercase">Owner Name</label>
                             <input type="text" name="OwnerName" id="edit-ownerName" class="form-control" placeholder="Leave blank if shelter pet" />
                         </div>
+                        
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small text-muted text-uppercase">Time / Date</label>
+                            <label class="form-label fw-bold small text-muted text-uppercase">Drop-off Time</label>
                             <input type="datetime-local" name="ScheduledDate" id="edit-scheduledDate" class="form-control" required />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small text-muted text-uppercase">Type</label>
+                            <label class="form-label fw-bold small text-muted text-uppercase">Pick-up Time</label>
+                            <input type="datetime-local" name="PickUpDate" id="edit-pickUpDate" class="form-control" />
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Status</label>
                             <select name="Status" id="edit-status" class="form-select" required>
                                 <option value="DropOff">Drop-off</option>
-                                <option value="Active">Active Boarding</option>
+                                <option value="Boarding">Active Boarding</option>
                                 <option value="PickUp">Pick-up</option>
+                                <option value="Completed">Mark as Completed</option>
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -698,7 +716,6 @@
 
 @section Scripts {
     <script>
-        // Filter logic
         function filterQueue(type) {
             event.preventDefault();
             const cards = document.querySelectorAll('.filterable-card');
@@ -712,31 +729,37 @@
                     card.style.display = 'none';
                 }
             });
-
             document.getElementById('empty-state').style.display = visibleCount === 0 ? 'block' : 'none';
         }
 
-        // Logic to populate and open the Review Application Modal
-        function openReviewModal(id, applicantName, petName, petInfo, petImage) {
-            document.getElementById('modalDeclineId').value = id;
-            document.getElementById('modalApproveId').value = id;
-            document.getElementById('modalApplicantName').innerText = applicantName;
-            document.getElementById('modalPetName').innerText = petName;
-            document.getElementById('modalPetInfo').innerText = petInfo;
-            document.getElementById('modalPetImage').src = petImage;
+        function openReviewModal(btn) {
+            document.getElementById('modalDeclineId').value = btn.dataset.id;
+            document.getElementById('modalApproveId').value = btn.dataset.id;
+            document.getElementById('modalApplicantName').innerText = btn.dataset.applicant;
+            document.getElementById('modalPetName').innerText = btn.dataset.pet;
+            document.getElementById('modalPetInfo').innerText = btn.dataset.info;
+            document.getElementById('modalPetImage').src = btn.dataset.img;
             var reviewModal = new bootstrap.Modal(document.getElementById('reviewAdoptionModal'));
             reviewModal.show();
         }
 
-        // Logic to populate and open the Edit Boarding Modal
-        function openEditModal(id, name, breed, owner, date, status, notes) {
-            document.getElementById('edit-id').value = id;
-            document.getElementById('edit-petName').value = name;
-            document.getElementById('edit-petBreed').value = breed;
-            document.getElementById('edit-ownerName').value = owner;
-            document.getElementById('edit-scheduledDate').value = date;
-            document.getElementById('edit-status').value = status;
-            document.getElementById('edit-specialNotes').value = notes === 'Standard' ? '' : notes;
+        function openEditModal(btn) {
+            document.getElementById('edit-id').value = btn.dataset.id;
+            document.getElementById('edit-petName').value = btn.dataset.petname;
+            document.getElementById('edit-petBreed').value = btn.dataset.petbreed;
+            document.getElementById('edit-ownerName').value = btn.dataset.ownername;
+            document.getElementById('edit-scheduledDate').value = btn.dataset.date;
+            
+            // Populates Pick Up Date
+            document.getElementById('edit-pickUpDate').value = btn.dataset.pickupdate || '';
+            
+            let statusVal = btn.dataset.status;
+            if (statusVal === 'Active') { statusVal = 'Boarding'; }
+            document.getElementById('edit-status').value = statusVal; 
+            
+            let notes = btn.dataset.notes;
+            document.getElementById('edit-specialNotes').value = (notes === 'Standard' || !notes) ? '' : notes;
+            
             var editModal = new bootstrap.Modal(document.getElementById('editBoardingModal'));
             editModal.show();
         }

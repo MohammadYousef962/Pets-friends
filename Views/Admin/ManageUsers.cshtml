@@ -6,224 +6,352 @@
 
 @section Styles {
     <style>
-        /* Implements smooth font smoothing across the page */
+        @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
         .admin-users-container {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            background-color: #FAF8F5; /* Restored deep premium background color */
+            border-radius: 28px;
+            padding: 40px;
+            border: 1px solid rgba(237, 224, 208, 0.7);
         }
 
-        /* Heading elements for ultra-soft, premium font structures */
         .premium-title {
-            font-family: 'Playfair Display', serif;
-            color: #5C3D1E;
-            font-weight: 700;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #4A3320;
+            font-weight: 800;
             font-size: 2.4rem;
             letter-spacing: -0.5px;
+            margin-bottom: 8px;
         }
 
         .premium-subtitle {
-            font-family: 'DM Sans', sans-serif;
             color: #8C7560;
             font-size: 1.05rem;
             font-weight: 400;
+            line-height: 1.6;
+        }
+
+        /* Filter Workspace */
+        .filter-bar {
+            background: #FFFFFF;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(92, 61, 30, 0.02);
+            border: 1px solid rgba(237, 224, 208, 0.6);
+            display: flex;
+            gap: 16px;
+            align-items: center;
             margin-bottom: 35px;
+            flex-wrap: wrap;
         }
 
-        /* Interactive floating rows style structure */
-        .table-floating { 
-            width: 100%; 
-            border-collapse: separate; 
-            border-spacing: 0 12px; 
-            margin-top: -12px; 
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 50px;
+            background: #FAF8F5;
+            border: 2px solid transparent;
+            border-radius: 14px;
+            font-weight: 500;
+            color: #5C3D1E;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: all 0.3s ease;
         }
 
-        .table-floating th { 
-            border: none; 
-            color: #8C7560; 
-            font-size: 0.85rem; 
-            text-transform: uppercase; 
-            letter-spacing: 1.2px; 
-            padding: 0 24px 5px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            transition: color 0.25s ease;
+        .filter-select, .table-select {
+            appearance: none;
+            background-color: #FAF8F5;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23C8A882%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px top 50%;
+            background-size: 10px auto;
+            border: 2px solid transparent;
+            border-radius: 14px;
+            font-weight: 600;
+            color: #5C3D1E;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            padding: 14px 40px 14px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .table-floating th:hover { 
-            color: #C8A882; 
+            .search-input:focus, .filter-select:focus, .table-select:focus {
+                background: #FFFFFF;
+                border-color: #C8A882;
+                outline: none;
+                box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.15);
+            }
+
+        /* Floating Table */
+        .table-floating {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 12px;
+            margin-top: -12px;
         }
 
-        /* Micro Sorting Chevron Styling */
+            .table-floating th {
+                border: none;
+                color: #8C7560;
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                letter-spacing: 1.5px;
+                padding: 0 24px 8px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: color 0.3s ease;
+            }
+
+                .table-floating th:hover {
+                    color: #C8A882;
+                }
+
         .sort-icon-small {
-            font-size: 0.65rem;
+            font-size: 0.75rem;
             color: #C8A882;
-            opacity: 0.7;
+            opacity: 0.6;
             vertical-align: middle;
-            transition: opacity 0.2s, transform 0.2s;
+            transition: all 0.3s ease;
         }
 
-        .table-floating th:hover .sort-icon-small {
-            opacity: 1;
-            transform: scale(1.15);
+        .table-floating tbody tr {
+            background: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(92, 61, 30, 0.02);
+            transition: all 0.3s ease;
         }
 
-        .table-floating tbody tr { 
-            background: #FFFFFF; 
-            box-shadow: 0 6px 18px rgba(92, 61, 30, 0.02); 
-            transition: all 0.35s cubic-bezier(0.165, 0.84, 0.44, 1); 
+            .table-floating tbody tr:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(92, 61, 30, 0.05);
+            }
+
+        .table-floating td {
+            padding: 16px 24px;
+            vertical-align: middle;
+            border-top: 1px solid rgba(237, 224, 208, 0.4);
+            border-bottom: 1px solid rgba(237, 224, 208, 0.4);
+            font-weight: 500;
+            font-size: 0.95rem;
         }
 
-        .table-floating tbody tr:hover { 
-            transform: scale(1.008) translateY(-3px); 
-            box-shadow: 0 12px 30px rgba(92, 61, 30, 0.07); 
+            .table-floating td:first-child {
+                border-left: 1px solid rgba(237, 224, 208, 0.4);
+                border-radius: 16px 0 0 16px;
+            }
+
+            .table-floating td:last-child {
+                border-right: 1px solid rgba(237, 224, 208, 0.4);
+                border-radius: 0 16px 16px 0;
+            }
+
+        .tr-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            object-fit: cover;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 4px 10px rgba(92, 61, 30, 0.06);
         }
 
-        .table-floating td { 
-            padding: 18px 24px; 
-            vertical-align: middle; 
-            border-top: 1px solid #EDE0D0; 
-            border-bottom: 1px solid #EDE0D0; 
-            font-weight: 500; 
-            font-size: 0.95rem; 
-        }
-
-        .table-floating td:first-child { 
-            border-left: 1px solid #EDE0D0; 
-            border-radius: 20px 0 0 20px; 
-        }
-
-        .table-floating td:last-child { 
-            border-right: 1px solid #EDE0D0; 
-            border-radius: 0 20px 20px 0; 
-        }
-
-        .tr-avatar { 
-            width: 46px; 
-            height: 46px; 
-            border-radius: 50%; 
-            object-fit: cover; 
-            border: 2px solid #EDE0D0;
-        }
-
-        /* Refined system indicator badges */
-        .badge-soft { 
-            padding: 8px 16px; 
-            border-radius: 12px; 
-            font-weight: 700; 
-            font-size: 0.75rem; 
-            text-transform: uppercase; 
-            letter-spacing: 0.8px; 
+        .badge-soft {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             display: inline-block;
         }
-        
-        .badge-client { background: rgba(107, 114, 128, 0.1); color: #4B5563; }
-        .badge-vet { background: rgba(2, 132, 199, 0.1); color: #0284C7; }
-        .badge-shelter { background: rgba(190, 24, 93, 0.1); color: #BE185D; }
-        .badge-merchant { background: rgba(217, 119, 6, 0.1); color: #D97706; }
-        .badge-admin { background: #5C3D1E; color: #FFF; }
 
-        /* Unified workspace contextual filter layouts */
-        .filter-bar { 
-            background: #FFFFFF; 
-            padding: 18px; 
-            border-radius: 24px; 
-            box-shadow: 0 10px 25px rgba(92, 61, 30, 0.03); 
-            border: 1px solid #EDE0D0; 
-            display: flex; 
-            gap: 16px; 
-            align-items: center; 
-            margin-bottom: 35px; 
-            flex-wrap: wrap; 
+        .badge-client {
+            background: rgba(107, 114, 128, 0.08);
+            color: #4B5563;
+            border: 1px solid rgba(107, 114, 128, 0.1);
         }
 
-        .search-input, .filter-select { 
-            background: #FAF8F5; 
-            border: 2px solid transparent; 
-            border-radius: 16px; 
-            font-weight: 500; 
-            color: #5C3D1E;
-            transition: all 0.3s ease; 
+        .badge-vet {
+            background: rgba(2, 132, 199, 0.08);
+            color: #0284C7;
+            border: 1px solid rgba(2, 132, 199, 0.1);
         }
 
-        .search-input { 
-            width: 100%; 
-            padding: 12px 20px 12px 48px; 
+        .badge-shelter {
+            background: rgba(190, 24, 93, 0.08);
+            color: #BE185D;
+            border: 1px solid rgba(190, 24, 93, 0.1);
         }
 
-        .search-input:focus, .filter-select:focus, .table-select:focus { 
-            background: #FFFFFF; 
-            border-color: #C8A882; 
-            outline: none; 
-            box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.15);
+        .badge-merchant {
+            background: rgba(217, 119, 6, 0.08);
+            color: #D97706;
+            border: 1px solid rgba(217, 119, 6, 0.1);
         }
 
-        /* Removed appearance:none and custom SVG arrow layout */
-        .filter-select { 
-            padding: 12px 20px; 
-            cursor: pointer; 
+        .badge-admin {
+            background: #4A3320;
+            color: #FFF;
+            box-shadow: 0 4px 10px rgba(74, 51, 32, 0.15);
         }
 
-        /* Removed appearance:none and custom SVG arrow layout */
         .table-select {
-            background: #FAF8F5; 
-            border: 1px solid #EDE0D0;
-            border-radius: 12px; 
-            font-weight: 600; 
-            color: #5C3D1E;
-            padding: 8px 14px; 
-            cursor: pointer; 
+            padding: 8px 32px 8px 14px;
             font-size: 0.85rem;
-            min-width: 125px;
-            transition: all 0.25s ease;
-        }
-        
-        /* Tactical security deletion icon configuration */
-        .btn-delete-soft { 
-            background: #FDF2F2; 
-            color: #EF4444; 
-            border: 1px solid rgba(239, 68, 68, 0.1); 
-            padding: 9px 13px; 
-            border-radius: 12px; 
-            transition: all 0.25s ease; 
+            min-width: 135px;
+            border: 1px solid #EDE0D0;
+            background-color: #FFFFFF;
         }
 
-        .btn-delete-soft:hover { 
-            background: #EF4444; 
-            color: #FFFFFF; 
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.2);
+        .btn-delete-soft {
+            background: #FFFFFF;
+            color: #EF4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 8px 14px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
         }
+
+            .btn-delete-soft:hover {
+                background: #EF4444;
+                color: #FFFFFF;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 15px rgba(239, 68, 68, 0.15);
+            }
+
+        /* Custom Built-In Deletion Modal Design */
+        .premium-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(74, 51, 32, 0.35);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+
+        .premium-modal-card {
+            background: #FFFFFF;
+            border-radius: 24px;
+            padding: 35px;
+            max-width: 460px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(92, 61, 30, 0.15);
+            border: 1px solid #EDE0D0;
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @@keyframes modalPop {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-icon-container {
+            width: 64px;
+            height: 64px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #EF4444;
+            font-size: 1.8rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-headline {
+            font-weight: 700;
+            color: #4A3320;
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+        }
+
+        .modal-description {
+            color: #8C7560;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 28px;
+        }
+
+        .modal-action-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn-modal-dismiss {
+            background: #FAF8F5;
+            border: 1px solid #EDE0D0;
+            color: #5C3D1E;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+            .btn-modal-dismiss:hover {
+                background: #EDE0D0;
+            }
+
+        .btn-modal-execute {
+            background: #EF4444;
+            border: none;
+            color: #FFFFFF;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+
+            .btn-modal-execute:hover {
+                background: #DC2626;
+                transform: translateY(-1px);
+            }
     </style>
 }
 
 <div class="glass-panel admin-users-container">
-    
-    <div class="row align-items-center mb-5">
+
+    <div class="row align-items-center mb-5 pb-2">
         <div class="col-md-8 text-start">
             <h1 class="premium-title">Account Directory</h1>
-            <p class="premium-subtitle mb-0">Verify ecosystem partners, modify platform clearance tiers, and supervise active client profiles.</p>
+            <p class="premium-subtitle mb-0">Verify ecosystem partners, modify platform clearance tiers, and supervise profiles.</p>
         </div>
     </div>
 
     <div class="filter-bar">
         <div class="position-relative flex-grow-1" style="min-width: 280px;">
-            <i class="bi bi-search position-absolute" style="left: 20px; top: 50%; transform: translateY(-50%); color: #C8A882; font-size: 1.05rem;"></i>
+            <i class="bi bi-search position-absolute" style="left: 20px; top: 50%; transform: translateY(-50%); color: #C8A882; font-size: 1.1rem;"></i>
             <input type="text" id="userSearch" class="search-input" placeholder="Search profiles by name or email address...">
         </div>
 
-        <select id="userRoleFilter" class="filter-select" style="min-width: 160px;">
+        <select id="userRoleFilter" class="filter-select" style="min-width: 180px;">
             <option value="All">All Roles</option>
-            <option value="Admin">Admin</option>
+            <option value="Admin">System Admin</option>
             <option value="Vet">Veterinarian</option>
-            <option value="Shelter">Shelter</option>
-            <option value="Merchant">Merchant</option>
-            <option value="Client">Client</option>
+            <option value="Shelter">Shelter Hub</option>
+            <option value="Merchant">Store Merchant</option>
+            <option value="Client">General Client</option>
         </select>
     </div>
 
-    <div class="table-responsive">
-        <table class="table-floating" id="userTable">
+    <div class="table-responsive" style="overflow-x: auto;">
+        <table class="table-floating" id="userTable" style="min-width: 800px;">
             <thead>
                 <tr>
                     <th onclick="sortTable(0, 'userTable')" title="Sort by Name">
@@ -243,7 +371,7 @@
                 {
                     string badgeClass = "badge-client";
                     string avatarColor = "6B7280";
-                    if (user.CurrentRole == "Admin") { badgeClass = "badge-admin"; avatarColor = "5C3D1E"; }
+                    if (user.CurrentRole == "Admin") { badgeClass = "badge-admin"; avatarColor = "4A3320"; }
                     else if (user.CurrentRole == "Vet") { badgeClass = "badge-vet"; avatarColor = "0284C7"; }
                     else if (user.CurrentRole == "Shelter") { badgeClass = "badge-shelter"; avatarColor = "BE185D"; }
                     else if (user.CurrentRole == "Merchant") { badgeClass = "badge-merchant"; avatarColor = "D97706"; }
@@ -251,9 +379,9 @@
                     <tr class="user-row" data-name="@user.FullName.ToLower()" data-email="@user.Email.ToLower()" data-role="@user.CurrentRole">
                         <td>
                             <div class="d-flex align-items-center">
-                                <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(user.FullName)&background=FAF6F1&color=@avatarColor&bold=true&size=100" class="tr-avatar me-3" alt="Avatar">
+                                <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(user.FullName)&background=FAF6F1&color=@avatarColor&bold=true&size=120" class="tr-avatar me-3" alt="Avatar">
                                 <div>
-                                    <div class="fw-bold" style="font-size:1.05rem; color: #5C3D1E;">@user.FullName</div>
+                                    <div class="fw-bold" style="font-size:1.02rem; color: #4A3320;">@user.FullName</div>
                                 </div>
                             </div>
                         </td>
@@ -271,7 +399,7 @@
                                 <div class="d-flex justify-content-end gap-2 align-items-center">
                                     <form asp-action="ChangeRole" method="post" class="m-0">
                                         <input type="hidden" name="userId" value="@user.UserId" />
-                                        <select name="newRole" class="table-select" onchange="this.form.submit()">
+                                        <select name="newRole" class="table-select shadow-sm" onchange="this.form.submit()">
                                             <option value="Client" selected="@(user.CurrentRole == "Client")">Client</option>
                                             <option value="Vet" selected="@(user.CurrentRole == "Vet")">Vet</option>
                                             <option value="Merchant" selected="@(user.CurrentRole == "Merchant")">Merchant</option>
@@ -279,9 +407,9 @@
                                         </select>
                                     </form>
 
-                                    <form asp-action="DeleteUser" method="post" class="m-0" onsubmit="return confirm('🚨 DANGER ZONE 🚨\n\nPermanently delete this user?\nThis will permanently clear ALL their associated database records (pets, appointments, store checkout histories).\n\nProceed with removal operation?');">
+                                    <form asp-action="DeleteUser" method="post" class="m-0 text-deletion-form">
                                         <input type="hidden" name="userId" value="@user.UserId" />
-                                        <button type="submit" class="btn-delete-soft" title="Delete System User Profile">
+                                        <button type="button" class="btn-delete-soft shadow-sm" title="Delete System User Profile" onclick="requestAccountDeletion(this)">
                                             <i class="bi bi-trash3-fill"></i>
                                         </button>
                                     </form>
@@ -294,68 +422,83 @@
         </table>
     </div>
 
-    <div id="userNoResults" class="text-center py-5" style="display:none;">
-        <i class="bi bi-person-x-fill text-muted mb-3 d-block" style="font-size: 3rem; color: #8C7560 !important;"></i>
-        <p class="text-muted fw-bold mb-0">No accounts match your custom search or selected filters.</p>
+    <div id="userNoResults" class="text-center py-5 mt-4" style="display:none;">
+        <div style="width: 72px; height: 72px; background: #FFFFFF; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px; border: 1px solid #EDE0D0;">
+            <i class="bi bi-person-x text-muted" style="font-size: 2rem; color: #C8A882 !important;"></i>
+        </div>
+        <p class="text-muted fw-bold mb-0" style="font-size: 1rem; color: #8C7560 !important;">No accounts match your current filters.</p>
+    </div>
+</div>
+
+<!-- Premium Confirmation Modal Box Template Container -->
+<div id="premiumDeleteModal" class="premium-modal-backdrop" style="display: none;">
+    <div class="premium-modal-card">
+        <div class="modal-icon-container">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <h3 class="modal-headline">Secure Removal Operation</h3>
+        <p class="modal-description">Are you completely certain you want to permanently delete this user? This action will instantly clear all associated records from the ecosystem database and cannot be undone.</p>
+        <div class="modal-action-row">
+            <button type="button" class="btn-modal-dismiss" onclick="dismissDeletionModal()">Cancel Operation</button>
+            <button type="button" class="btn-modal-execute" id="executeDeletionBtn">Confirm Deletion</button>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        // Real-time UI data filtering routine
+        let targetingFormInstance = null;
+
+        function requestAccountDeletion(triggerButton) {
+            targetingFormInstance = triggerButton.closest('.text-deletion-form');
+            document.getElementById('premiumDeleteModal').style.display = 'flex';
+        }
+
+        function dismissDeletionModal() {
+            document.getElementById('premiumDeleteModal').style.display = 'none';
+            targetingFormInstance = null;
+        }
+
+        document.getElementById('executeDeletionBtn').addEventListener('click', function() {
+            if (targetingFormInstance) {
+                targetingFormInstance.submit();
+            }
+        });
+
         function filterUsers() {
             const search = document.getElementById('userSearch').value.toLowerCase();
             const roleFilter = document.getElementById('userRoleFilter').value;
             let visibleCount = 0;
-            
+
             document.querySelectorAll('.user-row').forEach(row => {
                 const rName = row.getAttribute('data-name');
                 const rEmail = row.getAttribute('data-email');
                 const rRole = row.getAttribute('data-role');
-
                 const matchSearch = rName.includes(search) || rEmail.includes(search);
                 const matchRole = roleFilter === 'All' || rRole === roleFilter;
 
-                if (matchSearch && matchRole) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
+                if (matchSearch && matchRole) { row.style.display = ''; visibleCount++; }
+                else { row.style.display = 'none'; }
             });
-            
             document.getElementById('userNoResults').style.display = visibleCount === 0 ? 'block' : 'none';
         }
 
         document.getElementById('userSearch').addEventListener('input', filterUsers);
         document.getElementById('userRoleFilter').addEventListener('change', filterUsers);
 
-        // Client-side alphabet table-sorting compilation logic 
         function sortTable(n, tableId) {
             var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
             table = document.getElementById(tableId);
-            switching = true;
-            dir = "asc"; 
+            switching = true; dir = "asc";
             while (switching) {
-                switching = false;
-                rows = table.querySelectorAll("tbody tr.user-row");
+                switching = false; rows = table.querySelectorAll("tbody tr.user-row");
                 for (i = 0; i < (rows.length - 1); i++) {
-                    shouldSwitch = false;
-                    x = rows[i].querySelectorAll("td")[n];
-                    y = rows[i + 1].querySelectorAll("td")[n];
-                    if (dir == "asc") {
-                        if (x.innerText.toLowerCase() > y.innerText.toLowerCase()) { shouldSwitch = true; break; }
-                    } else if (dir == "desc") {
-                        if (x.innerText.toLowerCase() < y.innerText.toLowerCase()) { shouldSwitch = true; break; }
-                    }
+                    shouldSwitch = false; x = rows[i].querySelectorAll("td")[n]; y = rows[i + 1].querySelectorAll("td")[n];
+                    if (dir == "asc") { if (x.innerText.toLowerCase() > y.innerText.toLowerCase()) { shouldSwitch = true; break; } }
+                    else if (dir == "desc") { if (x.innerText.toLowerCase() < y.innerText.toLowerCase()) { shouldSwitch = true; break; } }
                 }
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchcount ++;      
-                } else {
-                    if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; }
-                }
+                if (shouldSwitch) { rows[i].parentNode.insertBefore(rows[i + 1], rows[i]); switching = true; switchcount ++; }
+                else { if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; } }
             }
         }
     </script>

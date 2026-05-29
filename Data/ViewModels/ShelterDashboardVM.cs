@@ -37,6 +37,7 @@ namespace Pets_friends.Data.ViewModels
         public string TimeLabel { get; set; }
         public string StatusType { get; set; }
         public string SpecialNotes { get; set; }
+        public DateTime? PickUpDate { get; set; }
         public DateTime ScheduledDate { get; set; } 
     }
 }

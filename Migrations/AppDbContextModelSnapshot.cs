@@ -296,6 +296,9 @@ namespace Pets_friends.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("PickUpDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("ScheduledDate")
                         .HasColumnType("datetime2");
 

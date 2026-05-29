@@ -59,10 +59,15 @@ namespace Pets_friends.Controllers
         [HttpGet]
         public async Task<IActionResult> Home()
         {
-            var profile = await GetCurrentMerchantAsync();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login", "Account");
+
+            var profile = await _context.MerchantProfiles.FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
             if (profile == null) return RedirectToAction("CreateProfile", "Merchant");
 
-            // DATA ISOLATION: Fetch strictly this merchant's products
+            ViewData["MerchantAvatar"] = profile.ImageUrl;
+            ViewData["MerchantName"] = user.FullName ?? profile.StoreName;
+
             var products = await _context.Products
                 .Where(p => p.MerchantProfileId == profile.Id)
                 .OrderByDescending(p => p.Id)
@@ -77,8 +82,11 @@ namespace Pets_friends.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            var profile = await GetCurrentMerchantAsync();
-            if (profile == null) return RedirectToAction("CreateProfile", "Merchant");
+            var user = await _userManager.GetUserAsync(User);
+            var profile = await _context.MerchantProfiles.FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
+
+            ViewData["MerchantAvatar"] = profile?.ImageUrl;
+            ViewData["MerchantName"] = user?.FullName ?? profile?.StoreName;
 
             return View(new ProductFormVM());
         }
@@ -87,10 +95,21 @@ namespace Pets_friends.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ProductFormVM model)
         {
-            if (!ModelState.IsValid) return View(model);
-
             var profile = await GetCurrentMerchantAsync();
             if (profile == null) return RedirectToAction("CreateProfile", "Merchant");
+
+            // FIX 1: Ignore validation on the file specifically so it doesn't block the save
+            ModelState.Remove("ImageFile");
+            ModelState.Remove("ExistingImageUrl");
+
+            if (!ModelState.IsValid)
+            {
+                // FIX 2: If another field (like description) fails, we MUST reload the navbar variables
+                var user = await _userManager.GetUserAsync(User);
+                ViewData["MerchantAvatar"] = profile.ImageUrl;
+                ViewData["MerchantName"] = user?.FullName ?? profile.StoreName;
+                return View(model);
+            }
 
             string uploadedImagePath = "https://placehold.co/300x300/FAF6F1/8C7560?text=No+Image";
             if (model.ImageFile != null)
@@ -100,7 +119,7 @@ namespace Pets_friends.Controllers
 
             var product = new Product
             {
-                MerchantProfileId = profile.Id, // Locks product to their store
+                MerchantProfileId = profile.Id,
                 Name = model.Name,
                 Category = model.Category,
                 Price = model.Price,
@@ -121,23 +140,23 @@ namespace Pets_friends.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var profile = await GetCurrentMerchantAsync();
-            if (profile == null) return RedirectToAction("CreateProfile", "Merchant");
+            var user = await _userManager.GetUserAsync(User);
+            var profile = await _context.MerchantProfiles.FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
 
-            // Ensure the product exists AND belongs to this merchant
-            var product = await _context.Products
-                .FirstOrDefaultAsync(p => p.Id == id && p.MerchantProfileId == profile.Id);
+            ViewData["MerchantAvatar"] = profile?.ImageUrl;
+            ViewData["MerchantName"] = user?.FullName ?? profile?.StoreName;
 
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id && p.MerchantProfileId == profile.Id);
             if (product == null) return NotFound();
 
             var vm = new ProductFormVM
             {
                 Id = product.Id,
                 Name = product.Name,
-                Category = product.Category,
+                Description = product.Description,
                 Price = product.Price,
                 StockQuantity = product.StockQuantity,
-                Description = product.Description,
+                Category = product.Category,
                 ExistingImageUrl = product.ImageUrl
             };
 
@@ -148,10 +167,21 @@ namespace Pets_friends.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ProductFormVM model)
         {
-            if (!ModelState.IsValid) return View(model);
-
             var profile = await GetCurrentMerchantAsync();
             if (profile == null) return RedirectToAction("CreateProfile", "Merchant");
+
+            // FIX 1: Ignore validation on the file so you can save changes without re-uploading an image!
+            ModelState.Remove("ImageFile");
+            ModelState.Remove("ExistingImageUrl");
+
+            if (!ModelState.IsValid)
+            {
+                // FIX 2: Reload layout variables so it doesn't crash visually
+                var user = await _userManager.GetUserAsync(User);
+                ViewData["MerchantAvatar"] = profile.ImageUrl;
+                ViewData["MerchantName"] = user?.FullName ?? profile.StoreName;
+                return View(model);
+            }
 
             var product = await _context.Products
                 .FirstOrDefaultAsync(p => p.Id == model.Id && p.MerchantProfileId == profile.Id);

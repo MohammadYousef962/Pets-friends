@@ -21,7 +21,7 @@ namespace Pets_friends.Models
         public string Status { get; set; } // DropOff, Active, PickUp, Completed
         public string TimeLabel { get; set; }
         public string SpecialNotes { get; set; }
-
+        public DateTime? PickUpDate { get; set; }
         public DateTime ScheduledDate { get; set; }
     }
 }

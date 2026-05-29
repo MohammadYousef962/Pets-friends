@@ -176,15 +176,11 @@
 
         .payment-logos {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
         }
 
-            .payment-logos img {
-                height: 20px;
-            }
-
-        /* Dynamic Target Panels */
+        /* --- Dynamic Target Panels --- */
         .payment-details-panel {
             display: none;
             background: #fff;
@@ -200,18 +196,8 @@
                 animation: fadeIn 0.3s ease;
             }
         @@keyframes fadeIn {
-            from
-
-        {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* --- SUMMARY PANEL --- */
@@ -366,8 +352,9 @@
                                 <div class="payment-desc">Encrypted transmission via dynamic localized processing</div>
                             </div>
                             <div class="payment-logos">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard">
+                                <!-- Replaced with stable CDN icons specifically designed for developers -->
+                                <img src="https://img.icons8.com/color/48/visa.png" alt="Visa" style="height: 26px; width: auto;">
+                                <img src="https://img.icons8.com/color/48/mastercard.png" alt="Mastercard" style="height: 26px; width: auto;">
                             </div>
                         </div>
 
@@ -424,7 +411,8 @@
                                 <div class="payment-desc">External portal gateway token processing link</div>
                             </div>
                             <div class="payment-logos">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal_.svg" alt="PayPal">
+                                <!-- Replaced with stable CDN icon specifically designed for developers -->
+                                <img src="https://img.icons8.com/color/48/paypal.png" alt="PayPal" style="height: 26px; width: auto;">
                             </div>
                         </div>
 
@@ -519,19 +507,15 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // --- SECURE DYNAMIC VALIDATION MANAGEMENT ENGINE ---
-        // Isolates standard HTML forms cleanly to prevent non-focusable UI exceptions
         function selectPayment(method) {
             document.getElementById('selectedPaymentMethod').value = method;
 
-            // 1. Purge active visual boundaries and unmount targeted validation attributes globally
             document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.payment-details-panel').forEach(p => {
                 p.classList.remove('active');
                 p.querySelectorAll('input').forEach(inp => inp.required = false);
             });
 
-            // 2. Enable active structural indicators cleanly
             const activeTab = document.querySelector(`.payment-card[data-method="${method}"]`);
             if (activeTab) activeTab.classList.add('active');
 
@@ -539,7 +523,6 @@
             if (targetPane) {
                 targetPane.classList.add('active');
 
-                // 3. Remount explicit structural constraints strictly to isolated focus target loops
                 if (method === 'card') {
                     document.getElementById('inpCardNumber').required = true;
                     document.getElementById('inpCardExpiry').required = true;

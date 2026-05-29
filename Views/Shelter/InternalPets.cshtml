@@ -140,6 +140,7 @@
             border: 1px solid rgba(255,255,255,0.8);
         }
 
+        /* Modals and Forms */
         .modal-content {
             border-radius: 24px;
             border: none;
@@ -290,6 +291,56 @@
                 background: #FAF6F1;
                 color: var(--brand-primary);
             }
+
+        /* --- CLIENT-SIDE PAGINATION CSS --- */
+        .pagination-container {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .custom-pagination {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            .custom-pagination .page-item .page-link {
+                background: rgba(255,255,255,0.7);
+                border: 1px solid var(--border-light);
+                color: var(--text-dark-blue);
+                border-radius: 12px;
+                padding: 10px 18px;
+                font-weight: 700;
+                font-family: 'Nunito', sans-serif;
+                transition: all 0.3s ease;
+                text-decoration: none;
+            }
+
+                .custom-pagination .page-item .page-link:hover {
+                    background: #FFFFFF;
+                    border-color: var(--brand-accent);
+                    color: var(--brand-primary);
+                }
+
+            .custom-pagination .page-item.active .page-link {
+                background: var(--brand-accent);
+                border-color: var(--brand-accent);
+                color: #FFFFFF;
+                box-shadow: 0 4px 15px rgba(200, 168, 130, 0.4);
+            }
+
+            .custom-pagination .page-item.disabled .page-link {
+                opacity: 0.5;
+                cursor: not-allowed;
+                background: transparent;
+                border-color: rgba(255,255,255,0.5);
+                pointer-events: none;
+            }
     </style>
 }
 
@@ -323,10 +374,11 @@
                 <i class="bi bi-filter"></i> Filter
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0">
-                <li><a class="dropdown-item fw-bold rounded-3" href="#" onclick="filterPets('all')">Show All</a></li>
+                <!-- Passed the event into the function to prevent the page jump -->
+                <li><a class="dropdown-item fw-bold rounded-3" href="#" onclick="filterPets(event, 'all')">Show All</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item rounded-3" href="#" onclick="filterPets('shelter')">Shelter Residents Only</a></li>
-                <li><a class="dropdown-item rounded-3" href="#" onclick="filterPets('boarded')">Boarded (Owned) Only</a></li>
+                <li><a class="dropdown-item rounded-3" href="#" onclick="filterPets(event, 'shelter')">Shelter Residents Only</a></li>
+                <li><a class="dropdown-item rounded-3" href="#" onclick="filterPets(event, 'boarded')">Boarded (Owned) Only</a></li>
             </ul>
         </div>
     </div>
@@ -490,6 +542,9 @@
                 }
             </div>
 
+            <!-- Pagination Container will be injected here via JS -->
+            <div id="pagination-controls"></div>
+
             <!-- Empty State for JS Filtering -->
             <div id="empty-state" class="text-center py-5 rounded-4 mt-3" style="display: none; background: #FFFFFF; border: 2px dashed #EBE0D5;">
                 <i class="bi bi-funnel fs-1 text-muted d-block mb-3"></i>
@@ -510,6 +565,7 @@
 
 @section Scripts {
     <script>
+        // -- IMAGE PREVIEW --
         function previewImage(input, targetId) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -518,25 +574,106 @@
             }
         }
 
-        function filterPets(type) {
-            event.preventDefault();
-            const pets = document.querySelectorAll('.pet-item');
-            let visibleCount = 0;
+        // -- PAGINATION & FILTER LOGIC --
+        const itemsPerPage = 6; // <-- Change this to show more/less items per page
+        let currentPage = 1;
+        let currentFilter = 'all';
 
+        function renderPagination(totalItems) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const paginationContainer = document.getElementById('pagination-controls');
+
+            if (!paginationContainer) return;
+            paginationContainer.innerHTML = '';
+
+            // Hide pagination if only 1 page
+            if (totalPages <= 1) return;
+
+            let html = '<div class="pagination-container"><ul class="custom-pagination">';
+
+            // Prev button
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(event, ${currentPage - 1})">
+                            <i class="bi bi-chevron-left me-1"></i> Prev
+                        </a>
+                     </li>`;
+
+            // Numbered pages
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="changePage(event, ${i})">${i}</a>
+                         </li>`;
+            }
+
+            // Next button
+            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(event, ${currentPage + 1})">
+                            Next <i class="bi bi-chevron-right ms-1"></i>
+                        </a>
+                     </li>`;
+
+            html += '</ul></div>';
+            paginationContainer.innerHTML = html;
+        }
+
+        function applyPaginationAndFilter() {
+            const pets = document.querySelectorAll('.pet-item');
+            let filteredPets = [];
+
+            // 1. First, find all pets that match the current filter and hide everything
             pets.forEach(pet => {
-                if (type === 'all' || pet.getAttribute('data-type') === type) {
-                    pet.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    pet.style.display = 'none';
+                pet.style.display = 'none'; // Hide all instantly
+                if (currentFilter === 'all' || pet.getAttribute('data-type') === currentFilter) {
+                    filteredPets.push(pet);
                 }
             });
 
-            // Show empty state message if everything is hidden
+            // 2. Show or hide empty state if no pets match filter
             const emptyState = document.getElementById('empty-state');
-            if (emptyState) {
-                emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+            if (filteredPets.length === 0) {
+                if (emptyState) emptyState.style.display = 'block';
+                renderPagination(0);
+                return;
+            } else {
+                if (emptyState) emptyState.style.display = 'none';
             }
+
+            // 3. Calculate exactly which pets to show for the current page
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+
+            // 4. Reveal only the ones that belong on this page
+            for (let i = 0; i < filteredPets.length; i++) {
+                if (i >= startIndex && i < endIndex) {
+                    filteredPets[i].style.display = 'block';
+                }
+            }
+
+            // 5. Draw the pagination buttons at the bottom
+            renderPagination(filteredPets.length);
         }
+
+        // Triggered by the Filter Dropdown
+        function filterPets(e, type) {
+            e.preventDefault(); // Stop page jumping to top
+            currentFilter = type;
+            currentPage = 1;    // Always reset to Page 1 when changing filters
+            applyPaginationAndFilter();
+        }
+
+        // Triggered by the Next/Prev/Number Buttons
+        function changePage(e, page) {
+            e.preventDefault(); // Stop page jumping to top
+            currentPage = page;
+            applyPaginationAndFilter();
+
+            // Smoothly scroll back to the top of the grid so the user doesn't stay at the bottom
+            document.querySelector('.page-header').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize on initial page load
+        document.addEventListener('DOMContentLoaded', () => {
+            applyPaginationAndFilter();
+        });
     </script>
 }

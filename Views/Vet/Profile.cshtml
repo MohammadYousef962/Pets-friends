@@ -6,14 +6,14 @@
 @{
     var clinicName = !string.IsNullOrEmpty(Model.ClinicName) ? Model.ClinicName : "Veterinary Clinic";
     ViewData["Title"] = clinicName + " | Pet Vet";
-    
+
     if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Vet"))
     {
         Layout = "~/Views/Shared/_VetLayout.cshtml";
     }
     else
     {
-        Layout = "~/Views/Shared/_Layout.cshtml"; 
+        Layout = "~/Views/Shared/_Layout.cshtml";
     }
 
     var currentUser = await UserManager.GetUserAsync(User);
@@ -21,7 +21,14 @@
     bool isAuthenticated = currentUser != null;
     bool hasPets = ViewBag.MyPets != null && ((IEnumerable<dynamic>)ViewBag.MyPets).Any();
 
-    int happyPetsCount = Model.Appointments?.Where(a => a.Status == "Completed" || a.Status == "Confirmed").Select(a => a.PetId).Distinct().Count() ?? Model.TotalReviews;
+    // --- FIX: Grabbing the accurate completed count from your controller! ---
+    int happyPetsCount = ViewData["ServedPetsCount"] as int? ?? 0;
+
+    // Optional fallback: If no completed pets yet but they have reviews, show total reviews so it doesn't look empty
+    if (happyPetsCount == 0 && Model.TotalReviews > 0)
+    {
+        happyPetsCount = Model.TotalReviews;
+    }
 
     // --- ONE-REVIEW-PER-USER DETECTION (Edit Mode Logic) ---
     VetReview? myExistingReview = null;
@@ -29,7 +36,7 @@
     {
         myExistingReview = Model.Reviews.FirstOrDefault(r => r.ReviewerId == currentUser.Id);
     }
-    
+
     int initialStars = myExistingReview?.Rating ?? 5;
     string initialComment = myExistingReview?.Comment ?? "";
     string formTitle = myExistingReview != null ? "Edit Your Review" : "Rate Your Experience";
@@ -57,7 +64,9 @@
             color: var(--text-dark);
         }
 
-        main, .pb-3 { background-color: transparent !important; }
+        main, .pb-3 {
+            background-color: transparent !important;
+        }
 
         h1, h2, h3, h4, h5, h6, .vet-name, .section-title, .stat-num, .rating-big {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -87,73 +96,434 @@
             text-transform: uppercase;
         }
 
-        .vet-name { font-weight: 800; font-size: 2.2rem; color: var(--text-dark); margin-bottom: 4px; line-height: 1.2; }
-        .doctor-name { font-weight: 700; font-size: 1.2rem; color: var(--brand-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-        .vet-spec { color: var(--text-muted); font-weight: 500; font-size: 0.95rem; margin-bottom: 6px; }
+        .vet-name {
+            font-weight: 800;
+            font-size: 2.2rem;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; max-width: 400px; margin-left: auto; }
-        @@media (max-width: 991px) { .stats-grid { margin-left: 0; max-width: 100%; margin-top: 20px; } .hero-card { padding: 25px; } }
+        .doctor-name {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--brand-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-        .stat-pill { background: #FAFAFA; border: 1px solid var(--border-light); border-radius: 16px; padding: 16px 10px; text-align: center; transition: transform 0.2s ease; }
-        .stat-pill:hover { transform: translateY(-3px); border-color: var(--brand-accent); }
-        .stat-num { font-weight: 800; font-size: 1.6rem; color: var(--text-dark); line-height: 1; }
-        .stat-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-top: 6px; }
+        .vet-spec {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
 
-        .service-tag { background: #FAF6F1; color: var(--brand-primary); border: 1px solid #EBE0D5; padding: 8px 18px; border-radius: 12px; font-size: 0.9rem; font-weight: 700; display: inline-flex; align-items: center; margin: 0 8px 8px 0; transition: all 0.2s ease; }
-        .service-tag:hover { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); transform: translateY(-2px); }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+        }
 
-        .section-title { font-weight: 700; font-size: 1.4rem; color: var(--text-dark); margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 10px; }
-        .section-title i { color: var(--brand-accent); }
+        @@media (max-width: 991px) {
+            .stats-grid {
+                margin-left: 0;
+                max-width: 100%;
+                margin-top: 20px;
+            }
 
-        .rating-hero { text-align: center; background: #FAFAFA; border-radius: 16px; padding: 24px; border: 1px solid var(--border-light); margin-bottom: 24px; }
-        .rating-big { font-size: 3rem; font-weight: 800; color: var(--text-dark); line-height: 1; }
-        
-        .review-card { background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 16px; padding: 20px; margin-bottom: 16px; transition: all 0.2s; }
-        .review-author { font-weight: 700; color: var(--text-dark); font-size: 0.95rem; }
-        .review-pet { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
-        .review-text { color: #4B5563; font-size: 0.95rem; line-height: 1.6; margin-top: 12px; margin-bottom: 0; }
+            .hero-card {
+                padding: 25px;
+            }
+        }
 
-        .hours-row { display: flex; justify-content: space-between; padding: 14px 15px; border-bottom: 1px dashed var(--border-light); font-size: 0.95rem; border-radius: 12px; transition: all 0.2s ease; color: var(--brand-primary); font-weight: 600; }
-        .hours-row:last-child { border-bottom: none; }
-        .hours-row:hover { background-color: #FAF6F1; border-bottom-color: transparent; transform: translateX(4px); }
-        .hours-row.today { background: #FDFaf5; padding: 14px 15px; border: 1px solid #EBE0D5; font-weight: 700; color: var(--brand-primary); box-shadow: 0 4px 10px rgba(92, 61, 30, 0.05); border-bottom-style: solid; }
-        .hours-row.today:hover { transform: translateX(4px); }
-        .badge-open { background: #DCFCE7; color: #059669; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; }
-        .badge-off { background: #FEE2E2; color: #DC2626; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; }
+        .stat-pill {
+            background: #FAFAFA;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 16px 10px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
 
-        .contact-item { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border-light); }
-        .contact-item:last-child { border-bottom: none; }
-        .contact-icon { width: 44px; height: 44px; background: #F3F4F6; color: var(--brand-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+            .stat-pill:hover {
+                transform: translateY(-3px);
+                border-color: var(--brand-accent);
+            }
 
-        .btn-primary-custom { background: var(--brand-primary); color: #fff; font-weight: 700; border-radius: 12px; padding: 12px 28px; transition: all 0.2s ease; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
-        .btn-primary-custom:hover:not(:disabled) { background: var(--brand-accent); color: #fff; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(200,168,130,0.3); }
-        .btn-disabled-preview { opacity: 0.6 !important; cursor: not-allowed !important; pointer-events: none; }
-        .preview-badge { background: #F3F4F6; color: var(--text-muted); border: 1px solid var(--border-light); padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; }
+        .stat-num {
+            font-weight: 800;
+            font-size: 1.6rem;
+            color: var(--text-dark);
+            line-height: 1;
+        }
 
-        .modal-content { border-radius: 24px; border: none; box-shadow: 0 20px 50px rgba(92, 61, 30, 0.15); }
-        .modal-header { background: #FAF6F1; border-bottom: 1px solid #EBE0D5; padding: 25px 30px; border-radius: 24px 24px 0 0; }
-        .modal-body { padding: 30px; background: #ffffff; }
-        .modal-footer { border-top: 1px solid #EBE0D5; padding: 20px 30px; background: #ffffff; border-radius: 0 0 24px 24px; }
-        
-        .form-label { font-weight: 800; color: #8C7560; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .form-select, .form-control { border-radius: 12px; padding: 14px 16px; border: 2px solid #EBE0D5; color: #1A1A1A; font-weight: 600; font-size: 1rem; transition: all 0.2s; box-shadow: none; }
-        .form-select:focus, .form-control:focus { border-color: var(--vet-color); box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.15); outline: none; }
-        
-        .pet-pill-label { border: 2px solid #EBE0D5; border-radius: 30px; padding: 10px 20px; font-weight: 700; color: #6B7280; cursor: pointer; transition: all 0.2s; user-select: none; display: inline-flex; align-items: center; gap: 8px; }
-        .pet-pill-label:hover { border-color: var(--brand-accent); color: var(--brand-primary); background: #FAF6F1; }
-        .btn-check:checked + .pet-pill-label { background: var(--vet-color); color: #fff; border-color: var(--vet-color); box-shadow: 0 4px 12px rgba(5,150,105,0.2); }
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
 
-        .urgent-box { background: #FEF2F2; border: 2px solid #FECACA; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 12px; transition: all 0.3s; cursor: pointer; }
-        .urgent-box:hover { background: #FEE2E2; border-color: #FCA5A5; }
-        .urgent-box.active { background: #DC2626; border-color: #B91C1C; }
-        .urgent-checkbox { width: 24px; height: 24px; border: 2px solid #FCA5A5; border-radius: 6px; cursor: pointer; }
-        .urgent-checkbox:checked { background-color: #DC2626; border-color: #DC2626; }
-        .urgent-label { color: #DC2626; font-size: 1.05rem; font-weight: 800; cursor: pointer; margin: 0; user-select: none; }
+        .service-tag {
+            background: #FAF6F1;
+            color: var(--brand-primary);
+            border: 1px solid #EBE0D5;
+            padding: 8px 18px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            margin: 0 8px 8px 0;
+            transition: all 0.2s ease;
+        }
 
-        .invalid-feedback { display: none; color: #DC2626; font-size: 0.85rem; font-weight: 700; margin-top: 5px; background: #FEF2F2; padding: 8px 12px; border-radius: 8px; border: 1px solid #FECACA; }
-        .btn-submit:disabled { background: #A7F3D0 !important; box-shadow: none !important; cursor: not-allowed; transform: none !important; }
+            .service-tag:hover {
+                background: var(--brand-primary);
+                color: #fff;
+                border-color: var(--brand-primary);
+                transform: translateY(-2px);
+            }
 
-        .new-pet-alert { background: #FDFaf5; border: 1px solid var(--brand-accent); border-radius: 16px; padding: 16px 20px; color: var(--brand-primary); display: flex; gap: 15px; align-items: flex-start; }
+        .section-title {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .section-title i {
+                color: var(--brand-accent);
+            }
+
+        .rating-hero {
+            text-align: center;
+            background: #FAFAFA;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border-light);
+            margin-bottom: 24px;
+        }
+
+        .rating-big {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            line-height: 1;
+        }
+
+        .review-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+
+        .review-author {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .review-pet {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .review-text {
+            color: #4B5563;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-top: 12px;
+            margin-bottom: 0;
+        }
+
+        .hours-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 15px;
+            border-bottom: 1px dashed var(--border-light);
+            font-size: 0.95rem;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            color: var(--brand-primary);
+            font-weight: 600;
+        }
+
+            .hours-row:last-child {
+                border-bottom: none;
+            }
+
+            .hours-row:hover {
+                background-color: #FAF6F1;
+                border-bottom-color: transparent;
+                transform: translateX(4px);
+            }
+
+            .hours-row.today {
+                background: #FDFaf5;
+                padding: 14px 15px;
+                border: 1px solid #EBE0D5;
+                font-weight: 700;
+                color: var(--brand-primary);
+                box-shadow: 0 4px 10px rgba(92, 61, 30, 0.05);
+                border-bottom-style: solid;
+            }
+
+                .hours-row.today:hover {
+                    transform: translateX(4px);
+                }
+
+        .badge-open {
+            background: #DCFCE7;
+            color: #059669;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .badge-off {
+            background: #FEE2E2;
+            color: #DC2626;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+            .contact-item:last-child {
+                border-bottom: none;
+            }
+
+        .contact-icon {
+            width: 44px;
+            height: 44px;
+            background: #F3F4F6;
+            color: var(--brand-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .btn-primary-custom {
+            background: var(--brand-primary);
+            color: #fff;
+            font-weight: 700;
+            border-radius: 12px;
+            padding: 12px 28px;
+            transition: all 0.2s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+            .btn-primary-custom:hover:not(:disabled) {
+                background: var(--brand-accent);
+                color: #fff;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(200,168,130,0.3);
+            }
+
+        .btn-disabled-preview {
+            opacity: 0.6 !important;
+            cursor: not-allowed !important;
+            pointer-events: none;
+        }
+
+        .preview-badge {
+            background: #F3F4F6;
+            color: var(--text-muted);
+            border: 1px solid var(--border-light);
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .modal-content {
+            border-radius: 24px;
+            border: none;
+            box-shadow: 0 20px 50px rgba(92, 61, 30, 0.15);
+        }
+
+        .modal-header {
+            background: #FAF6F1;
+            border-bottom: 1px solid #EBE0D5;
+            padding: 25px 30px;
+            border-radius: 24px 24px 0 0;
+        }
+
+        .modal-body {
+            padding: 30px;
+            background: #ffffff;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #EBE0D5;
+            padding: 20px 30px;
+            background: #ffffff;
+            border-radius: 0 0 24px 24px;
+        }
+
+        .form-label {
+            font-weight: 800;
+            color: #8C7560;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .form-select, .form-control {
+            border-radius: 12px;
+            padding: 14px 16px;
+            border: 2px solid #EBE0D5;
+            color: #1A1A1A;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+            box-shadow: none;
+        }
+
+            .form-select:focus, .form-control:focus {
+                border-color: var(--vet-color);
+                box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.15);
+                outline: none;
+            }
+
+        .pet-pill-label {
+            border: 2px solid #EBE0D5;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: 700;
+            color: #6B7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .pet-pill-label:hover {
+                border-color: var(--brand-accent);
+                color: var(--brand-primary);
+                background: #FAF6F1;
+            }
+
+        .btn-check:checked + .pet-pill-label {
+            background: var(--vet-color);
+            color: #fff;
+            border-color: var(--vet-color);
+            box-shadow: 0 4px 12px rgba(5,150,105,0.2);
+        }
+
+        .urgent-box {
+            background: #FEF2F2;
+            border: 2px solid #FECACA;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+            .urgent-box:hover {
+                background: #FEE2E2;
+                border-color: #FCA5A5;
+            }
+
+            .urgent-box.active {
+                background: #DC2626;
+                border-color: #B91C1C;
+            }
+
+        .urgent-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #FCA5A5;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+            .urgent-checkbox:checked {
+                background-color: #DC2626;
+                border-color: #DC2626;
+            }
+
+        .urgent-label {
+            color: #DC2626;
+            font-size: 1.05rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin: 0;
+            user-select: none;
+        }
+
+        .invalid-feedback {
+            display: none;
+            color: #DC2626;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-top: 5px;
+            background: #FEF2F2;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #FECACA;
+        }
+
+        .btn-submit:disabled {
+            background: #A7F3D0 !important;
+            box-shadow: none !important;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .new-pet-alert {
+            background: #FDFaf5;
+            border: 1px solid var(--brand-accent);
+            border-radius: 16px;
+            padding: 16px 20px;
+            color: var(--brand-primary);
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
     </style>
 }
 
@@ -198,7 +568,7 @@
                 <div>
                     <span class="vet-title-tag">Veterinary Clinic</span>
                     <h1 class="vet-name">@clinicName</h1>
-                    <div class="doctor-name"><i class="bi bi-person-badge"></i> @(Model.UserAccount?.FullName ?? "Staff Physician")</div>
+                    <div class="doctor-name"><i class="bi bi-person-badge"></i> Dr.@(Model.UserAccount?.FullName ?? "Staff Physician")</div>
 
                     <p class="vet-spec mb-4">
                         <i class="bi bi-award-fill me-2" style="color:var(--brand-accent)"></i>@Model.Specialization
@@ -230,11 +600,11 @@
             <div class="col-lg-5 mt-4 mt-lg-0">
                 <div class="stats-grid">
                     <div class="stat-pill">
-                        <div class="stat-num">@Model.YearsOfExperience<span style="font-size:1.1rem; color: var(--brand-accent);">+</span></div>
+                        <div class="stat-num">@Model.YearsOfExperience<span style="font-size:1.1rem; color: var(--brand-accent);"></span></div>
                         <div class="stat-label">Years Exp.</div>
                     </div>
                     <div class="stat-pill">
-                        <div class="stat-num">@happyPetsCount<span style="font-size:1.1rem; color: var(--brand-accent);">+</span></div>
+                        <div class="stat-num">@happyPetsCount<span style="font-size:1.1rem; color: var(--brand-accent);"></span></div>
                         <div class="stat-label">Happy Pets</div>
                     </div>
                     <div class="stat-pill">
@@ -278,7 +648,7 @@
             </div>
 
             <!-- The hidden delete form for Vet Review -->
-            @if(myExistingReview != null)
+            @if (myExistingReview != null)
             {
                 <form id="deleteVetReviewForm" asp-controller="Vet" asp-action="DeleteReview" method="post" style="display:none;">
                     <input type="hidden" name="vetId" value="@Model.Id" />
@@ -289,7 +659,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 class="section-title mb-0 border-0"><i class="bi bi-chat-quote"></i> Patient Reviews</h2>
                 </div>
-                
+
                 <div class="rating-hero mt-2">
                     <div class="rating-big">@Model.AverageRating.ToString("0.0")</div>
                     <div class="stars my-2">
@@ -315,7 +685,10 @@
                                     <div>
                                         <div class="review-author">
                                             @review.Reviewer?.FullName
-                                            @if(isMyCard) { <span class="badge bg-secondary ms-2" style="font-size:0.7rem;">Your Review</span> }
+                                            @if (isMyCard)
+                                            {
+                                                <span class="badge bg-secondary ms-2" style="font-size:0.7rem;">Your Review</span>
+                                            }
                                         </div>
                                         <div class="review-pet"><i class="bi bi-shield-check me-1" style="color:#10B981;"></i>Verified Patient</div>
                                     </div>
@@ -361,7 +734,9 @@
         <div class="col-lg-4">
             <div class="section-card">
                 <h2 class="section-title"><i class="bi bi-clock"></i> Working Hours</h2>
-                @{ var todayName = DateTime.Now.DayOfWeek.ToString(); }
+                @{
+                    var todayName = DateTime.Now.DayOfWeek.ToString();
+                }
                 @if (Model.Schedule != null && Model.Schedule.Any())
                 {
                     foreach (var wh in Model.Schedule.OrderBy(s => s.Day))
@@ -370,7 +745,10 @@
                         <div class="hours-row @(isToday ? "today" : "")">
                             <span class="day">
                                 @wh.Day
-                                @if (isToday) { <span style="font-size:.7rem; color:var(--brand-primary); margin-left:.3rem; text-transform: uppercase;">(Today)</span> }
+                                @if (isToday)
+                                {
+                                    <span style="font-size:.7rem; color:var(--brand-primary); margin-left:.3rem; text-transform: uppercase;">(Today)</span>
+                                }
                             </span>
 
                             @if (wh.IsOff || wh.OpenTime == null || wh.CloseTime == null)
@@ -444,12 +822,12 @@
                 </h5>
                 <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
             </div>
-            
+
             <form asp-controller="Vet" asp-action="BookAppointment" method="post" id="bookingForm">
                 <input type="hidden" name="vetId" value="@Model.Id" />
-                
+
                 <div class="modal-body">
-                    
+
                     @if (!isAuthenticated)
                     {
                         <div class="text-center py-4">
@@ -525,7 +903,7 @@
                                     <input type="text" class="form-control new-pet-input" id="newPetBreed" placeholder="e.g. Cat - Persian">
                                 </div>
                             </div>
-                            
+
                             <div class="mb-4">
                                 <label class="form-label">Service Type</label>
                                 <select class="form-select bg-light" disabled>
@@ -560,7 +938,7 @@
                         </div>
                     }
                 </div>
-                
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
                     @if (isAuthenticated)
@@ -582,16 +960,16 @@
                 <h5 class="modal-title fw-bold"><i class="bi bi-star-fill me-2" style="color: #F59E0B;"></i> @formTitle</h5>
                 <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
             </div>
-            
+
             <form asp-controller="Vet" asp-action="SubmitReview" method="post">
                 <input type="hidden" name="vetId" value="@Model.Id" />
                 <input type="hidden" name="rating" id="starRatingValue" value="@initialStars" />
-                
+
                 <div class="modal-body text-center">
                     <h6 class="fw-bold mb-3">How was your visit?</h6>
-                    
+
                     <div class="d-flex justify-content-center gap-2 mb-4" id="starRatingUI" style="font-size: 2.5rem; color: #EBE0D5; cursor: pointer;">
-                        @for(int i = 1; i <= 5; i++)
+                        @for (int i = 1; i <= 5; i++)
                         {
                             string starClass = i <= initialStars ? "bi-star-fill text-warning" : "bi-star";
                             <i class="bi @starClass review-star-icon" data-val="@i"></i>
@@ -603,10 +981,10 @@
                         <textarea name="comment" class="form-control" rows="4" placeholder="Share your experience to help other pet parents..." required>@initialComment</textarea>
                     </div>
                 </div>
-                
+
                 <div class="modal-footer d-flex justify-content-between">
                     <div>
-                        @if(myExistingReview != null)
+                        @if (myExistingReview != null)
                         {
                             <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-bold" onclick="if(confirm('Are you sure you want to permanently delete your review?')) document.getElementById('deleteVetReviewForm').submit();">Delete</button>
                         }
@@ -625,18 +1003,18 @@
     <script>
         // --- 0. NEW PET FLOW TRIGGER ---
         const userHasPets = @(hasPets ? "true" : "false");
-        
+
         function showNewPetForm() {
             // Hide the frown face prompt
             document.getElementById('noPetsPromptUI').style.display = 'none';
-            
+
             // Show the actual form fields
             document.getElementById('newPetUI').style.display = 'block';
             document.getElementById('sharedBookingFields').style.display = 'block';
-            
+
             // Show the submit button
             document.getElementById('submitBookingBtn').style.display = 'inline-block';
-            
+
             // Activate the required fields for the new UI dynamically
             document.getElementById('appointmentDateTime').setAttribute('required', 'required');
             document.getElementById('newPetName').setAttribute('required', 'required');
@@ -649,7 +1027,7 @@
         // --- 1. URGENT TOGGLE UX ---
         const urgentCheck = document.getElementById('urgentCheck');
         const urgentContainer = document.getElementById('urgentContainer');
-        
+
         if (urgentCheck && urgentContainer) {
             urgentCheck.addEventListener('change', function() {
                 if (this.checked) {
@@ -686,7 +1064,7 @@
                     // Logic for Users WITHOUT Pets (Checking text fields)
                     const nameLen = document.getElementById('newPetName').value.trim().length;
                     const breedLen = document.getElementById('newPetBreed').value.trim().length;
-                    
+
                     if (nameLen > 0 && breedLen > 0) {
                         isValid = true;
                     } else {
@@ -697,14 +1075,14 @@
                 // Also ensure time is valid before unlocking
                 const timeError = document.getElementById('timeError');
                 const timeErrVisible = timeError && timeError.style.display === 'block';
-                
+
                 submitBookingBtn.disabled = !(isValid && !timeErrVisible);
             }
 
             // Attach listeners
             petCheckboxes.forEach(cb => cb.addEventListener('change', runValidations));
             newPetInputs.forEach(input => input.addEventListener('input', runValidations));
-            
+
             if (userHasPets) {
                 runValidations();
             }
@@ -717,7 +1095,7 @@
                 const name = document.getElementById('newPetName').value.trim();
                 const breed = document.getElementById('newPetBreed').value.trim();
                 const notesElem = document.getElementById('notesInput');
-                
+
                 // Pack the new pet info safely into the notes field so the Vet can see it!
                 const existingNotes = notesElem.value;
                 notesElem.value = `[NEW PATIENT VERIFICATION] Pet Name: ${name} | Breed: ${breed} || Additional Notes: ${existingNotes}`;
@@ -737,16 +1115,16 @@
             const vetSchedule = {
                 @if (Model.Schedule != null)
                 {
-                    foreach(var day in Model.Schedule)
-                    {
-                        <text>
-                        "@day.Day.ToString()": {
-                            isOff: @(day.IsOff.ToString().ToLower()),
-                            open: "@(day.OpenTime?.ToString(@"hh\:mm") ?? "00:00")",
-                            close: "@(day.CloseTime?.ToString(@"hh\:mm") ?? "23:59")"
-                        },
-                        </text>
-                    }
+                        foreach (var day in Model.Schedule)
+                        {
+                                <text>
+                                "@day.Day.ToString()": {
+                                    isOff: @(day.IsOff.ToString().ToLower()),
+                                    open: "@(day.OpenTime?.ToString(@"hh\:mm") ?? "00:00")",
+                                    close: "@(day.CloseTime?.ToString(@"hh\:mm") ?? "23:59")"
+                                },
+                                </text>
+                        }
                 }
             };
 
@@ -754,7 +1132,7 @@
 
             dtInput.addEventListener('change', function() {
                 if(timeError) timeError.style.display = 'none';
-                
+
                 if (submitBookingBtn) runValidations();
 
                 if (!this.value) return;
@@ -769,8 +1147,8 @@
                         return;
                     }
 
-                    const selectedTimeStr = this.value.split('T')[1]; 
-                    
+                    const selectedTimeStr = this.value.split('T')[1];
+
                     if (selectedTimeStr < schedule.open || selectedTimeStr > schedule.close) {
                         const open12h = format12Hour(schedule.open);
                         const close12h = format12Hour(schedule.close);
@@ -784,8 +1162,8 @@
             if(timeError) {
                 timeError.innerHTML = `<i class="bi bi-exclamation-circle-fill me-1"></i> ${msg}`;
                 timeError.style.display = 'block';
-                dtInput.value = ''; 
-                if(submitBookingBtn) submitBookingBtn.disabled = true; 
+                dtInput.value = '';
+                if(submitBookingBtn) submitBookingBtn.disabled = true;
             }
         }
 
@@ -807,7 +1185,7 @@
             star.addEventListener('click', function() {
                 const val = parseInt(this.getAttribute('data-val'));
                 ratingInput.value = val;
-                
+
                 stars.forEach(s => {
                     if (parseInt(s.getAttribute('data-val')) <= val) {
                         s.classList.replace('bi-star', 'bi-star-fill');

@@ -43,7 +43,7 @@
 
         .dropdown-menu-custom {
             border: 1px solid #EBE0D5;
-            border-radius: 20px; /* Enhanced soft edges */
+            border-radius: 20px;
             box-shadow: 0 15px 45px rgba(92, 61, 30, 0.12);
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(15px);
@@ -54,18 +54,15 @@
         }
 
         @@keyframes fadeIn {
-            from
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
 
-        {
-            opacity: 0;
-            transform: translateY(-8px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .dropdown-item-custom {
@@ -83,7 +80,7 @@
             .dropdown-item-custom:hover {
                 background-color: #FAF6F1;
                 color: #7b4f2c;
-                padding-left: 28px; /* Smooth elegant slide-out effect */
+                padding-left: 28px;
             }
 
             .dropdown-item-custom i {
@@ -145,6 +142,113 @@
         .admin-wrapper {
             flex: 1;
             padding: 40px 20px;
+        }
+
+        /* ---------------------------------------------------- */
+        /* Premium Floating Toast Notifications */
+        /* ---------------------------------------------------- */
+        .premium-toast-container {
+            position: fixed;
+            top: 95px; /* Spawns just below the navbar */
+            right: 25px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            pointer-events: none; /* Lets you click through empty space */
+        }
+
+        .premium-toast {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 16px 24px;
+            min-width: 320px;
+            max-width: 400px;
+            box-shadow: 0 15px 35px rgba(92, 61, 30, 0.15);
+            border-left: 6px solid #10B981; /* Success Green */
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transform: translateX(120%);
+            opacity: 0;
+            animation: slideInToast 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            pointer-events: auto; /* Make the actual toast clickable */
+        }
+
+            .premium-toast.toast-error {
+                border-left-color: #EF4444; /* Error Red */
+            }
+
+        .toast-icon {
+            font-size: 1.5rem;
+        }
+
+        .toast-success-icon {
+            color: #10B981;
+        }
+
+        .toast-error-icon {
+            color: #EF4444;
+        }
+
+        .toast-body {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .toast-title {
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #4A3320;
+            margin-bottom: 2px;
+        }
+
+        .toast-message {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            color: #8C7560;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: transparent;
+            border: none;
+            color: #C8A882;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            padding: 0;
+        }
+
+            .toast-close:hover {
+                color: #4A3320;
+            }
+
+        @@keyframes slideInToast {
+            0% {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @@keyframes slideOutToast {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(120%);
+                opacity: 0;
+            }
         }
     </style>
 </head>
@@ -215,6 +319,33 @@
         </nav>
     </header>
 
+    <!-- Floating Toast Notification Container -->
+    <div class="premium-toast-container" id="toastContainer">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="premium-toast" id="successToast">
+                <i class="bi bi-check-circle-fill toast-icon toast-success-icon"></i>
+                <div class="toast-body">
+                    <span class="toast-title">System Update</span>
+                    <span class="toast-message">@TempData["SuccessMessage"]</span>
+                </div>
+                <button class="toast-close" onclick="closeToast('successToast')"><i class="bi bi-x"></i></button>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="premium-toast toast-error" id="errorToast">
+                <i class="bi bi-exclamation-triangle-fill toast-icon toast-error-icon"></i>
+                <div class="toast-body">
+                    <span class="toast-title">Action Prevented</span>
+                    <span class="toast-message">@TempData["ErrorMessage"]</span>
+                </div>
+                <button class="toast-close" onclick="closeToast('errorToast')"><i class="bi bi-x"></i></button>
+            </div>
+        }
+    </div>
+
     <div class="admin-wrapper">
         <main role="main">
             @RenderBody()
@@ -223,6 +354,28 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script to Auto-Hide the Toasts -->
+    <script>
+        function closeToast(id) {
+            const toast = document.getElementById(id);
+            if (toast) {
+                toast.style.animation = 'slideOutToast 0.4s ease forwards';
+                setTimeout(() => toast.remove(), 400); // Remove from DOM after animation
+            }
+        }
+
+        // Auto-dismiss after 5 seconds
+        document.addEventListener("DOMContentLoaded", function() {
+            if (document.getElementById('successToast')) {
+                setTimeout(() => { closeToast('successToast'); }, 5000);
+            }
+            if (document.getElementById('errorToast')) {
+                setTimeout(() => { closeToast('errorToast'); }, 7000); // Give errors a little longer to read
+            }
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

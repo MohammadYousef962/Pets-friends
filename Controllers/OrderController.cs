@@ -58,10 +58,6 @@ namespace Pets_friends.Controllers
             return View(orders); // Renders a client-facing history view
         }
 
-        // ====================================================================
-        // 2. MERCHANT ENDPOINTS (Fulfillment Dashboard)
-        // ====================================================================
-
         [Authorize(Roles = "Merchant")]
         [HttpGet]
         public async Task<IActionResult> StoreOrders()
@@ -73,6 +69,12 @@ namespace Pets_friends.Controllers
                 .FirstOrDefaultAsync(p => p.UserAccountId == user.Id);
 
             if (merchantProfile == null) return RedirectToAction("CreateProfile", "Merchant");
+
+            // ==========================================================
+            // FIX: PASS DATA TO SATISFY YOUR LAYOUT (PROFILE PIC & NAME)
+            // ==========================================================
+            ViewData["MerchantAvatar"] = merchantProfile.ImageUrl;
+            ViewData["MerchantName"] = user.FullName ?? merchantProfile.StoreName;
 
             // Pull strictly orders assigned to this merchant's store
             var orders = await _context.Orders
@@ -209,7 +211,6 @@ namespace Pets_friends.Controllers
             var clientProfile = await _context.ClientProfiles
                 .FirstOrDefaultAsync(c => c.UserAccountId == user.Id);
 
-            // FIX: Auto-create the buyer profile instead of redirecting away
             if (clientProfile == null)
             {
                 clientProfile = new ClientProfile { UserAccountId = user.Id };
@@ -224,27 +225,65 @@ namespace Pets_friends.Controllers
 
             if (!cartItems.Any()) return RedirectToAction("Cart", "Store");
 
-            // 1. Permanently update profile phone record if supplied freshly
-            if (ModelState.IsValid && string.IsNullOrEmpty(user.PhoneNumber))
+            // 1. DYNAMIC VALIDATION FIX: Remove validation errors for payment methods NOT selected
+            // (Otherwise ModelState.IsValid fails silently because hidden required fields are empty)
+            if (model.PaymentMethod == "cod" || model.PaymentMethod == "paypal")
+            {
+                ModelState.Remove("CardNumber");
+                ModelState.Remove("CardExpiry");
+                ModelState.Remove("CardCvv");
+                ModelState.Remove("NameOnCard");
+                ModelState.Remove("CliqAlias");
+            }
+            else if (model.PaymentMethod == "cliq")
+            {
+                ModelState.Remove("CardNumber");
+                ModelState.Remove("CardExpiry");
+                ModelState.Remove("CardCvv");
+                ModelState.Remove("NameOnCard");
+            }
+            else if (model.PaymentMethod == "card")
+            {
+                ModelState.Remove("CliqAlias");
+            }
+
+            // 2. CHECK VALIDATION & RETURN ERRORS IF ANY
+            if (!ModelState.IsValid)
+            {
+                // Reload cart values for the view so the user can fix their mistakes
+                model.CartItems = cartItems;
+                model.Subtotal = cartItems.Sum(i => i.Quantity * (decimal)i.Product.Price);
+                model.Tax = model.Subtotal * 0.08m;
+                model.GrandTotal = model.Subtotal + model.Tax;
+                return View(model);
+            }
+
+            // 3. ALWAYS UPDATE ADDRESS & PHONE (Guarantees the receipt will show the new address)
+            bool profileUpdated = false;
+
+            if (!string.IsNullOrWhiteSpace(model.StreetAddress))
+            {
+                clientProfile.Address = model.StreetAddress.Trim();
+                _context.ClientProfiles.Update(clientProfile);
+                profileUpdated = true;
+            }
+
+            if (string.IsNullOrEmpty(user.PhoneNumber) && !string.IsNullOrWhiteSpace(model.PhoneNumber))
             {
                 user.PhoneNumber = model.PhoneNumber;
                 await _userManager.UpdateAsync(user);
             }
 
-            // 2. Auto-save fresh street address permanently to DB if it is blank
-            if (ModelState.IsValid && string.IsNullOrWhiteSpace(clientProfile.Address) && !string.IsNullOrWhiteSpace(model.StreetAddress))
+            if (profileUpdated)
             {
-                clientProfile.Address = model.StreetAddress.Trim();
-                _context.ClientProfiles.Update(clientProfile);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(); // Save the address BEFORE creating the order
             }
 
-            // 3. Isolate independent vendor store drop shipments cleanly
+            // 4. CREATE VENDOR ORDERS
             var merchantGroups = cartItems.GroupBy(c => c.Product.MerchantProfileId);
 
             foreach (var group in merchantGroups)
             {
-                // Evaluates pure decimal logic to guarantee structural database parity
                 decimal groupSubtotal = group.Sum(i => i.Quantity * (decimal)i.Product.Price);
                 decimal groupTax = groupSubtotal * 0.08m;
                 decimal combinedTotal = groupSubtotal + groupTax;
@@ -255,7 +294,6 @@ namespace Pets_friends.Controllers
                     MerchantProfileId = group.Key,
                     OrderDate = DateTime.Now,
                     Status = "Pending",
-                    // Assigned pure decimal directly to match EF Core Model definitions perfectly
                     TotalAmount = combinedTotal,
                     OrderItems = new List<OrderItem>()
                 };
@@ -269,7 +307,6 @@ namespace Pets_friends.Controllers
                         UnitPrice = item.Product.Price
                     });
 
-                    // Insulate item stock safely avoiding negative integer overflow
                     if (item.Product.StockQuantity >= item.Quantity)
                         item.Product.StockQuantity -= item.Quantity;
                     else
@@ -281,7 +318,7 @@ namespace Pets_friends.Controllers
                 _context.Orders.Add(order);
             }
 
-            // 4. Purge bag cleanly to signal fulfillment loop execution
+            // 5. PURGE CART & COMPLETE
             _context.ShoppingCarts.RemoveRange(cartItems);
             await _context.SaveChangesAsync();
 

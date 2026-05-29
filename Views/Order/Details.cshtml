@@ -1,6 +1,7 @@
 ﻿@model Pets_friends.Models.Order
 
 @{
+    ViewData["Title"] = "Order Invoice";
     Layout = "~/Views/Shared/_StoreLayout.cshtml";
 
     decimal rawSubtotal = Model.OrderItems?.Sum(i => (decimal)i.Quantity * i.UnitPrice) ?? 0m;
@@ -8,25 +9,15 @@
     decimal feesAndTaxes = totalPaid - rawSubtotal;
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Receipt #ORD-@Model.Id.ToString("D4") | PetFriends</title>
-
+@section Styles {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <style>
-        body {
-            /* Applied signature warm UI background gradient for digital viewing */
-            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%) !important;
-            background-attachment: fixed !important;
+        .invoice-wrapper {
             font-family: 'DM Sans', sans-serif;
             color: #2D1B0E;
             padding: 40px 20px;
+            background: linear-gradient(135deg, #f5f1eb 0%, #e7d8c7 45%, #d2b89c 100%);
+            border-radius: 12px;
         }
 
         .invoice-container {
@@ -180,29 +171,40 @@
 
             .btn-print:hover {
                 background: #C8A882;
+                color: #fff;
             }
 
+        /* --- MAGIC PRINT CSS --- */
         @@media print {
-            body {
-                padding: 0;
-                background: #fff !important; /* Forces solid white background for printing */
+            /* 1. Hide EVERYTHING on the website body */
+            body * {
+                visibility: hidden;
             }
-
+            /* 2. Show ONLY the invoice and its children */
+            .invoice-container, .invoice-container * {
+                visibility: visible;
+            }
+            /* 3. Pull the invoice up to the absolute top left of the physical paper (ignores layout margins) */
             .invoice-container {
-                box-shadow: none;
-                border: none;
-                padding: 0;
-                max-width: 100%;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
-
+            /* 4. Hide the print button on the paper */
             .btn-print {
-                display: none;
+                display: none !important;
             }
         }
     </style>
-</head>
-<body>
+}
 
+<div class="invoice-wrapper">
     <div class="invoice-container">
 
         <div class="invoice-header flex-column flex-sm-row gap-3">
@@ -303,7 +305,9 @@
         </button>
 
     </div>
+</div>
 
+@section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const dateNodes = document.querySelectorAll('.device-date');
@@ -315,5 +319,4 @@
             });
         });
     </script>
-</body>
-</html>
+}

@@ -1,10 +1,32 @@
 ﻿@model Pets_friends.Data.ViewModels.ClinicsDirectoryVM
 @using Microsoft.AspNetCore.Identity
 @using Pets_friends.Models
+@using Pets_friends.Data
+@using Microsoft.EntityFrameworkCore
 @inject UserManager<UserAccount> UserManager
+@inject AppDbContext _context
 
 @{
     Layout = null; // Hides the standard internal layout
+
+    var currentPath = Context.Request.Path.ToString().ToLower();
+    var currentUser = await UserManager.GetUserAsync(User);
+
+    // Safely encode for the navbar avatar
+    string userName = currentUser?.FullName ?? "User";
+    var encodedName = userName.Replace(" ", "+");
+    var profileImageUrl = $"https://ui-avatars.com/api/?name={encodedName}&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true";
+
+    // Safely check the database for an actual uploaded profile picture
+    if (currentUser != null)
+    {
+        var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == currentUser.Id);
+        if (clientProfile != null && !string.IsNullOrWhiteSpace(clientProfile.ImageUrl))
+        {
+            // Override with the real image from the server
+            profileImageUrl = clientProfile.ImageUrl;
+        }
+    }
 }
 
 <!DOCTYPE html>
@@ -96,7 +118,7 @@
                 transform: translateY(-2px);
             }
 
-        /* --- NEW USER DROPDOWN UI (SMOOTH ANIMATION) --- */
+        /* --- NEW USER DROPDOWN UI --- */
         .user-profile-btn {
             background: #FFFFFF;
             border: 1px solid var(--border-light);
@@ -155,7 +177,7 @@
             padding: 12px;
             margin-top: 15px !important;
             min-width: 220px;
-            /* Smooth Apple-style pop-in animation - ONLY OPACITY */
+            background: var(--bg-white);
             animation: dropFade 0.2s ease-out forwards;
             transform-origin: top right;
         }
@@ -281,37 +303,6 @@
             .btn-search:hover {
                 background: var(--text-dark);
                 transform: scale(1.02);
-            }
-
-        /* --- FILTERS --- */
-        .filters-wrapper {
-            background: var(--bg-white);
-            padding: 20px 0;
-            border-bottom: 1px solid var(--border-light);
-            position: sticky;
-            top: 73px;
-            z-index: 999;
-        }
-
-        .filter-pill {
-            display: inline-block;
-            text-decoration: none;
-            background: #F8F2E8;
-            border: 1px solid var(--border-light);
-            color: var(--text-muted);
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-            .filter-pill:hover, .filter-pill.active {
-                background: var(--brand-primary);
-                border-color: var(--brand-primary);
-                color: white !important;
             }
 
         /* --- GRID & CARDS --- */
@@ -462,17 +453,6 @@
 </head>
 <body>
 
-    @{
-        var currentPath = Context.Request.Path.ToString().ToLower();
-
-        // Get currently logged in user logic
-        var currentUser = await UserManager.GetUserAsync(User);
-        string userName = currentUser?.FullName ?? "User";
-
-        var encodedName = userName.Replace(" ", "+");
-        var profileImageUrl = $"https://ui-avatars.com/api/?name={encodedName}&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true";
-    }
-
     <nav class="main-nav">
         <div class="container d-flex justify-content-between align-items-center">
             <a href="/" class="nav-brand">PetFriends</a>
@@ -523,6 +503,7 @@
             <p>Connect with top-rated medical professionals who care as much about your pet as you do.</p>
 
             <form asp-action="Clinics" method="get">
+                <!-- Kept the category hidden input just in case your controller depends on it, but the UI is removed -->
                 <input type="hidden" name="category" value="@Model.CurrentCategory" />
 
                 <div class="search-container">
@@ -534,17 +515,6 @@
         </div>
     </section>
 
-    <div class="filters-wrapper">
-        <div class="container d-flex gap-3 overflow-auto pb-1" style="scrollbar-width: none;">
-            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=all" class="filter-pill @(Model.CurrentCategory == "all" ? "active" : "")">All Specialists</a>
-            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=General" class="filter-pill @(Model.CurrentCategory == "General" ? "active" : "")">General Practice</a>
-            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=Surgery" class="filter-pill @(Model.CurrentCategory == "Surgery" ? "active" : "")">Surgical Care</a>
-            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=Dental" class="filter-pill @(Model.CurrentCategory == "Dental" ? "active" : "")">Dental Health</a>
-            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=Emergency" class="filter-pill @(Model.CurrentCategory == "Emergency" ? "active" : "")">Emergency 24/7</a>
-            <a href="/Home/Clinics?query=@Model.CurrentQuery&category=Exotic" class="filter-pill @(Model.CurrentCategory == "Exotic" ? "active" : "")">Exotic Pets</a>
-        </div>
-    </div>
-
     <section class="vets-grid-section">
         <div class="container">
 
@@ -553,7 +523,7 @@
                 <div id="noResults" class="text-center py-5">
                     <i class="bi bi-search-heart fs-1 text-muted d-block mb-3"></i>
                     <h4 class="fw-bold">No clinics found matching your criteria</h4>
-                    <p class="text-muted">Try adjusting your search terms or filters.</p>
+                    <p class="text-muted">Try adjusting your search terms.</p>
                 </div>
             }
             else

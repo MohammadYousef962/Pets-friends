@@ -14,7 +14,7 @@ using System.Collections.Generic;
 
 namespace Pets_friends.Controllers
 {
-    [Authorize] // Allows ANY logged in user (Clients) to submit forms. Methods are restricted below.
+    [Authorize]
     public class ShelterController : Controller
     {
         private readonly AppDbContext _context;
@@ -28,11 +28,63 @@ namespace Pets_friends.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // ========================================================
+        // AUTOMATED SYNC METHOD FOR BOARDING DATES
+        // ========================================================
+        private async Task SyncBoardingStatusesAsync(int shelterId)
+        {
+            bool modified = false;
+            var now = DateTime.Now;
+
+            // 1. DropOff -> Boarding (When real-time hits Drop-off time)
+            var dropOffs = await _context.BoardingRecords
+                .Where(b => b.ShelterProfileId == shelterId && b.Status == "DropOff" && b.ScheduledDate <= now)
+                .ToListAsync();
+
+            foreach (var b in dropOffs)
+            {
+                b.Status = "Boarding";
+                b.TimeLabel = $"{b.ScheduledDate:hh:mm tt} • Boarding";
+
+                // ADD to Internal Pets because boarding is now Active
+                var linkedPet = await _context.Pets.FirstOrDefaultAsync(p => p.Name == b.PetName && p.ClientProfileId != null);
+                if (linkedPet != null && linkedPet.ShelterProfileId != shelterId)
+                {
+                    linkedPet.ShelterProfileId = shelterId;
+                }
+                modified = true;
+            }
+
+            // 2. Boarding -> PickUp (When real-time hits Pick-up time)
+            var readyForPickup = await _context.BoardingRecords
+                .Where(b => b.ShelterProfileId == shelterId && b.Status == "Boarding" && b.PickUpDate.HasValue && b.PickUpDate.Value <= now)
+                .ToListAsync();
+
+            foreach (var b in readyForPickup)
+            {
+                b.Status = "PickUp";
+                b.TimeLabel = $"{b.PickUpDate.Value:hh:mm tt} • Pick-up";
+
+                // REMOVE from Internal Pets because they are waiting for pick-up
+                var linkedPet = await _context.Pets.FirstOrDefaultAsync(p => p.Name == b.PetName && p.ClientProfileId != null);
+                if (linkedPet != null && linkedPet.ShelterProfileId == shelterId)
+                {
+                    linkedPet.ShelterProfileId = null;
+                }
+                modified = true;
+            }
+
+            if (modified)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
+
         // --------------------------------------------------------
         // DASHBOARD
         // --------------------------------------------------------
         [HttpGet]
-        [Authorize(Roles = "Shelter")] // Only Shelters can see the Dashboard
+        [Authorize(Roles = "Shelter")]
         public async Task<IActionResult> Dashboard()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -43,6 +95,8 @@ namespace Pets_friends.Controllers
 
             int currentShelterId = shelter.Id;
 
+            await SyncBoardingStatusesAsync(currentShelterId);
+
             var viewModel = new ShelterDashboardVM
             {
                 ShelterName = shelter.ShelterName,
@@ -51,8 +105,6 @@ namespace Pets_friends.Controllers
                 InResidenceCount = await _context.Pets.CountAsync(p => p.ShelterProfileId == currentShelterId && p.IsAdopted == false && p.ClientProfileId == null && p.IsPubliclyListed == true),
                 PendingAdoptionsCount = await _context.AdoptionApplications.CountAsync(a => a.Pet.ShelterProfileId == currentShelterId && a.Type == "Adoption" && a.Status == "Pending"),
                 IntakeRequestsCount = await _context.AdoptionApplications.CountAsync(a => a.Pet.ShelterProfileId == currentShelterId && a.Type == "Transfer" && a.Status == "Pending"),
-
-                // FIXED: Boarding Now counts only accepted/active boarding logs
                 ActiveBoardingCount = await _context.BoardingRecords.CountAsync(b => b.ShelterProfileId == currentShelterId && b.Status != "Pending" && b.Status != "Completed")
             };
 
@@ -66,14 +118,13 @@ namespace Pets_friends.Controllers
                     Type = a.Type,
                     PetName = a.Pet.Name,
                     PetInfo = $"{a.Pet.Breed} • {a.Pet.Age}yrs",
-                    PetImageUrl = a.Pet.ImageUrl ?? "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=150&q=80",
+                    PetImageUrl = a.Pet.ImageUrl ?? "https://placehold.co/100x100/EBE0D5/5C3D1E?text=Pet",
                     ApplicantName = a.ClientProfile.UserAccount.FullName,
                     ApplicantContact = a.ClientProfile.UserAccount.PhoneNumber ?? a.ClientProfile.UserAccount.Email,
                     Status = a.Status
                 })
                 .ToListAsync();
 
-            // FIXED: Fetch the image of the pet for Boarding Requests
             var pendingBoardings = await _context.BoardingRecords
                 .Where(b => b.ShelterProfileId == currentShelterId && b.Status == "Pending")
                 .Select(b => new QueueItemDto
@@ -82,7 +133,8 @@ namespace Pets_friends.Controllers
                     Type = "Boarding",
                     PetName = b.PetName,
                     PetInfo = $"{b.PetBreed} • Boarding Req.",
-                    PetImageUrl = _context.Pets.Where(p => p.Name == b.PetName && p.ShelterProfileId == currentShelterId).Select(p => p.ImageUrl).FirstOrDefault() ?? "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=150&q=80",
+                    // FIXED: Removed the ShelterProfile check so it successfully pulls the client's pet image!
+                    PetImageUrl = _context.Pets.Where(p => p.Name == b.PetName).Select(p => p.ImageUrl).FirstOrDefault() ?? "https://placehold.co/100x100/EBE0D5/5C3D1E?text=Pet",
                     ApplicantName = b.OwnerName,
                     ApplicantContact = "Client",
                     Status = b.Status
@@ -104,7 +156,8 @@ namespace Pets_friends.Controllers
                     TimeLabel = b.TimeLabel,
                     StatusType = b.Status,
                     SpecialNotes = b.SpecialNotes,
-                    ScheduledDate = b.ScheduledDate
+                    ScheduledDate = b.ScheduledDate,
+                    PickUpDate = b.PickUpDate
                 })
                 .ToListAsync();
 
@@ -197,10 +250,17 @@ namespace Pets_friends.Controllers
         // --------------------------------------------------------
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddBoardingSession(int? shelterId, List<int>? petIds, string PetName, string PetBreed, string OwnerName, DateTime ScheduledDate, string Status, string SpecialNotes)
+        public async Task<IActionResult> AddBoardingSession(int? shelterId, List<int>? petIds, string PetName, string PetBreed, string OwnerName, string ScheduledDate, string PickUpDate, string Status, string SpecialNotes)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
+
+            // FIXED: Securely parse string dates to avoid model binding failures
+            DateTime parsedSchedule = DateTime.Now;
+            if (DateTime.TryParse(ScheduledDate, out DateTime ps)) parsedSchedule = ps;
+
+            DateTime? parsedPickUp = null;
+            if (!string.IsNullOrWhiteSpace(PickUpDate) && DateTime.TryParse(PickUpDate, out DateTime pu)) parsedPickUp = pu;
 
             int targetShelterId = shelterId ?? 0;
             bool isClientSubmission = shelterId.HasValue;
@@ -214,10 +274,10 @@ namespace Pets_friends.Controllers
             var shelterProfile = await _context.ShelterProfiles.FindAsync(targetShelterId);
             if (shelterProfile == null) return NotFound();
 
-            var dName = ScheduledDate.DayOfWeek;
+            var dName = parsedSchedule.DayOfWeek;
             var schedule = await _context.WorkingDays.FirstOrDefaultAsync(w => w.ShelterProfileId == targetShelterId && w.Day == dName);
 
-            if (schedule == null || schedule.IsOff || ScheduledDate.TimeOfDay < schedule.OpenTime || ScheduledDate.TimeOfDay > schedule.CloseTime)
+            if (schedule == null || schedule.IsOff || parsedSchedule.TimeOfDay < schedule.OpenTime || parsedSchedule.TimeOfDay > schedule.CloseTime)
             {
                 TempData["ErrorMessage"] = "Booking Failed: Selected time is outside of the shelter's working hours.";
                 if (isClientSubmission) return RedirectToAction("Profile", new { id = shelterId });
@@ -225,7 +285,7 @@ namespace Pets_friends.Controllers
             }
 
             string finalStatus = isClientSubmission ? "Pending" : Status;
-            string formattedTime = ScheduledDate.ToString("hh:mm tt");
+            string formattedTime = parsedSchedule.ToString("hh:mm tt");
             string actionLabel = finalStatus == "Pending" ? "Pending Approval" : (finalStatus == "DropOff" ? "Drop-off" : (finalStatus == "PickUp" ? "Pick-up" : "Boarding"));
             string fullTimeLabel = isClientSubmission ? "Awaiting Review" : $"{formattedTime} • {actionLabel}";
 
@@ -236,15 +296,14 @@ namespace Pets_friends.Controllers
                     var pet = await _context.Pets.FindAsync(pid);
                     if (pet != null)
                     {
-                        pet.ShelterProfileId = targetShelterId;
-
                         var newBoarding = new BoardingRecord
                         {
                             ShelterProfileId = targetShelterId,
                             PetName = pet.Name,
                             PetBreed = pet.Breed,
                             OwnerName = OwnerName,
-                            ScheduledDate = ScheduledDate,
+                            ScheduledDate = parsedSchedule,
+                            PickUpDate = parsedPickUp,
                             Status = finalStatus,
                             TimeLabel = fullTimeLabel,
                             SpecialNotes = SpecialNotes
@@ -261,7 +320,8 @@ namespace Pets_friends.Controllers
                     PetName = PetName,
                     PetBreed = PetBreed,
                     OwnerName = string.IsNullOrWhiteSpace(OwnerName) ? "-" : OwnerName,
-                    ScheduledDate = ScheduledDate,
+                    ScheduledDate = parsedSchedule,
+                    PickUpDate = parsedPickUp,
                     Status = finalStatus,
                     TimeLabel = fullTimeLabel,
                     SpecialNotes = string.IsNullOrWhiteSpace(SpecialNotes) ? "Standard" : SpecialNotes
@@ -292,9 +352,20 @@ namespace Pets_friends.Controllers
             var session = await _context.BoardingRecords.FindAsync(id);
             if (session != null && session.Status == "Pending")
             {
-                session.Status = "DropOff";
-                string formattedTime = session.ScheduledDate.ToString("hh:mm tt");
-                session.TimeLabel = $"{formattedTime} • Drop-off";
+                if (session.ScheduledDate <= DateTime.Now)
+                {
+                    session.Status = "Boarding";
+                    session.TimeLabel = $"{session.ScheduledDate:hh:mm tt} • Boarding";
+
+                    var linkedPet = await _context.Pets.FirstOrDefaultAsync(p => p.Name == session.PetName && p.ClientProfileId != null);
+                    if (linkedPet != null) linkedPet.ShelterProfileId = session.ShelterProfileId;
+                }
+                else
+                {
+                    session.Status = "DropOff";
+                    session.TimeLabel = $"{session.ScheduledDate:hh:mm tt} • Drop-off";
+                }
+
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = $"Boarding request for {session.PetName} approved!";
             }
@@ -332,7 +403,7 @@ namespace Pets_friends.Controllers
             {
                 app.Pet.ClientProfileId = null;
                 app.Pet.IsAdopted = false;
-                app.Pet.IsPubliclyListed = false; // Makes them start in Internal Pets!
+                app.Pet.IsPubliclyListed = false;
                 app.Status = "Completed";
 
                 await _context.SaveChangesAsync();
@@ -411,7 +482,7 @@ namespace Pets_friends.Controllers
         [HttpPost]
         [Authorize(Roles = "Shelter")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateBoardingSession(int id, string PetName, string PetBreed, string OwnerName, DateTime ScheduledDate, string Status, string SpecialNotes)
+        public async Task<IActionResult> UpdateBoardingSession(int id, string PetName, string PetBreed, string OwnerName, string ScheduledDate, string PickUpDate, string Status, string SpecialNotes)
         {
             var session = await _context.BoardingRecords.FindAsync(id);
             if (session != null)
@@ -419,13 +490,38 @@ namespace Pets_friends.Controllers
                 session.PetName = PetName;
                 session.PetBreed = PetBreed;
                 session.OwnerName = string.IsNullOrWhiteSpace(OwnerName) ? "-" : OwnerName;
-                session.ScheduledDate = ScheduledDate;
+
+                // FIXED: Manually parsing the dates prevents ASP.NET from failing and returning 0001-01-01
+                if (DateTime.TryParse(ScheduledDate, out DateTime ps)) session.ScheduledDate = ps;
+
+                if (!string.IsNullOrWhiteSpace(PickUpDate) && DateTime.TryParse(PickUpDate, out DateTime pu)) session.PickUpDate = pu;
+                else session.PickUpDate = null;
+
                 session.Status = Status;
 
-                string formattedTime = ScheduledDate.ToString("hh:mm tt");
-                string actionLabel = Status == "DropOff" ? "Drop-off" : (Status == "PickUp" ? "Pick-up" : "Boarding");
+                DateTime displayDate = (Status == "PickUp" && session.PickUpDate.HasValue) ? session.PickUpDate.Value : session.ScheduledDate;
+                string formattedTime = displayDate.ToString("hh:mm tt");
+                string actionLabel = Status == "DropOff" ? "Drop-off" : (Status == "PickUp" ? "Pick-up" : (Status == "Completed" ? "Completed" : "Boarding"));
+
                 session.TimeLabel = $"{formattedTime} • {actionLabel}";
                 session.SpecialNotes = string.IsNullOrWhiteSpace(SpecialNotes) ? "Standard" : SpecialNotes;
+
+                // STRICT MANUAL INTERNAL PETS LOGIC
+                var linkedPet = await _context.Pets.FirstOrDefaultAsync(p => p.Name == PetName && p.ClientProfileId != null);
+                if (linkedPet != null)
+                {
+                    if (Status == "Boarding")
+                    {
+                        linkedPet.ShelterProfileId = session.ShelterProfileId;
+                    }
+                    else
+                    {
+                        if (linkedPet.ShelterProfileId == session.ShelterProfileId)
+                        {
+                            linkedPet.ShelterProfileId = null;
+                        }
+                    }
+                }
 
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Boarding session updated successfully.";
@@ -557,6 +653,8 @@ namespace Pets_friends.Controllers
             var shelter = await _context.ShelterProfiles.FirstOrDefaultAsync(s => s.UserAccountId == shelterUser.Id);
 
             if (shelter == null) return RedirectToAction("Dashboard");
+
+            await SyncBoardingStatusesAsync(shelter.Id);
 
             var query = _context.Pets
                 .Include(p => p.ClientProfile).ThenInclude(c => c.UserAccount)
@@ -874,11 +972,11 @@ namespace Pets_friends.Controllers
                 DateOfBirth = vm.DateOfBirth,
                 Gender = vm.Gender,
                 IsNeutered = vm.IsNeutered,
-                Description = vm.Description,
-                MedicalHistory = vm.MedicalHistory,
-                IsAdopted = false,
 
-                // FIXED: Newborns from this form are strictly internal (unlisted) until toggled!
+                Description = string.IsNullOrWhiteSpace(vm.Description) ? "No description provided." : vm.Description,
+                MedicalHistory = string.IsNullOrWhiteSpace(vm.MedicalHistory) ? "No medical history recorded." : vm.MedicalHistory,
+
+                IsAdopted = false,
                 IsPubliclyListed = false,
 
                 ImageUrl = await ProcessUploadedFile(vm.ImageFile) ?? "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&q=80"
@@ -914,7 +1012,6 @@ namespace Pets_friends.Controllers
 
             if (targetShelterId == 0) return RedirectToAction("Main", "Home");
 
-            // Filter for pets that are strictly up for adoption!
             var query = _context.Pets
                 .Where(p => p.ShelterProfileId == targetShelterId && p.IsAdopted == false && p.IsPubliclyListed == true && p.ClientProfileId == null);
 
@@ -956,9 +1053,10 @@ namespace Pets_friends.Controllers
             if (pet == null) return NotFound();
 
             pet.Name = Name;
-            pet.Description = Description;
-            pet.MedicalHistory = MedicalHistory;
             pet.IsNeutered = IsNeutered;
+
+            pet.Description = string.IsNullOrWhiteSpace(Description) ? "No description provided." : Description;
+            pet.MedicalHistory = string.IsNullOrWhiteSpace(MedicalHistory) ? "No medical history recorded." : MedicalHistory;
 
             if (ImageFile != null)
             {
@@ -997,7 +1095,6 @@ namespace Pets_friends.Controllers
             var pet = await _context.Pets.FirstOrDefaultAsync(p => p.Id == id && p.ShelterProfileId == shelter.Id);
             if (pet == null) return NotFound();
 
-            // Prevent the shelter from deleting a pet that is owned by a client (Boarding)
             if (pet.ClientProfileId != null)
             {
                 TempData["ErrorMessage"] = "You cannot delete a pet that belongs to a client. The client must remove it from their own account.";

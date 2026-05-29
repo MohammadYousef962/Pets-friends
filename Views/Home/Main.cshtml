@@ -1,14 +1,35 @@
 ﻿@model Pets_friends.Data.ViewModels.HomeVM
 @using Microsoft.AspNetCore.Identity
 @using Pets_friends.Models
+@using Pets_friends.Data
+@using Microsoft.EntityFrameworkCore
 @inject UserManager<UserAccount> UserManager
+@inject AppDbContext _context
 
 @{
     Layout = null; // Hides the standard internal layout
 
     var currentPath = Context.Request.Path.ToString().ToLower();
     var currentUser = await UserManager.GetUserAsync(User);
+
+    // Safely encode for the navbar avatar
     string userName = currentUser?.FullName ?? "User";
+    var encodedName = userName.Replace(" ", "+");
+    var profileImageUrl = $"https://ui-avatars.com/api/?name={encodedName}&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true";
+
+    // Safely check the database for an actual uploaded profile picture
+    if (currentUser != null)
+    {
+        var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == currentUser.Id);
+        if (clientProfile != null && !string.IsNullOrWhiteSpace(clientProfile.ImageUrl))
+        {
+            // Override with the real image from the server
+            profileImageUrl = clientProfile.ImageUrl;
+        }
+    }
+
+    // Check authentication status to control modals, dropdown, and footer links
+    bool isAuthenticated = User.Identity != null && User.Identity.IsAuthenticated;
 }
 
 <!DOCTYPE html>
@@ -16,7 +37,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PetFriends | The Complete Pet Ecosystem</title>
+    <title>PetFriends </title>
 
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -47,7 +68,7 @@
             letter-spacing: -0.5px;
         }
 
-        /* --- NAVBAR --- */
+        /* --- ORIGINAL NAVBAR (Transparent, Absolute) --- */
         .main-nav {
             padding: 20px 0;
             background: transparent;
@@ -98,7 +119,7 @@
                 transform: translateY(-2px);
             }
 
-        /* --- USER DROPDOWN UI --- */
+        /* --- NEW USER DROPDOWN UI --- */
         .user-profile-btn {
             background: #FFFFFF;
             border: 1px solid var(--border-light);
@@ -133,7 +154,7 @@
         }
 
         .nav-user-name {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Nunito', sans-serif;
             font-weight: 700;
             color: var(--text-dark);
             font-size: 0.95rem;
@@ -142,7 +163,7 @@
         .dropdown-chevron {
             color: var(--text-muted);
             font-size: 0.8rem;
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.2s ease;
         }
 
         .dropdown-toggle.show .dropdown-chevron {
@@ -155,16 +176,21 @@
             border: 1px solid var(--border-light);
             box-shadow: 0 15px 35px rgba(92, 61, 30, 0.1);
             padding: 12px;
-            margin-top: 25px !important; 
+            margin-top: 15px !important;
             min-width: 220px;
             background: #fff;
-            animation: dropFade 0.2s ease forwards;
+            animation: dropFade 0.2s ease-out forwards;
             transform-origin: top right;
         }
 
         @@keyframes dropFade {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .custom-user-dropdown .dropdown-item {
@@ -326,283 +352,803 @@
             z-index: 10;
         }
 
-        .badge-1 { top: -10px; left: 0px; animation-delay: 0s; }
-        .badge-2 { bottom: 30px; left: -20px; animation-delay: 2s; }
-        .badge-3 { bottom: 60px; right: -10px; animation-delay: 4s; }
+        .badge-1 {
+            top: -10px;
+            left: 0px;
+            animation-delay: 0s;
+        }
+
+        .badge-2 {
+            bottom: 30px;
+            left: -20px;
+            animation-delay: 2s;
+        }
+
+        .badge-3 {
+            bottom: 60px;
+            right: -10px;
+            animation-delay: 4s;
+        }
 
         @@keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
         }
 
-        .avatar-group { display: flex; align-items: center; }
-        .avatar-group img {
-            width: 32px; height: 32px; border-radius: 50%;
-            border: 2px solid white; margin-left: -10px; object-fit: cover;
+        .avatar-group {
+            display: flex;
+            align-items: center;
         }
-        .avatar-group img:first-child { margin-left: 0; }
+
+            .avatar-group img {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                border: 2px solid white;
+                margin-left: -10px;
+                object-fit: cover;
+            }
+
+                .avatar-group img:first-child {
+                    margin-left: 0;
+                }
+
         .avatar-plus {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: var(--brand-accent); color: white; display: flex;
-            align-items: center; justify-content: center; font-size: 0.7rem;
-            font-weight: bold; border: 2px solid white; margin-left: -10px; z-index: 4;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--brand-accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            border: 2px solid white;
+            margin-left: -10px;
+            z-index: 4;
         }
 
         /* --- FEATURES GRID --- */
-        .features-section { padding: 100px 0; background: var(--bg-white); }
-        .section-subtitle {
-            font-family: 'Nunito', sans-serif; text-transform: uppercase;
-            color: var(--brand-accent); font-weight: 800; letter-spacing: 1.5px;
-            font-size: 0.9rem; margin-bottom: 10px;
+        .features-section {
+            padding: 100px 0;
+            background: var(--bg-white);
         }
+
+        .section-subtitle {
+            font-family: 'Nunito', sans-serif;
+            text-transform: uppercase;
+            color: var(--brand-accent);
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
         .section-title {
-            font-family: 'Nunito', sans-serif; font-size: 3rem;
-            font-weight: 800; margin-bottom: 15px; color: var(--text-dark);
+            font-family: 'Nunito', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            color: var(--text-dark);
         }
 
         .feature-card {
-            background: var(--bg-light); border-radius: 24px; padding: 40px 30px;
-            text-align: center; height: 100%; transition: all 0.3s;
+            background: var(--bg-light);
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+            height: 100%;
+            transition: all 0.3s;
             border: 1px solid var(--border-light);
         }
+
             .feature-card:hover {
-                transform: translateY(-5px); box-shadow: 0 15px 30px rgba(92, 61, 30, 0.05);
+                transform: translateY(-5px);
+                box-shadow: 0 15px 30px rgba(92, 61, 30, 0.05);
                 border-color: var(--brand-accent);
             }
+
             .feature-card.dark {
-                background: var(--text-dark); color: white;
-                border-color: var(--text-dark); box-shadow: 0 15px 30px rgba(45, 27, 14, 0.2);
+                background: var(--text-dark);
+                color: white;
+                border-color: var(--text-dark);
+                box-shadow: 0 15px 30px rgba(45, 27, 14, 0.2);
             }
-                .feature-card.dark .feature-title { color: white; }
-                .feature-card.dark .feature-text { color: rgba(255,255,255,0.85); font-weight: 400; }
+
+                .feature-card.dark .feature-title {
+                    color: white;
+                }
+
+                .feature-card.dark .feature-text {
+                    color: rgba(255,255,255,0.85);
+                    font-weight: 400;
+                }
 
         .feature-icon-box {
-            width: 55px; height: 55px; border-radius: 16px; display: inline-flex;
-            align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 25px;
+            width: 55px;
+            height: 55px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 25px;
         }
-        .bg-red-light { background: #FFEBEE; color: #D32F2F; }
-        .bg-orange-light { background: #FFF3E0; color: #F57C00; }
-        .bg-tan-light { background: #FDFaf5; color: #C8A882; border: 1px solid #EBE0D5; }
-        .bg-blue-light { background: #E0F2FE; color: #0284C7; }
-        .feature-card.dark .feature-icon-box { background: rgba(255, 255, 255, 0.1); color: var(--brand-accent); }
+
+        .bg-red-light {
+            background: #FFEBEE;
+            color: #D32F2F;
+        }
+
+        .bg-orange-light {
+            background: #FFF3E0;
+            color: #F57C00;
+        }
+
+        .bg-tan-light {
+            background: #FDFaf5;
+            color: #C8A882;
+            border: 1px solid #EBE0D5;
+        }
+
+        .bg-blue-light {
+            background: #E0F2FE;
+            color: #0284C7;
+        }
+
+        .feature-card.dark .feature-icon-box {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--brand-accent);
+        }
 
         .feature-title {
-            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.35rem;
-            margin-bottom: 12px; color: var(--text-dark); letter-spacing: -0.3px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.35rem;
+            margin-bottom: 12px;
+            color: var(--text-dark);
+            letter-spacing: -0.3px;
         }
-        .feature-text { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; }
+
+        .feature-text {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
 
         /* --- SHOWCASE SECTION (Pets) --- */
         .showcase-section {
-            background: #1A0F08; padding: 100px 0; color: white;
-            border-radius: 40px; margin: 0 20px;
+            background: #1A0F08;
+            padding: 100px 0;
+            color: white;
+            border-radius: 40px;
+            margin: 0 20px;
         }
 
         .pet-card {
-            background: rgba(255,255,255,0.05); border-radius: 20px; padding: 15px;
-            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);
-            transition: transform 0.3s; height: 100%; display: flex; flex-direction: column;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
+
             .pet-card:hover {
-                transform: translateY(-5px); background: rgba(255,255,255,0.1);
+                transform: translateY(-5px);
+                background: rgba(255,255,255,0.1);
                 border-color: rgba(200, 168, 130, 0.3);
             }
 
-        .pet-img-wrapper { position: relative; border-radius: 12px; overflow: hidden; margin-bottom: 15px; height: 220px; }
-        .pet-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s; }
-        .pet-card:hover .pet-img { transform: scale(1.05); }
+        .pet-img-wrapper {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            height: 220px;
+        }
+
+        .pet-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s;
+        }
+
+        .pet-card:hover .pet-img {
+            transform: scale(1.05);
+        }
 
         .pet-overlay {
-            position: absolute; inset: 0; background: rgba(26, 15, 8, 0.6);
-            display: flex; flex-direction: column; gap: 12px; align-items: center;
-            justify-content: center; opacity: 0; transition: opacity 0.3s ease; backdrop-filter: blur(2px);
+            position: absolute;
+            inset: 0;
+            background: rgba(26, 15, 8, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(2px);
         }
-        .pet-card:hover .pet-overlay { opacity: 1; }
+
+        .pet-card:hover .pet-overlay {
+            opacity: 1;
+        }
 
         .btn-overlay-adopt, .btn-overlay-view {
-            font-weight: 700; padding: 8px 24px; border-radius: 20px; font-size: 0.9rem;
-            transition: 0.2s; width: 130px; text-align: center; text-decoration: none; font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            width: 130px;
+            text-align: center;
+            text-decoration: none;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
         }
-        .btn-overlay-adopt { background: var(--brand-accent); color: #2D1B0E; border: none; }
-        .btn-overlay-adopt:hover { background: #fff; color: #2D1B0E; }
-        
-        .btn-overlay-view { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.5); }
-        .btn-overlay-view:hover { background: #fff; color: #2D1B0E; border-color: #fff; }
 
-        .pet-info { padding: 0 5px; flex-grow: 1; }
-        .pet-name { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.35rem; margin-bottom: 3px; }
-        .pet-breed { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+        .btn-overlay-adopt {
+            background: var(--brand-accent);
+            color: #2D1B0E;
+            border: none;
+        }
+
+            .btn-overlay-adopt:hover {
+                background: #fff;
+                color: #2D1B0E;
+            }
+
+        .btn-overlay-view {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+            .btn-overlay-view:hover {
+                background: #fff;
+                color: #2D1B0E;
+                border-color: #fff;
+            }
+
+        .pet-info {
+            padding: 0 5px;
+            flex-grow: 1;
+        }
+
+        .pet-name {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.35rem;
+            margin-bottom: 3px;
+        }
+
+        .pet-breed {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+        }
+
         .shelter-label {
-            font-size: 0.75rem; color: var(--brand-accent); font-weight: 700;
-            text-transform: uppercase; margin-bottom: 4px; display: block;
+            font-size: 0.75rem;
+            color: var(--brand-accent);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: block;
         }
 
         /* --- TOP VETS SECTION --- */
-        .vets-section { padding: 100px 0; background: var(--bg-white); }
-        .vet-card {
-            background: var(--bg-light); border-radius: 24px; padding: 35px 20px;
-            border: 1px solid var(--border-light); text-align: center; height: 100%;
-            display: flex; flex-direction: column; align-items: center;
+        .vets-section {
+            padding: 100px 0;
+            background: var(--bg-white);
         }
+
+        .vet-card {
+            background: var(--bg-light);
+            border-radius: 24px;
+            padding: 35px 20px;
+            border: 1px solid var(--border-light);
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
             .vet-card:hover {
-                transform: translateY(-5px); box-shadow: 0 15px 30px rgba(92, 61, 30, 0.05);
+                transform: translateY(-5px);
+                box-shadow: 0 15px 30px rgba(92, 61, 30, 0.05);
                 border-color: var(--brand-accent);
             }
 
         .vet-avatar {
-            width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
-            border: 3px solid #fff; box-shadow: 0 5px 15px rgba(92, 61, 30, 0.08); margin-bottom: 15px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            box-shadow: 0 5px 15px rgba(92, 61, 30, 0.08);
+            margin-bottom: 15px;
         }
-        .vet-name-small { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.35rem; color: var(--text-dark); margin-bottom: 6px; }
-        
-        .vet-stars { color: #8C7560; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; }
-        .vet-stars i { color: #F59E0B; margin-right: 2px; }
 
-        .vet-spec { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; }
+        .vet-name-small {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.35rem;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .vet-stars {
+            color: #8C7560;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+            .vet-stars i {
+                color: #F59E0B;
+                margin-right: 2px;
+            }
+
+        .vet-spec {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
 
         .btn-vet-view {
-            background: #fff; color: var(--text-dark); border: 2px solid var(--border-light);
-            border-radius: 12px; padding: 10px 20px; font-weight: 700; font-size: 0.95rem;
-            text-decoration: none; transition: 0.2s; width: 100%; display: inline-block;
+            background: #fff;
+            color: var(--text-dark);
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: 0.2s;
+            width: 100%;
+            display: inline-block;
         }
-            .btn-vet-view:hover { background: var(--brand-accent); color: #fff; border-color: var(--brand-accent); }
+
+            .btn-vet-view:hover {
+                background: var(--brand-accent);
+                color: #fff;
+                border-color: var(--brand-accent);
+            }
 
         /* --- TRENDING PRODUCTS SECTION --- */
-        .products-section { padding: 100px 0; background: var(--bg-light); }
-        .prod-card {
-            background: #fff; border-radius: 24px; border: 1px solid var(--border-light);
-            overflow: hidden; transition: all 0.3s; height: 100%; display: flex; flex-direction: column;
+        .products-section {
+            padding: 100px 0;
+            background: var(--bg-light);
         }
+
+        .prod-card {
+            background: #fff;
+            border-radius: 24px;
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+            transition: all 0.3s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
             .prod-card:hover {
-                transform: translateY(-5px); box-shadow: 0 15px 30px rgba(92, 61, 30, 0.05);
+                transform: translateY(-5px);
+                box-shadow: 0 15px 30px rgba(92, 61, 30, 0.05);
                 border-color: var(--brand-accent);
             }
 
         .prod-img {
-            height: 220px; background: #FAF6F1; display: flex; align-items: center;
-            justify-content: center; padding: 20px; border-bottom: 1px solid var(--border-light); position: relative;
+            height: 220px;
+            background: #FAF6F1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-light);
+            position: relative;
         }
-            .prod-img img { max-height: 100%; max-width: 100%; object-fit: contain; transition: transform 0.4s; }
-        .prod-card:hover .prod-img img { transform: scale(1.05); }
 
-        .prod-info { padding: 25px; display: flex; flex-direction: column; flex-grow: 1; }
+            .prod-img img {
+                max-height: 100%;
+                max-width: 100%;
+                object-fit: contain;
+                transition: transform 0.4s;
+            }
+
+        .prod-card:hover .prod-img img {
+            transform: scale(1.05);
+        }
+
+        .prod-info {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
         .prod-store {
-            font-size: 0.75rem; font-weight: 700; color: #A89582;
-            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #A89582;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
         }
+
         .prod-title {
-            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.15rem;
-            color: var(--text-dark); margin-bottom: 5px; line-height: 1.3;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+            line-height: 1.3;
         }
-        .prod-price { font-size: 1.4rem; font-weight: 700; color: var(--text-dark); }
+
+        .prod-price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
 
         .btn-prod-view {
-            background: #fff; color: var(--text-dark); border: 2px solid var(--border-light);
-            border-radius: 12px; padding: 6px 16px; font-weight: 700; font-size: 0.9rem;
-            text-decoration: none; transition: 0.2s; display: inline-block;
+            background: #fff;
+            color: var(--text-dark);
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 6px 16px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: 0.2s;
+            display: inline-block;
         }
-            .btn-prod-view:hover { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); }
+
+            .btn-prod-view:hover {
+                background: var(--brand-primary);
+                color: #fff;
+                border-color: var(--brand-primary);
+            }
 
         /* --- CARD REVIEW SNIPPET CLASS --- */
         .card-review-snippet {
-            font-size: 0.85rem; color: #8C7560; font-style: italic; display: -webkit-box;
-            -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-            flex-grow: 1; line-height: 1.5; margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: #8C7560;
+            font-style: italic;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex-grow: 1;
+            line-height: 1.5;
+            margin-bottom: 20px;
         }
-        .card-review-snippet::before, .card-review-snippet::after { content: '"'; }
+
+            .card-review-snippet::before, .card-review-snippet::after {
+                content: '"';
+            }
 
         /* --- TESTIMONIALS --- */
-        .testimonial-section { padding: 100px 0; background: var(--bg-white); }
+        .testimonial-section {
+            padding: 100px 0;
+            background: var(--bg-white);
+        }
+
         .rating-block {
             background: url('https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=600&q=80') center/cover;
-            border-radius: 24px; padding: 40px; height: 100%; min-height: 350px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            position: relative; overflow: hidden; box-shadow: 0 15px 30px rgba(92, 61, 30, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            height: 100%;
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(92, 61, 30, 0.1);
         }
-            .rating-block::before { content: ''; position: absolute; inset: 0; background: rgba(45, 27, 14, 0.65); }
 
-        .rating-content { position: relative; z-index: 2; text-align: center; color: white; }
-        .rating-number { font-family: 'Nunito', sans-serif; font-size: 5.5rem; font-weight: 900; line-height: 1; margin-bottom: 10px; }
-        .rating-stars { color: #FFC107; font-size: 1.4rem; margin-bottom: 10px; letter-spacing: 2px; }
+            .rating-block::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: rgba(45, 27, 14, 0.65);
+            }
+
+        .rating-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: white;
+        }
+
+        .rating-number {
+            font-family: 'Nunito', sans-serif;
+            font-size: 5.5rem;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .rating-stars {
+            color: #FFC107;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
 
         .review-card {
-            background: var(--bg-light); border: 1px solid var(--border-light);
-            border-radius: 24px; padding: 35px; height: 100%; display: flex; flex-direction: column;
+            background: var(--bg-light);
+            border: 1px solid var(--border-light);
+            border-radius: 24px;
+            padding: 35px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
-            .review-card.tan { background: #F8F2E8; border-color: #EBE0D5; }
+
+            .review-card.tan {
+                background: #F8F2E8;
+                border-color: #EBE0D5;
+            }
 
         .review-text {
-            font-size: 1.05rem; color: var(--text-dark); line-height: 1.7;
-            margin-bottom: 30px; font-weight: 500; font-style: italic; flex-grow: 1;
+            font-size: 1.05rem;
+            color: var(--text-dark);
+            line-height: 1.7;
+            margin-bottom: 30px;
+            font-weight: 500;
+            font-style: italic;
+            flex-grow: 1;
         }
-        .review-author { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--text-dark); }
-        .review-role { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+        .review-author {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+        }
+
+        .review-role {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
 
         /* --- FOOTER --- */
-        .footer-cta { background: var(--text-dark); color: white; padding-top: 80px; text-align: center; margin-top: 0px; }
-            .footer-cta h2 { font-family: 'Nunito', sans-serif; font-size: 3rem; font-weight: 800; margin-bottom: 15px; }
-            .footer-cta p { color: rgba(255,255,255,0.7); margin-bottom: 30px; font-size: 1.1rem; }
+        .footer-cta {
+            background: var(--text-dark);
+            color: white;
+            padding-top: 80px;
+            text-align: center;
+            margin-top: 0px;
+        }
+
+            .footer-cta h2 {
+                font-family: 'Nunito', sans-serif;
+                font-size: 3rem;
+                font-weight: 800;
+                margin-bottom: 15px;
+            }
+
+            .footer-cta p {
+                color: rgba(255,255,255,0.7);
+                margin-bottom: 30px;
+                font-size: 1.1rem;
+            }
 
         .partner-link-card {
-            display: flex; flex-direction: column; align-items: center; padding: 35px 25px;
-            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px; text-decoration: none; color: white; transition: all 0.3s ease; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 35px 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            height: 100%;
         }
-            .partner-link-card:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--brand-accent); transform: translateY(-5px); }
+
+            .partner-link-card:hover {
+                background: rgba(255, 255, 255, 0.08);
+                border-color: var(--brand-accent);
+                transform: translateY(-5px);
+            }
 
         .partner-icon {
-            width: 65px; height: 65px; background: rgba(200, 168, 130, 0.15); color: var(--brand-accent);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
-            margin-bottom: 20px; transition: all 0.3s ease;
+            width: 65px;
+            height: 65px;
+            background: rgba(200, 168, 130, 0.15);
+            color: var(--brand-accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
         }
-        .partner-link-card:hover .partner-icon { background: var(--brand-accent); color: var(--text-dark); transform: scale(1.1); }
-        .partner-link-card h4 { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.35rem; margin-bottom: 10px; color: white; }
-        .partner-link-card p { font-size: 0.95rem; color: rgba(255, 255, 255, 0.6); margin-bottom: 25px; line-height: 1.5; flex-grow: 1; }
 
-        .partner-link-text { font-weight: 700; color: var(--brand-accent); font-size: 0.95rem; display: flex; align-items: center; gap: 5px; transition: gap 0.2s; }
-        .partner-link-card:hover .partner-link-text { gap: 10px; }
+        .partner-link-card:hover .partner-icon {
+            background: var(--brand-accent);
+            color: var(--text-dark);
+            transform: scale(1.1);
+        }
 
-        .footer-bottom { margin-top: 80px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 25px 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); }
-        .footer-bottom a { color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s ease; }
-        .footer-bottom a:hover { color: white; }
+        .partner-link-card h4 {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.35rem;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .partner-link-card p {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 25px;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        .partner-link-text {
+            font-weight: 700;
+            color: var(--brand-accent);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: gap 0.2s;
+        }
+
+        .partner-link-card:hover .partner-link-text {
+            gap: 10px;
+        }
+
+        .footer-bottom {
+            margin-top: 80px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px 0;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+            .footer-bottom a {
+                color: rgba(255, 255, 255, 0.7);
+                text-decoration: none;
+                transition: color 0.3s ease;
+            }
+
+                .footer-bottom a:hover {
+                    color: white;
+                }
 
         /* --- MODAL UI --- */
-        .modal-content { border-radius: 24px; border: none; box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden; }
-        .modal-header { background: #FFFFFF; border-bottom: 1px solid var(--border-light); padding: 24px 30px; }
+        .modal-content {
+            border-radius: 24px;
+            border: none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: #FFFFFF;
+            border-bottom: 1px solid var(--border-light);
+            padding: 24px 30px;
+        }
+
         .medical-lock-banner {
-            background: #F0FDF4; color: #065F46; padding: 12px 20px; font-size: 0.9rem;
-            font-weight: 600; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #D1FAE5;
+            background: #F0FDF4;
+            color: #065F46;
+            padding: 12px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #D1FAE5;
         }
+
         .locked-field {
-            background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 12px;
-            padding: 12px 16px; color: #4B5563; font-weight: 600; margin-bottom: 15px;
+            background: #F3F4F6;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #4B5563;
+            font-weight: 600;
+            margin-bottom: 15px;
         }
+
         .locked-label {
-            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;
-            font-weight: 800; color: #9CA3AF; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 800;
+            color: #9CA3AF;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
+
         .pet-desc-box {
-            background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 12px;
-            padding: 16px; color: #1F2937; font-size: 0.95rem; line-height: 1.6; font-weight: 500;
+            background: #FFFFFF;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 16px;
+            color: #1F2937;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-weight: 500;
         }
-        .modal-pet-img { width: 100%; height: 250px; border-radius: 16px; object-fit: cover; margin-bottom: 20px; border: 1px solid var(--border-light); }
+
+        .modal-pet-img {
+            width: 100%;
+            height: 250px;
+            border-radius: 16px;
+            object-fit: cover;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-light);
+        }
+
         .form-control-custom {
-            width: 100%; padding: 14px 16px; border-radius: 12px; border: 2px solid #EBE0D5;
-            background: #fff; font-weight: 500; margin-bottom: 20px; color: #2D1B0E; font-size: 0.95rem;
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 2px solid #EBE0D5;
+            background: #fff;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: #2D1B0E;
+            font-size: 0.95rem;
         }
+
         .terms-box {
-            background: #FFFBEB; border: 2px solid #FDE68A; border-radius: 16px;
-            padding: 15px; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px;
+            background: #FFFBEB;
+            border: 2px solid #FDE68A;
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 10px;
         }
+
         .btn-adopt-modal {
-            background: var(--adopt-color); color: white; border-radius: 12px;
-            font-weight: 700; padding: 12px 30px; border: none; transition: 0.2s;
+            background: var(--adopt-color);
+            color: white;
+            border-radius: 12px;
+            font-weight: 700;
+            padding: 12px 30px;
+            border: none;
+            transition: 0.2s;
         }
     </style>
 </head>
 <body>
 
+    <!-- Transparent Navbar retained! Using clinics dropdown style with image -->
     <nav class="main-nav">
         <div class="container d-flex justify-content-between align-items-center">
             <a href="/" class="nav-brand">PetFriends</a>
@@ -613,12 +1159,11 @@
                 <a href="/Home/Shelters">Shelters</a>
             </div>
             <div>
-                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                @if (isAuthenticated)
                 {
                     <div class="dropdown">
-                        <!-- Updated Dropdown Offset -->
-                        <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,30">
-                            <img src="https://ui-avatars.com/api/?name=@userName&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true" alt="Avatar" class="nav-avatar">
+                        <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,15">
+                            <img src="@profileImageUrl" alt="Avatar" class="nav-avatar">
                             <span class="nav-user-name">@userName</span>
                             <i class="bi bi-chevron-down dropdown-chevron"></i>
                         </button>
@@ -776,22 +1321,27 @@
                         <div class="vet-card">
                             <img src="@vet.ImageUrl" class="vet-avatar" alt="Vet">
                             <h4 class="vet-name-small">@vet.ClinicName</h4>
-                            
-                            <!-- Dynamic Vet Stars based on real rating -->
+
                             <div class="vet-stars">
                                 @for (int i = 1; i <= 5; i++)
                                 {
-                                    if (i <= Math.Round(vet.Rating)) { <i class="bi bi-star-fill"></i> }
-                                    else { <i class="bi bi-star" style="color: #EBE0D5;"></i> }
+                                    if (i <= Math.Round(vet.Rating))
+                                    {
+                                        <i class="bi bi-star-fill"></i>
+                                    }
+                                    else
+                                    {
+
+                                        <i class="bi bi-star" style="color: #EBE0D5;"></i>
+                                    }
                                 }
                                 <span class="review-count" style="color: #8C7560; margin-left: 5px;">@vet.Rating.ToString("0.0") (@vet.ReviewCount)</span>
                             </div>
-                            
+
                             <p class="vet-spec">@vet.Specialties</p>
-                            
-                            <!-- Dynamic Review Snippet -->
+
                             <div class="card-review-snippet text-center">@vet.RecentReview</div>
-                            
+
                             <a href="/Vet/Profile?id=@vet.Id" class="btn-vet-view w-100 mt-auto">View Clinic</a>
                         </div>
                     </div>
@@ -821,17 +1371,23 @@
                             <div class="prod-info">
                                 <div class="prod-store"><i class="bi bi-shop"></i> @prod.StoreName</div>
                                 <h4 class="prod-title">@prod.Title</h4>
-                                
-                                <!-- Dynamic Product Star Rating Instead of Comments -->
+
                                 <div class="vet-stars mt-2 mb-3" style="font-size: 0.85rem; flex-grow: 1;">
                                     @for (int i = 1; i <= 5; i++)
                                     {
-                                        if (i <= Math.Round(prod.Rating)) { <i class="bi bi-star-fill"></i> }
-                                        else { <i class="bi bi-star" style="color: #EBE0D5;"></i> }
+                                        if (i <= Math.Round(prod.Rating))
+                                        {
+                                            <i class="bi bi-star-fill"></i>
+                                        }
+                                        else
+                                        {
+
+                                            <i class="bi bi-star" style="color: #EBE0D5;"></i>
+                                        }
                                     }
                                     <span style="color: #8C7560; margin-left: 5px;">@prod.Rating.ToString("0.0") (@prod.ReviewCount)</span>
                                 </div>
-                                
+
                                 <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top" style="border-color: #EBE0D5 !important;">
                                     <div class="prod-price mb-0 mt-1">$@prod.Price.ToString("0.00")</div>
                                     <a href="/Store/Details?id=@prod.Id" class="btn-prod-view mt-1">View</a>
@@ -853,21 +1409,21 @@
                 <div class="col-lg-4">
                     <div class="rating-block">
                         <div class="rating-content">
-                            <!-- Show Actual Average Vet Rating -->
                             <div class="rating-number">@Model.OverallVetAverageRating.ToString("0.0")</div>
                             <div class="rating-stars">★★★★★</div>
-                            <!-- Show Actual Total Vet Reviews -->
                             <p class="mb-4 fw-bold" style="font-size: 1.1rem;">@(Model.TotalVetReviews) Verified Reviews</p>
                             <a href="/Account/Register" class="btn btn-light rounded-pill fw-bold text-dark px-4 py-2">Join the Community</a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Use the 1st actual review fetched from DB -->
                 <div class="col-lg-4">
                     <div class="review-card">
                         <div class="rating-stars mb-3" style="font-size: 1.2rem; color: #F59E0B;">
-                            @for(int i = 0; i < Model.RecentTestimonials[0].Rating; i++) { <span>★</span> }
+                            @for (int i = 0; i < Model.RecentTestimonials[0].Rating; i++)
+                            {
+                                <span>★</span>
+                            }
                         </div>
                         <p class="review-text">"@Model.RecentTestimonials[0].Comment"</p>
                         <div>
@@ -877,11 +1433,13 @@
                     </div>
                 </div>
 
-                <!-- Use the 2nd actual review fetched from DB -->
                 <div class="col-lg-4">
                     <div class="review-card tan">
                         <div class="rating-stars mb-3" style="font-size: 1.2rem; color: #F59E0B;">
-                            @for(int i = 0; i < Model.RecentTestimonials[1].Rating; i++) { <span>★</span> }
+                            @for (int i = 0; i < Model.RecentTestimonials[1].Rating; i++)
+                            {
+                                <span>★</span>
+                            }
                         </div>
                         <p class="review-text">"@Model.RecentTestimonials[1].Comment"</p>
                         <div>
@@ -894,17 +1452,15 @@
         </div>
     </section>
 
+    <!-- FOOTER WITH CONDITIONAL AUTHENTICATION LINKS -->
     <footer class="footer-cta">
         <div class="container" style="max-width: 1000px;">
             <h2>Join the PetFriends Network</h2>
             <p>Are you a licensed veterinarian, a registered shelter, or a pet supply merchant?<br>Select your specialty below to launch your official partner profile today.</p>
 
             <div class="row g-4 mt-4">
-
-                <!-- Veterinarians Card -->
                 <div class="col-md-4">
-                    <!-- Option 1: Standard URL (Replace YOUR_LINK_HERE) -->
-                    <a href="https://forms.gle/CyoEBEJrMxhD4pTc9" class="partner-link-card">
+                    <a href="@(isAuthenticated ? "https://forms.gle/CyoEBEJrMxhD4pTc9" : "/Account/Login")" class="partner-link-card">
                         <div class="partner-icon"><i class="bi bi-heart-pulse-fill"></i></div>
                         <h4>Veterinarians</h4>
                         <p>Launch your clinic profile, accept bookings, and manage your schedule.</p>
@@ -912,10 +1468,8 @@
                     </a>
                 </div>
 
-                <!-- Animal Shelters Card -->
                 <div class="col-md-4">
-                    <!-- Option 2: ASP.NET Core Routing (Fill in the Controller and Action) -->
-                    <a href="https://forms.gle/zR852v7rYruGx4V87" class="partner-link-card">
+                    <a href="@(isAuthenticated ? "https://forms.gle/zR852v7rYruGx4V87" : "/Account/Login")" class="partner-link-card">
                         <div class="partner-icon"><i class="bi bi-house-heart-fill"></i></div>
                         <h4>Animal Shelters</h4>
                         <p>Process adoptions and manage intake requests seamlessly.</p>
@@ -923,16 +1477,14 @@
                     </a>
                 </div>
 
-                <!-- Pet Merchants Card -->
                 <div class="col-md-4">
-                    <a href="https://forms.gle/Jn5KVegEBP4za1qXA" class="partner-link-card">
+                    <a href="@(isAuthenticated ? "https://forms.gle/Jn5KVegEBP4za1qXA" : "/Account/Login")" class="partner-link-card">
                         <div class="partner-icon"><i class="bi bi-shop"></i></div>
                         <h4>Pet Merchants</h4>
                         <p>Open your digital storefront and manage your inventory easily.</p>
                         <span class="partner-link-text">Apply Now <i class="bi bi-arrow-right"></i></span>
                     </a>
                 </div>
-
             </div>
         </div>
 
@@ -947,6 +1499,7 @@
         </div>
     </footer>
 
+    <!-- Pet Details Modal -->
     <div class="modal fade" id="petDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content" style="color: var(--text-dark); text-align: left;">
@@ -993,31 +1546,52 @@
         </div>
     </div>
 
+    <!-- Authenticated Adoption Modal -->
     <div class="modal fade" id="adoptionApplicationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content" style="color: var(--text-dark); text-align: left;">
-                <div class="modal-header" style="background: #ECFDF5; border-bottom: 1px solid #D1FAE5;">
-                    <h5 class="modal-title fw-bold" style="color: #065F46;"><i class="bi bi-envelope-paper-heart-fill me-2"></i> Adoption Inquiry Form</h5>
+                <div class="modal-header" style="background:#ECFDF5; border-bottom:1px solid #D1FAE5;">
+                    <h5 class="fw-bold modal-title" style="color: #065F46;"><i class="bi bi-envelope-paper-heart-fill me-2" style="color:#059669;"></i> Adopt: <span id="adoptModalPetName">Pet</span></h5>
                     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="adoptionApplicationForm" onsubmit="event.preventDefault(); alert('Application successfully recorded into the shelter intake queue!'); bootstrap.Modal.getInstance(document.getElementById('adoptionApplicationModal')).hide();">
-                    <div class="modal-body p-4">
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Why are you looking to adopt this pet? *</label>
-                            <textarea class="form-control-custom" rows="3" required placeholder="Tell the shelter about your choice..."></textarea>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Describe your home infrastructure *</label>
-                            <textarea class="form-control-custom" rows="3" required placeholder="Yard tracking details, resident pet details, active schedules..."></textarea>
-                        </div>
-                        <div class="terms-box">
-                            <input type="checkbox" required style="width:20px; height:20px; cursor: pointer; margin-top:3px;" />
-                            <p class="terms-text">I commit to bringing this pet back for verified post-adoption safety checkups once a week for month one, and twice a month for the subsequent observation periods.</p>
-                        </div>
+
+                <form asp-controller="Home" asp-action="SubmitAdoption" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="PetId" id="adoptPetIdField" />
+
+                    <div class="modal-body p-4 text-start">
+                        @if (!isAuthenticated)
+                        {
+                            <div class="text-center py-4">
+                                <i class="bi bi-shield-lock fs-1 text-muted mb-3 d-block"></i>
+                                <h6 class="fw-bold">Sign In Required</h6>
+                                <p class="text-muted small">You need to be signed in to submit an adoption application.</p>
+                                <a href="/Account/Login" class="btn btn-dark rounded-pill mt-2 px-4 py-2 fw-bold" style="background: #059669; border: none; text-decoration:none; color:white;">Sign In Now</a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Why are you looking to adopt this pet? *</label>
+                                <textarea name="Motivation" class="form-control-custom" rows="3" required placeholder="Explain your decision details..."></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Describe your current domestic infrastructure *</label>
+                                <textarea name="LivingSituation" class="form-control-custom" rows="3" required placeholder="Specify yard status, residential context, rental lease boundaries if any..."></textarea>
+                            </div>
+                            <div class="terms-box">
+                                <input type="checkbox" name="AgreedToPolicy" value="true" required style="width:20px; height:20px; cursor: pointer; margin-top:3px;" />
+                                <p class="mb-0" style="color: #92400E; font-size: 0.9rem; line-height: 1.5; font-weight: 600;">I formally commit to returning the rescue to a verified shelter checkup hub once a week during month one, and twice a month for the successive context to safeguard proper adjustment.</p>
+                            </div>
+                        }
                     </div>
-                    <div class="modal-footer">
+
+                    <div class="modal-footer" style="background:#FAFAFA;">
                         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold" style="background:#10B981; border:none;">Submit Application</button>
+                        @if (isAuthenticated)
+                        {
+                            <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold" style="background:#10B981; border:none;">Submit Request</button>
+                        }
                     </div>
                 </form>
             </div>
@@ -1030,6 +1604,7 @@
         const allDatabasePets = @Html.Raw(Json.Serialize(Model.AdoptablePets));
         let activePetIdContext = 0;
         let activePetNameContext = "";
+        let shuffleIntervalTimer;
 
         function getShuffleIndexSequence() {
             if (!allDatabasePets || allDatabasePets.length === 0) return [];
@@ -1101,17 +1676,34 @@
         }
 
         function triggerApplicationFromDetails() {
-            bootstrap.Modal.getInstance(document.getElementById('petDetailsModal')).hide();
+            var myModalInstance = bootstrap.Modal.getInstance(document.getElementById('petDetailsModal'));
+            if(myModalInstance) { myModalInstance.hide(); }
+
             launchAdoptionForm(activePetIdContext, activePetNameContext);
         }
 
         function launchAdoptionForm(id, name) {
-            document.getElementById('appPetName').innerText = name;
-            new bootstrap.Modal(document.getElementById('applicationModal')).show();
+            document.getElementById('adoptModalPetName').innerText = name;
+            document.getElementById('adoptPetIdField').value = id;
+            new bootstrap.Modal(document.getElementById('adoptionApplicationModal')).show();
+        }
+
+        function startShuffle() {
+            shuffleIntervalTimer = setInterval(drawRealtimeShuffleGrid, 1000);
+        }
+
+        function stopShuffle() {
+            clearInterval(shuffleIntervalTimer);
+        }
+
+        const petGridContainer = document.getElementById('realtimePetsGrid');
+        if(petGridContainer) {
+            petGridContainer.addEventListener('mouseenter', stopShuffle);
+            petGridContainer.addEventListener('mouseleave', startShuffle);
         }
 
         drawRealtimeShuffleGrid();
-        setInterval(drawRealtimeShuffleGrid, 1000); 
+        startShuffle();
     </script>
 </body>
 </html>

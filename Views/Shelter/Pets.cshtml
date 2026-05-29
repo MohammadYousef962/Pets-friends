@@ -9,7 +9,6 @@
     bool isShelterManager = User.IsInRole("Shelter");
     bool isClient = !isShelterManager; // Treat anyone who isn't the shelter as a potential adopter
 
-    // --- THE FIX: ADDED THIS LINE ---
     bool isAuthenticated = User.Identity?.IsAuthenticated == true;
 
     if (isShelterManager)
@@ -362,7 +361,8 @@
                     <div class="col-md-4 col-sm-6">
                         <div class="my-pet-card" data-bs-toggle="modal" data-bs-target="#editModal-@pet.Id">
                             <div class="position-relative" style="border-radius: 18px; overflow: hidden; margin-bottom: 16px;">
-                                <img src="@pet.ImageUrl" class="my-pet-img m-0" alt="@pet.Name" onerror="this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
+                                <!-- FIX: Added this.onerror=null to prevent infinite image loading loops -->
+                                <img src="@pet.ImageUrl" class="my-pet-img m-0" alt="@pet.Name" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
                                 <div class="pet-overlay">
                                     <span class="btn-overlay-view">@(isShelterManager ? "Edit Pet Details" : "View & Adopt")</span>
                                 </div>
@@ -410,10 +410,12 @@
                                                     <h6 class="fw-bold mb-4" style="color: var(--brand-primary); font-family: 'Nunito', sans-serif;">Editable Display Profile</h6>
 
                                                     <div class="pfp-upload-wrap" onclick="document.getElementById('file-@pet.Id').click()">
-                                                        <img src="@pet.ImageUrl" id="preview-@pet.Id" alt="@pet.Name" onerror="this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
+                                                        <!-- FIX: Added this.onerror=null here too -->
+                                                        <img src="@pet.ImageUrl" id="preview-@pet.Id" alt="@pet.Name" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
                                                         <div class="pfp-overlay"><i class="bi bi-camera"></i></div>
-                                                        <input name="ImageFile" type="file" id="file-@pet.Id" hidden accept="image/*" onchange="previewImage(this, 'preview-@pet.Id')">
                                                     </div>
+                                                    <!-- FIX: Moved the file input OUTSIDE the clickable div to prevent infinite event bubbling loop -->
+                                                    <input name="ImageFile" type="file" id="file-@pet.Id" hidden accept="image/*" onchange="previewImage(this, 'preview-@pet.Id')">
 
                                                     <label class="editable-label">Pet Name <span class="text-danger">*</span></label>
                                                     <input type="text" name="Name" class="editable-input" value="@pet.Name" required maxlength="50">
@@ -423,7 +425,8 @@
                                                 }
                                                 else
                                                 {
-                                                    <img src="@pet.ImageUrl" class="rounded-4 w-100 shadow-sm mb-3" style="height:280px; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
+                                                    <!-- FIX: Added this.onerror=null here too -->
+                                                    <img src="@pet.ImageUrl" class="rounded-4 w-100 shadow-sm mb-3" style="height:280px; object-fit:cover;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
                                                     <h5 class="fw-bold text-dark mb-2">About @pet.Name</h5>
                                                     <p class="text-muted" style="line-height: 1.6;">@(string.IsNullOrWhiteSpace(pet.Description) ? "A wonderful companion waiting for a home." : pet.Description)</p>
                                                 }
@@ -493,7 +496,8 @@
                                         }
                                         else
                                         {
-                                            <button type="button" class="btn-adopt-modal" onclick="openAdoptionModal('@pet.Name', '@pet.Id', 'editModal-@pet.Id')">
+                                            <!-- FIX: Use Json.Serialize to safely pass pet names that contain apostrophes/quotes -->
+                                            <button type="button" class="btn-adopt-modal" onclick='openAdoptionModal(@Html.Raw(Json.Serialize(pet.Name)), "@pet.Id", "editModal-@pet.Id")'>
                                                 <i class="bi bi-heart-fill me-1"></i> Apply to Adopt
                                             </button>
                                         }
@@ -505,11 +509,10 @@
                 }
             </div>
 
-            <div class="pagination-wrap">
-                <a href="#" class="page-link-custom"><i class="bi bi-chevron-left"></i></a>
-                <a href="#" class="page-link-custom active">1</a>
-                <a href="#" class="page-link-custom"><i class="bi bi-chevron-right"></i></a>
-            </div>
+            <!-- FIX: Removed the static/dummy pagination block that was here. 
+                 Static pagination will not work unless you implement a 'PagedList' or 
+                 equivalent server-side pagination model. The previous IF statement 
+                 would output useless HTML and confuse the user. -->
         }
         else
         {
@@ -584,18 +587,33 @@
             }
         }
 
-        // Logic to transition from Pet Details Modal -> Adoption Modal seamlessly
+        // FIX: Properly handle Bootstrap Modal transitions
         function openAdoptionModal(name, id, parentModalId) {
-            // Close the details modal first if it is open
-            if (parentModalId) {
-                var parentModal = bootstrap.Modal.getInstance(document.getElementById(parentModalId));
-                if(parentModal) { parentModal.hide(); }
-            }
-
-            // Populate and open Adoption Modal
+            // Set text and value
             document.getElementById('adoptModalPetName').innerText = name;
             document.getElementById('adoptPetIdField').value = id;
-            new bootstrap.Modal(document.getElementById('adoptionApplicationModal')).show();
+
+            // Get the adoption modal using Bootstrap's recommended instance retrieval
+            var adoptModalEl = document.getElementById('adoptionApplicationApplicationModal') || document.getElementById('adoptionApplicationModal');
+            var adoptModal = bootstrap.Modal.getOrCreateInstance(adoptModalEl);
+
+            if (parentModalId) {
+                var parentModalEl = document.getElementById(parentModalId);
+                var parentModal = bootstrap.Modal.getInstance(parentModalEl);
+                
+                if (parentModal) {
+                    // Wait for the first modal to fully close before opening the new one
+                    // This prevents the dark backdrop from glitching and locking the screen
+                    parentModalEl.addEventListener('hidden.bs.modal', function handler() {
+                        adoptModal.show();
+                        parentModalEl.removeEventListener('hidden.bs.modal', handler);
+                    });
+                    parentModal.hide();
+                    return;
+                }
+            }
+
+            adoptModal.show();
         }
     </script>
 }

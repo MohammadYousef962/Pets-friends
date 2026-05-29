@@ -66,7 +66,6 @@ namespace Pets_friends.Controllers
                 return RedirectToAction("CreateProfile");
             }
 
-            // Passes layout presentation strings safely to decouple async view context queries
             ViewData["MerchantAvatar"] = profile.ImageUrl;
             ViewData["MerchantName"] = user.FullName ?? profile.StoreName;
 
@@ -77,14 +76,25 @@ namespace Pets_friends.Controllers
 
             var lowStock = storeProducts.Where(p => p.StockQuantity <= 5).ToList();
 
+            // Fetch orders with OrderItems included so we can calculate tax-free revenue
             var storeOrders = await _context.Orders
                 .AsNoTracking()
                 .Include(o => o.ClientProfile)
                     .ThenInclude(c => c.UserAccount)
+                .Include(o => o.OrderItems) // REQUIRED: Include items to calculate pure revenue
+                .Where(o => o.MerchantProfileId == profile.Id)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
 
-            var activeOrders = storeOrders.Where(o => o.Status != "Delivered").ToList();
+            var activeOrders = storeOrders.Where(o => o.Status != "Delivered" && o.Status != "Cancelled").ToList();
+
+            // =========================================================================
+            // FIX: Calculate pure revenue by multiplying item quantities by their prices.
+            // STRICT CONDITION: Only calculate this for orders marked as "Delivered".
+            // =========================================================================
+            decimal pureMerchantRevenue = storeOrders
+                .Where(o => o.Status == "Delivered")
+                .Sum(o => o.OrderItems.Sum(item => item.Quantity * (decimal)item.UnitPrice));
 
             var vm = new MerchantDashboardVM
             {
@@ -92,7 +102,10 @@ namespace Pets_friends.Controllers
                 StoreProducts = storeProducts,
                 LowStockProducts = lowStock,
                 TotalProductsCount = storeProducts.Count,
-                TotalRevenue = storeOrders.Sum(o => o.TotalAmount),
+
+                // Use the pure tax-free calculated revenue
+                TotalRevenue = pureMerchantRevenue,
+
                 ActiveOrdersCount = activeOrders.Count,
                 RecentOrders = storeOrders.Take(5).ToList()
             };
@@ -140,7 +153,9 @@ namespace Pets_friends.Controllers
                 return RedirectToAction("Dashboard");
             }
 
-            string? uploadedImagePath = null;
+            string uploadedImagePath = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(model.StoreName ?? "Store")}&background=FAF6F1&color=5C3D1E&bold=true";
+
+            // If they DID upload an image, overwrite the default one:
             if (model.ImageFile != null)
             {
                 uploadedImagePath = await SaveImageAsync(model.ImageFile);
@@ -158,7 +173,7 @@ namespace Pets_friends.Controllers
                 UserAccountId = user.Id,
                 StoreName = model.StoreName,
                 StoreAddress = model.StoreAddress,
-                ImageUrl = uploadedImagePath
+                ImageUrl = uploadedImagePath // Now it is mathematically impossible to send NULL
             };
 
             _context.MerchantProfiles.Add(profile);

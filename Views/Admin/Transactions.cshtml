@@ -6,203 +6,231 @@
 
 @section Styles {
     <style>
-        /* Implements smooth font smoothing across the page */
         .admin-transactions-container {
             font-family: 'DM Sans', sans-serif;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Heading elements for ultra-soft, premium font structures */
         .premium-title {
             font-family: 'Playfair Display', serif;
-            color: #5C3D1E;
-            font-weight: 700;
-            font-size: 2.4rem;
+            color: #4A3320;
+            font-weight: 800;
+            font-size: 2.6rem;
             letter-spacing: -0.5px;
+            margin-bottom: 8px;
         }
 
         .premium-subtitle {
-            font-family: 'DM Sans', sans-serif;
             color: #8C7560;
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             font-weight: 400;
+            line-height: 1.6;
+        }
+
+        /* Filter Workspace (Matches Manage Users exactly) */
+        .filter-bar {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(92, 61, 30, 0.04);
+            border: 1px solid rgba(237, 224, 208, 0.7);
+            display: flex;
+            gap: 16px;
+            align-items: center;
             margin-bottom: 35px;
+            flex-wrap: wrap;
         }
 
-        /* Interactive floating rows style structure */
-        .table-floating { 
-            width: 100%; 
-            border-collapse: separate; 
-            border-spacing: 0 12px; 
-            margin-top: -12px; 
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 50px;
+            background: #FAF8F5;
+            border: 2px solid transparent;
+            border-radius: 14px;
+            font-weight: 500;
+            color: #5C3D1E;
+            transition: all 0.3s ease;
         }
 
-        .table-floating th { 
-            border: none; 
-            color: #8C7560; 
-            font-size: 0.85rem; 
-            text-transform: uppercase; 
-            letter-spacing: 1.2px; 
-            padding: 0 24px 5px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            transition: color 0.25s ease;
+        .filter-select {
+            appearance: none;
+            background-color: #FAF8F5;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23C8A882%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px top 50%;
+            background-size: 10px auto;
+            border: 2px solid transparent;
+            border-radius: 14px;
+            font-weight: 600;
+            color: #5C3D1E;
+            padding: 14px 40px 14px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .table-floating th:hover { 
-            color: #C8A882; 
+            .search-input:focus, .filter-select:focus {
+                background: #FFFFFF;
+                border-color: #C8A882;
+                outline: none;
+                box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.15);
+            }
+
+        /* Floating Table Layout */
+        .table-floating {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 14px;
+            margin-top: -14px;
         }
 
-        /* Micro Sorting Chevron Styling */
+            .table-floating th {
+                border: none;
+                color: #8C7560;
+                font-size: 0.85rem;
+                text-transform: uppercase;
+                letter-spacing: 1.5px;
+                padding: 0 24px 8px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: color 0.3s ease;
+            }
+
+                .table-floating th:hover {
+                    color: #C8A882;
+                }
+
         .sort-icon-small {
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             color: #C8A882;
-            opacity: 0.7;
+            opacity: 0.5;
             vertical-align: middle;
-            transition: opacity 0.2s, transform 0.2s;
+            transition: all 0.3s ease;
         }
 
         .table-floating th:hover .sort-icon-small {
             opacity: 1;
-            transform: scale(1.15);
+            transform: scale(1.2);
         }
 
-        .table-floating tbody tr { 
-            background: #FFFFFF; 
-            box-shadow: 0 6px 18px rgba(92, 61, 30, 0.02); 
-            transition: all 0.35s cubic-bezier(0.165, 0.84, 0.44, 1); 
+        .table-floating tbody tr {
+            background: #FFFFFF;
+            box-shadow: 0 4px 15px rgba(92, 61, 30, 0.03);
+            transition: all 0.35s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
 
-        .table-floating tbody tr:hover { 
-            transform: scale(1.008) translateY(-3px); 
-            box-shadow: 0 12px 30px rgba(92, 61, 30, 0.07); 
+            .table-floating tbody tr:hover {
+                transform: scale(1.01) translateY(-2px);
+                box-shadow: 0 12px 25px rgba(92, 61, 30, 0.08);
+            }
+
+        .table-floating td {
+            padding: 20px 24px;
+            vertical-align: middle;
+            border-top: 1px solid rgba(237, 224, 208, 0.5);
+            border-bottom: 1px solid rgba(237, 224, 208, 0.5);
+            font-weight: 500;
+            font-size: 0.95rem;
         }
 
-        .table-floating td { 
-            padding: 18px 24px; 
-            vertical-align: middle; 
-            border-top: 1px solid #EDE0D0; 
-            border-bottom: 1px solid #EDE0D0; 
-            font-weight: 500; 
-            font-size: 0.95rem; 
-        }
+            .table-floating td:first-child {
+                border-left: 1px solid rgba(237, 224, 208, 0.5);
+                border-radius: 16px 0 0 16px;
+            }
 
-        .table-floating td:first-child { 
-            border-left: 1px solid #EDE0D0; 
-            border-radius: 20px 0 0 20px; 
-        }
+            .table-floating td:last-child {
+                border-right: 1px solid rgba(237, 224, 208, 0.5);
+                border-radius: 0 16px 16px 0;
+            }
 
-        .table-floating td:last-child { 
-            border-right: 1px solid #EDE0D0; 
-            border-radius: 0 20px 20px 0; 
-        }
-
-        /* Soft transaction source icons */
         .source-icon-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             font-size: 0.75rem;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            padding: 4px 10px;
+            border-radius: 8px;
         }
 
-        /* Refined system indicator badges with warm transparencies */
-        .badge-soft { 
-            padding: 8px 16px; 
-            border-radius: 12px; 
-            font-weight: 700; 
-            font-size: 0.75rem; 
-            text-transform: uppercase; 
-            letter-spacing: 0.8px; 
+        .bg-source-service {
+            background: rgba(2, 132, 199, 0.08);
+            color: #0284C7;
+            border: 1px solid rgba(2, 132, 199, 0.1);
+        }
+
+        .bg-source-product {
+            background: rgba(217, 119, 6, 0.08);
+            color: #D97706;
+            border: 1px solid rgba(217, 119, 6, 0.1);
+        }
+
+        .badge-soft {
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             display: inline-block;
-        }
-        
-        .badge-completed { background: rgba(5, 150, 105, 0.1); color: #059669; }
-        .badge-pending { background: rgba(217, 119, 6, 0.1); color: #D97706; }
-        .badge-cancelled { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
-
-        /* Unified filter alignment workspace */
-        .filter-bar { 
-            background: #FFFFFF; 
-            padding: 18px; 
-            border-radius: 24px; 
-            box-shadow: 0 10px 25px rgba(92, 61, 30, 0.03); 
-            border: 1px solid #EDE0D0; 
-            display: flex; 
-            gap: 16px; 
-            align-items: center; 
-            margin-bottom: 35px; 
-            flex-wrap: wrap; 
+            border: 1px solid transparent;
         }
 
-        .search-input, .filter-select { 
-            background: #FAF8F5; 
-            border: 2px solid transparent; 
-            border-radius: 16px; 
-            font-weight: 500; 
-            color: #5C3D1E;
-            transition: all 0.3s ease; 
+        .badge-completed {
+            background: rgba(16, 185, 129, 0.08);
+            color: #10B981;
+            border-color: rgba(16, 185, 129, 0.15);
         }
 
-        .search-input { 
-            width: 100%; 
-            padding: 12px 20px 12px 48px; 
+        .badge-pending {
+            background: rgba(217, 119, 6, 0.08);
+            color: #D97706;
+            border-color: rgba(217, 119, 6, 0.15);
         }
 
-        .search-input:focus, .filter-select:focus { 
-            background: #FFFFFF; 
-            border-color: #C8A882; 
-            outline: none; 
-            box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.15);
-        }
-
-        /* Removed appearance:none and custom SVG arrow layout */
-        .filter-select { 
-            padding: 12px 20px; 
-            cursor: pointer; 
+        .badge-cancelled {
+            background: rgba(239, 68, 68, 0.08);
+            color: #EF4444;
+            border-color: rgba(239, 68, 68, 0.15);
         }
     </style>
 }
 
 <div class="glass-panel admin-transactions-container">
-    
-    <!-- Top Greeting Header -->
-    <div class="row align-items-center mb-5">
+
+    <div class="row align-items-center mb-5 pb-2">
         <div class="col-md-8 text-start">
             <h1 class="premium-title">Ecosystem Ledger</h1>
             <p class="premium-subtitle mb-0">Chronological ledger recording storefront checkouts and ecosystem service appointments.</p>
         </div>
     </div>
 
-    <!-- Interactive Filtering Area -->
     <div class="filter-bar">
         <div class="position-relative flex-grow-1" style="min-width: 280px;">
-            <i class="bi bi-search position-absolute" style="left: 20px; top: 50%; transform: translateY(-50%); color: #C8A882; font-size: 1.05rem;"></i>
-            <input type="text" id="transactionSearch" class="search-input" placeholder="Search transactions by customer or detail description...">
+            <i class="bi bi-search position-absolute" style="left: 20px; top: 50%; transform: translateY(-50%); color: #C8A882; font-size: 1.1rem;"></i>
+            <input type="text" id="transactionSearch" class="search-input" placeholder="Search transactions by customer or description...">
         </div>
 
-        <select id="transactionStatus" class="filter-select" style="min-width: 160px;">
+        <select id="transactionStatus" class="filter-select" style="min-width: 180px;">
             <option value="All">All Statuses</option>
             <option value="Completed">Completed / Delivered</option>
-            <option value="Confirmed">Confirmed (Appointments)</option>
+            <option value="Confirmed">Confirmed (Bookings)</option>
             <option value="Pending">Pending / Active</option>
             <option value="Cancelled">Cancelled</option>
         </select>
 
-        <select id="transactionType" class="filter-select" style="min-width: 160px;">
+        <select id="transactionType" class="filter-select" style="min-width: 180px;">
             <option value="All">All Sources</option>
             <option value="Product">Store Orders (Revenue)</option>
             <option value="Service">Appointments (Zero-Fee)</option>
         </select>
     </div>
 
-    <!-- Floating Grid Table -->
-    <div class="table-responsive">
-        <table class="table-floating" id="ledgerTable">
+    <div class="table-responsive" style="overflow-x: auto;">
+        <table class="table-floating" id="ledgerTable" style="min-width: 800px;">
             <thead>
                 <tr>
                     <th onclick="sortTxTable(0)" title="Sort by Date">
@@ -226,44 +254,44 @@
                 @foreach (var record in Model)
                 {
                     var statusLower = record.Status.ToLower();
-                    var badgeClass = statusLower == "completed" || statusLower == "confirmed" ? "badge-completed" :
-                                    (statusLower == "pending" ? "badge-pending" : "badge-cancelled");
+                    var badgeClass = statusLower == "completed" || statusLower == "confirmed" || statusLower == "delivered" ? "badge-completed" :
+                    (statusLower == "pending" ? "badge-pending" : "badge-cancelled");
 
                     <tr class="tx-row" data-name="@record.CustomerName.ToLower()" data-detail="@record.Details.ToLower()" data-status="@record.Status" data-type="@record.Type">
                         <td>
-                            <div class="fw-bold" style="color: #5C3D1E; font-size: 1.05rem;">@record.Timestamp.ToString("MMM dd, yyyy")</div>
-                            <div style="font-size: 0.8rem; color: #8C7560; font-weight: 600;">@record.Timestamp.ToString("hh:mm tt")</div>
+                            <div class="fw-bold" style="color: #4A3320; font-size: 1.05rem;">@record.Timestamp.ToString("MMM dd, yyyy")</div>
+                            <div style="font-size: 0.85rem; color: #8C7560; font-weight: 600; margin-top: 2px;">@record.Timestamp.ToString("hh:mm tt")</div>
                         </td>
                         <td>
-                            <div class="fw-bold" style="color: #5C3D1E; font-size: 1.05rem;">@record.CustomerName</div>
+                            <div class="fw-bold" style="color: #4A3320; font-size: 1.05rem;">@record.CustomerName</div>
                         </td>
                         <td>
                             @if (record.Type == "Service")
                             {
-                                <div class="source-icon-badge" style="color: #0284C7;">
-                                    <i class="bi bi-calendar-event"></i> Appointment
+                                <div class="source-icon-badge bg-source-service">
+                                    <i class="bi bi-calendar2-heart"></i> Appointment
                                 </div>
                             }
                             else
                             {
-                                <div class="source-icon-badge" style="color: #D97706;">
+                                <div class="source-icon-badge bg-source-product">
                                     <i class="bi bi-box-seam"></i> Store Order
                                 </div>
                             }
-                            <div style="font-size: 0.95rem; font-weight: 600; color: #8C7560;">@record.Details</div>
+                            <div style="font-size: 0.95rem; font-weight: 600; color: #8C7560; margin-top: 2px;">@record.Details</div>
                         </td>
                         <td>
                             @if (record.Amount.HasValue && record.Type == "Product")
                             {
-                                <span style="font-weight: 700; color: #059669; font-size: 1.15rem;">@record.Amount.Value.ToString("C")</span>
+                                <span style="font-weight: 800; color: #10B981; font-size: 1.15rem;">@record.Amount.Value.ToString("C")</span>
                             }
                             else
                             {
-                                <span style="font-weight: 600; color: #8C7560; font-size: 1.05rem;">$0.00 (Platform Free)</span>
+                                <span style="font-weight: 600; color: #8C7560; font-size: 1.05rem; background: rgba(140, 117, 96, 0.08); padding: 4px 10px; border-radius: 8px;">Platform Free</span>
                             }
                         </td>
                         <td class="text-end" style="padding-right: 24px;">
-                            <span class="badge-soft @badgeClass">@record.Status</span>
+                            <span class="badge-soft @badgeClass shadow-sm">@record.Status</span>
                         </td>
                     </tr>
                 }
@@ -271,16 +299,17 @@
         </table>
     </div>
 
-    <!-- Empty Filter Fallback -->
-    <div id="txNoResults" class="text-center py-5" style="display:none;">
-        <i class="bi bi-receipt-cutoff text-muted mb-3 d-block" style="font-size: 3rem; color: #8C7560 !important;"></i>
-        <p class="text-muted fw-bold mb-0">No transaction records match your search parameters or filters.</p>
+    <div id="txNoResults" class="text-center py-5 mt-4" style="display:none;">
+        <div style="width: 80px; height: 80px; background: #FAF8F5; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+            <i class="bi bi-receipt-cutoff text-muted" style="font-size: 2.2rem; color: #C8A882 !important;"></i>
+        </div>
+        <p class="text-muted fw-bold mb-0" style="font-size: 1.1rem; color: #8C7560 !important;">No transaction records match your filters.</p>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        // Real-time client-side transaction filters
+        // Exact same JS logic...
         function filterTransactions() {
             const search = document.getElementById('transactionSearch').value.toLowerCase();
             const status = document.getElementById('transactionStatus').value;
@@ -297,14 +326,9 @@
                 const matchStatus = status === 'All' || rStatus === status || (status === 'Completed' && rStatus === 'Delivered');
                 const matchType = type === 'All' || rType === type;
 
-                if (matchSearch && matchStatus && matchType) { 
-                    row.style.display = ''; 
-                    visibleCount++; 
-                } else { 
-                    row.style.display = 'none'; 
-                }
+                if (matchSearch && matchStatus && matchType) { row.style.display = ''; visibleCount++; }
+                else { row.style.display = 'none'; }
             });
-
             document.getElementById('txNoResults').style.display = visibleCount === 0 ? 'block' : 'none';
         }
 
@@ -312,32 +336,19 @@
         document.getElementById('transactionStatus').addEventListener('change', filterTransactions);
         document.getElementById('transactionType').addEventListener('change', filterTransactions);
 
-        // Sorting algorithm for the Ledger
         function sortTxTable(n) {
             var table = document.getElementById("ledgerTable");
             var rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-            switching = true; 
-            dir = "asc"; 
+            switching = true; dir = "asc";
             while (switching) {
-                switching = false;
-                rows = table.querySelectorAll("tbody tr.tx-row");
+                switching = false; rows = table.querySelectorAll("tbody tr.tx-row");
                 for (i = 0; i < (rows.length - 1); i++) {
-                    shouldSwitch = false;
-                    x = rows[i].querySelectorAll("td")[n];
-                    y = rows[i + 1].querySelectorAll("td")[n];
-                    if (dir == "asc") {
-                        if (x.innerText.toLowerCase() > y.innerText.toLowerCase()) { shouldSwitch = true; break; }
-                    } else if (dir == "desc") {
-                        if (x.innerText.toLowerCase() < y.innerText.toLowerCase()) { shouldSwitch = true; break; }
-                    }
+                    shouldSwitch = false; x = rows[i].querySelectorAll("td")[n]; y = rows[i + 1].querySelectorAll("td")[n];
+                    if (dir == "asc") { if (x.innerText.toLowerCase() > y.innerText.toLowerCase()) { shouldSwitch = true; break; } }
+                    else if (dir == "desc") { if (x.innerText.toLowerCase() < y.innerText.toLowerCase()) { shouldSwitch = true; break; } }
                 }
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true; 
-                    switchcount++;      
-                } else {
-                    if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; }
-                }
+                if (shouldSwitch) { rows[i].parentNode.insertBefore(rows[i + 1], rows[i]); switching = true; switchcount++; }
+                else { if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; } }
             }
         }
     </script>

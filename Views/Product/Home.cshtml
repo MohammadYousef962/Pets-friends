@@ -499,7 +499,6 @@
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Evaluates exact page layout slice parameters cleanly
             const itemsPerPage = 12;
             let currentPage = 1;
             let currentCategory = 'all';
@@ -535,15 +534,25 @@
                 allItems.forEach(item => item.style.display = 'none');
 
                 if (filteredItems.length === 0) {
-                    noResultsMsg.style.display = 'block';
-                    if (creationCardSlot) creationCardSlot.style.display = 'none';
+                    // FIX: If the store is completely empty, SHOW the create card.
+                    // Only hide it if they typed a search that resulted in 0 items.
+                    if (allItems.length === 0 && currentCategory === 'all' && searchQuery === '') {
+                        noResultsMsg.style.display = 'none';
+                        if (creationCardSlot) {
+                            creationCardSlot.style.display = 'flex'; // Force display
+                            grid.appendChild(creationCardSlot);
+                        }
+                    } else {
+                        noResultsMsg.style.display = 'block';
+                        if (creationCardSlot) creationCardSlot.style.display = 'none';
+                    }
                 } else {
                     noResultsMsg.style.display = 'none';
                     paginatedItems.forEach(item => item.style.display = 'block');
 
                     // Explicitly append the Plus item node as the final layout child contextually
                     if (creationCardSlot) {
-                        creationCardSlot.style.display = 'block';
+                        creationCardSlot.style.display = 'flex';
                         grid.appendChild(creationCardSlot);
                     }
                 }

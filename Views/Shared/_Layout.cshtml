@@ -1,13 +1,29 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using Pets_friends.Models
+@using Pets_friends.Data
+@using Microsoft.EntityFrameworkCore
 @inject UserManager<UserAccount> UserManager
+@inject AppDbContext _context
 
 @{
     var currentPath = Context.Request.Path.ToString().ToLower();
     var currentUser = await UserManager.GetUserAsync(User);
+
+    // 1. Setup the default fallback avatar
     string userName = currentUser?.FullName ?? "User";
     var encodedName = userName.Replace(" ", "+");
     var profileImageUrl = $"https://ui-avatars.com/api/?name={encodedName}&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true";
+
+    // 2. Safely check the database for an actual uploaded profile picture
+    if (currentUser != null)
+    {
+        var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == currentUser.Id);
+        if (clientProfile != null && !string.IsNullOrWhiteSpace(clientProfile.ImageUrl))
+        {
+            // Override with the real image from the server
+            profileImageUrl = clientProfile.ImageUrl;
+        }
+    }
 }
 
 <!DOCTYPE html>
@@ -53,61 +69,63 @@
             padding: 20px 0;
             background: rgba(250, 246, 241, 0.95);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             position: sticky;
             top: 0;
             width: 100%;
             z-index: 1000;
-            border-bottom: 1px solid #EBE0D5; /* hard-coded */
+            border-bottom: 1px solid #EBE0D5;
         }
 
         .nav-brand {
             font-family: 'Nunito', sans-serif;
             font-weight: 800;
             font-size: 1.5rem;
-            color: #2D1B0E; /* hard-coded */
+            color: #2D1B0E !important;
             text-decoration: none;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .nav-links a {
-            color: #8C7560; /* hard-coded */
+        .nav-links a,
+        .nav-links a:visited,
+        .nav-links a:focus {
+            color: #8C7560 !important;
             font-weight: 600;
-            text-decoration: none;
+            text-decoration: none !important;
             margin: 0 15px;
             transition: color 0.3s;
             font-size: 0.95rem;
         }
 
-        .nav-links a:hover,
-        .nav-links a.active {
-            color: #5C3D1E !important; /* hard-coded */
-        }
+            .nav-links a:hover,
+            .nav-links a.active {
+                color: #5C3D1E !important;
+            }
 
         .btn-nav {
-            background: #2D1B0E; /* hard-coded */
+            background: #5C3D1E !important;
             color: white !important;
             padding: 10px 24px;
             border-radius: 30px;
             font-weight: 700;
-            text-decoration: none;
+            text-decoration: none !important;
             transition: all 0.3s;
             font-size: 0.95rem;
             display: inline-block;
+            border: none;
         }
 
-        .btn-nav:hover {
-            background: #C8A882; /* hard-coded */
-            color: white !important;
-            transform: translateY(-2px);
-        }
+            .btn-nav:hover {
+                background: #C8A882 !important;
+                color: white !important;
+                transform: translateY(-2px);
+            }
 
-        /* --- USER DROPDOWN --- */
+        /* --- NEW USER DROPDOWN UI (SMOOTH ANIMATION) --- */
         .user-profile-btn {
             background: #FFFFFF;
-            border: 1px solid #EBE0D5;
+            border: 1px solid var(--border-light);
             border-radius: 50px;
             padding: 4px 16px 4px 4px;
             display: flex;
@@ -119,15 +137,15 @@
             outline: none;
         }
 
-        .user-profile-btn:hover, .dropdown-toggle.show {
-            background: #FAF6F1;
-            border-color: #C8A882;
-            box-shadow: 0 4px 12px rgba(92, 61, 30, 0.1);
-        }
+            .user-profile-btn:hover, .user-profile-btn:focus, .dropdown-toggle.show {
+                background: #FAF6F1;
+                border-color: var(--brand-accent);
+                box-shadow: 0 4px 12px rgba(92, 61, 30, 0.1);
+            }
 
-        .user-profile-btn::after {
-            display: none;
-        }
+            .user-profile-btn::after {
+                display: none;
+            }
 
         .nav-avatar {
             width: 36px;
@@ -136,72 +154,75 @@
             object-fit: cover;
             border: 2px solid #fff;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            background: #EBE0D5;
+            background: var(--border-light);
         }
 
         .nav-user-name {
             font-family: 'Nunito', sans-serif;
             font-weight: 700;
-            color: #2D1B0E; /* hard-coded */
+            color: var(--text-dark);
             font-size: 0.95rem;
         }
 
         .dropdown-chevron {
-            color: #8C7560;
+            color: var(--text-muted);
             font-size: 0.8rem;
             transition: transform 0.2s ease;
         }
 
         .dropdown-toggle.show .dropdown-chevron {
             transform: rotate(180deg);
-            color: #5C3D1E;
+            color: var(--brand-primary);
         }
 
         .custom-user-dropdown {
             border-radius: 20px;
-            border: 1px solid #EBE0D5;
+            border: 1px solid var(--border-light);
             box-shadow: 0 15px 35px rgba(92, 61, 30, 0.1);
             padding: 12px;
             margin-top: 15px !important;
             min-width: 220px;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
+            background: var(--bg-white);
             animation: dropFade 0.2s ease-out forwards;
             transform-origin: top right;
         }
 
         @@keyframes dropFade {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .custom-user-dropdown .dropdown-item {
             border-radius: 12px;
             padding: 10px 16px;
             font-weight: 600;
-            color: #2D1B0E;
+            color: var(--text-dark);
             font-size: 0.95rem;
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 12px;
         }
 
-        .custom-user-dropdown .dropdown-item i {
-            color: #C8A882;
-            font-size: 1.1rem;
-            width: 24px;
-        }
+            .custom-user-dropdown .dropdown-item i {
+                color: var(--brand-accent);
+                font-size: 1.1rem;
+                width: 24px;
+            }
 
-        .custom-user-dropdown .dropdown-item:hover {
-            background: #FDFaf5;
-            color: #5C3D1E;
-            transform: translateX(4px);
-        }
+            .custom-user-dropdown .dropdown-item:hover {
+                background: #FDFaf5;
+                color: var(--brand-primary);
+                transform: translateX(4px);
+            }
 
-        .custom-user-dropdown .dropdown-item:hover i {
-            color: #5C3D1E;
-        }
+                .custom-user-dropdown .dropdown-item:hover i {
+                    color: var(--brand-primary);
+                }
 
         .custom-user-dropdown .dropdown-divider {
             border-color: #EBE0D5;
@@ -216,14 +237,14 @@
             text-align: left;
         }
 
-        .logout-btn-item:hover {
-            background: #FEF2F2 !important;
-            color: #DC2626 !important;
-        }
+            .logout-btn-item:hover {
+                background: #FEF2F2 !important;
+                color: #DC2626 !important;
+            }
 
-        .logout-btn-item:hover i {
-            color: #DC2626 !important;
-        }
+                .logout-btn-item:hover i {
+                    color: #DC2626 !important;
+                }
 
         main {
             flex: 1 0 auto;
@@ -261,16 +282,16 @@
             gap: 25px;
         }
 
-        .footer-links a {
-            color: #A1A1AA;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
+            .footer-links a {
+                color: #A1A1AA;
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.2s ease;
+            }
 
-        .footer-links a:hover {
-            color: #FFFFFF !important;
-        }
+                .footer-links a:hover {
+                    color: #FFFFFF !important;
+                }
 
         @@media (max-width: 767px) {
             .footer-wrap {
@@ -291,13 +312,14 @@
                 <a href="/" class="@(currentPath == "/" || currentPath == "/home/main" ? "active" : "")">Home</a>
                 <a href="/Store/Home" class="@(currentPath.StartsWith("/store") ? "active" : "")">Marketplace</a>
                 <a href="/Home/Clinics" class="@(currentPath.StartsWith("/home/clinics") || currentPath.StartsWith("/vet/profile") ? "active" : "")">Vet Clinics</a>
-                <a href="/Home/Shelters" class="@(currentPath.StartsWith("/home/shelters") ? "active" : "")">Shelters</a>
+                <a href="/Home/Shelters" class="@(currentPath.StartsWith("/home/shelters") || currentPath.StartsWith("/shelter/profile") ? "active" : "")">Shelters</a>
             </div>
             <div>
                 @if (User.Identity != null && User.Identity.IsAuthenticated)
                 {
                     <div class="dropdown">
                         <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,15">
+                            <!-- This will now use the database image if it exists! -->
                             <img src="@profileImageUrl" alt="Avatar" class="nav-avatar">
                             <span class="nav-user-name">@userName</span>
                             <i class="bi bi-chevron-down dropdown-chevron"></i>
@@ -335,7 +357,7 @@
         <div class="container">
             <div class="footer-wrap">
                 <div class="footer-copyright">
-                    &copy; 2026 petfriends.support@@gmail.com. All Rights Reserved.
+                    &copy; 2026 petfriends.support@gmail.com. All Rights Reserved.
                 </div>
                 <div class="footer-links">
                     <a href="/Home/Privacy">Privacy Policy</a>

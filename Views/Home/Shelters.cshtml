@@ -1,7 +1,10 @@
 ﻿@model Pets_friends.Data.ViewModels.SheltersDirectoryVM
 @using Microsoft.AspNetCore.Identity
 @using Pets_friends.Models
+@using Pets_friends.Data
+@using Microsoft.EntityFrameworkCore
 @inject UserManager<UserAccount> UserManager
+@inject AppDbContext _context
 
 @{
     Layout = null;
@@ -430,6 +433,17 @@
         string userName = currentUser?.FullName ?? "User";
         var encodedName = userName.Replace(" ", "+");
         var profileImageUrl = $"https://ui-avatars.com/api/?name={encodedName}&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true";
+
+        // Safely check the database for an actual uploaded profile picture
+        if (currentUser != null)
+        {
+            var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == currentUser.Id);
+            if (clientProfile != null && !string.IsNullOrWhiteSpace(clientProfile.ImageUrl))
+            {
+                // Override with the real image from the server
+                profileImageUrl = clientProfile.ImageUrl;
+            }
+        }
     }
 
     <nav class="main-nav">

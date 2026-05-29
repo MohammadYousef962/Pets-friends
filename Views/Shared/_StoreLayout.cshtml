@@ -1,4 +1,11 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using Pets_friends.Models
+@using Pets_friends.Data
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<UserAccount> UserManager
+@inject AppDbContext _context
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -10,22 +17,45 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
+        :root {
+            --text-dark: #2D1B0E;
+            --text-muted: #8C7560;
+            --brand-primary: #5C3D1E;
+            --brand-accent: #C8A882;
+            --bg-light: #FAF6F1;
+            --bg-white: #FFFFFF;
+            --border-light: #EBE0D5;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* =========================
+                           NAVBAR
+                        ========================== */
+
         .store-navbar {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(250, 246, 241, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid #EBE0D5;
-            padding: 15px 0;
+            padding: 18px 0;
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 4px 20px rgba(92, 61, 30, 0.05);
         }
 
         .store-brand {
-            font-family: 'Playfair Display', serif;
-            font-weight: 700;
-            font-size: 1.6rem;
-            color: #5C3D1E;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: #2D1B0E !important;
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -48,7 +78,7 @@
             padding: 12px 20px 12px 45px;
             border-radius: 30px;
             border: 2px solid #EBE0D5;
-            background: #FAF6F1;
+            background: #FFFFFF;
             font-size: 0.95rem;
             transition: all 0.3s;
             outline: none;
@@ -56,7 +86,6 @@
 
             .search-input:focus {
                 border-color: #C8A882;
-                background: #fff;
                 box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.1);
             }
 
@@ -76,22 +105,48 @@
         }
 
         .nav-action-btn {
-            color: #5C3D1E;
-            text-decoration: none;
+            color: #5C3D1E !important;
+            text-decoration: none !important;
             font-weight: 600;
             display: flex;
             align-items: center;
             transition: color 0.2s;
             position: relative;
             font-size: 0.95rem;
-            border: none;
-            background: none;
-            padding: 0;
         }
 
             .nav-action-btn:hover {
-                color: #C8A882;
+                color: #C8A882 !important;
             }
+
+        /* =========================
+                           SIGN IN BUTTON
+                        ========================== */
+
+        .btn-nav {
+            background: #5C3D1E !important;
+            color: white !important;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            text-decoration: none !important;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            display: inline-block;
+            border: none;
+            line-height: 1.2;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+            .btn-nav:hover {
+                background: #C8A882 !important;
+                color: white !important;
+                transform: translateY(-2px);
+            }
+
+        /* =========================
+                           CART BADGE
+                        ========================== */
 
         .cart-badge {
             position: absolute;
@@ -104,59 +159,143 @@
             padding: 2px 6px;
             border-radius: 10px;
             border: 2px solid #fff;
-            transition: transform 0.2s;
             z-index: 2;
         }
 
-            .cart-badge.pop {
-                transform: scale(1.3);
+        /* =========================
+                           USER DROPDOWN
+                        ========================== */
+
+        .user-profile-btn {
+            background: #FFFFFF;
+            border: 1px solid var(--border-light);
+            border-radius: 50px;
+            padding: 4px 16px 4px 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(92, 61, 30, 0.05);
+            outline: none;
+        }
+
+            .user-profile-btn:hover,
+            .user-profile-btn:focus,
+            .dropdown-toggle.show {
+                background: #FAF6F1;
+                border-color: var(--brand-accent);
+                box-shadow: 0 4px 12px rgba(92, 61, 30, 0.1);
             }
 
-        /* --- PREMIUM RIGHT-ALIGNED DROPDOWN (UPGRADED) --- */
-        .user-profile-btn { 
-            background: #FFFFFF; border: 1px solid #EBE0D5; border-radius: 50px; 
-            padding: 5px 16px 5px 5px; display: flex; align-items: center; gap: 8px; 
-            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 8px rgba(92, 61, 30, 0.05); 
-            height: 44px; outline: none;
-        }
-        
-        .user-profile-btn:hover, .user-profile-btn[aria-expanded="true"] { 
-            background: #FDFaf5; border-color: #C8A882; box-shadow: 0 4px 15px rgba(92, 61, 30, 0.12); 
-        }
-        
-        .user-profile-btn::after { display: none; } /* Hides Bootstrap Arrow */
+            .user-profile-btn::after {
+                display: none;
+            }
 
-        .nav-avatar { 
-            width: 32px; height: 32px; border-radius: 50%; object-fit: cover; 
-            background: #FAF6F1; border: 1px solid #EBE0D5; 
+        .nav-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: var(--border-light);
         }
-        
-        .nav-user-name { font-family: 'Nunito', sans-serif; font-weight: 700; color: #1A1A1A; font-size: 0.95rem; margin-right: 4px; }
-        .dropdown-chevron { color: #8C7560; font-size: 0.8rem; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .user-profile-btn[aria-expanded="true"] .dropdown-chevron { transform: rotate(180deg); color: #5C3D1E; }
 
-        /* THE FIX: Opacity-only animation prevents Popper.js alignment bugs */
-        .dropdown-menu-custom { 
-            border-radius: 20px; border: 1px solid #EBE0D5; box-shadow: 0 20px 40px rgba(92, 61, 30, 0.12); 
-            padding: 10px; min-width: 240px; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px);
-            animation: dropFade 0.2s ease forwards;
+        .nav-user-name {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 0.95rem;
         }
-        
-        @@keyframes dropFade { from { opacity: 0; } to { opacity: 1; } }
 
-        .dropdown-item-custom { 
-            border-radius: 12px; padding: 12px 16px; font-weight: 600; color: #1A1A1A; 
-            font-size: 0.95rem; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px; 
+        .dropdown-chevron {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
         }
-        
-        .dropdown-item-custom i { color: #C8A882; font-size: 1.2rem; transition: color 0.2s; }
-        .dropdown-item-custom:hover { background: #FDFaf5; color: #5C3D1E; transform: translateX(4px); }
-        .dropdown-item-custom:hover i { color: #5C3D1E; }
-        .dropdown-divider-custom { border-top: 1px solid #EBE0D5; margin: 8px 10px; opacity: 0.5; }
 
-        .logout-text { border: none; background: transparent; width: 100%; text-align: left; }
-        .logout-text:hover { background: #FEF2F2 !important; color: #DC2626 !important; }
-        .logout-text:hover i { color: #DC2626 !important; }
+        .dropdown-toggle.show .dropdown-chevron {
+            transform: rotate(180deg);
+            color: var(--brand-primary);
+        }
+
+        .dropdown-menu-custom {
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 15px 35px rgba(92, 61, 30, 0.1);
+            padding: 12px;
+            margin-top: 15px !important;
+            min-width: 220px;
+            background: var(--bg-white);
+            animation: dropFade 0.2s ease-out forwards;
+            transform-origin: top right;
+        }
+
+        @@keyframes dropFade {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .dropdown-item-custom {
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+            .dropdown-item-custom i {
+                color: var(--brand-accent);
+                font-size: 1.1rem;
+                width: 24px;
+            }
+
+            .dropdown-item-custom:hover {
+                background: #FDFaf5;
+                color: var(--brand-primary);
+                transform: translateX(4px);
+            }
+
+                .dropdown-item-custom:hover i {
+                    color: var(--brand-primary);
+                }
+
+        .dropdown-divider-custom {
+            border-color: #EBE0D5;
+            margin: 8px 10px;
+            opacity: 1;
+        }
+
+        .logout-text {
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+            .logout-text:hover {
+                background: #FEF2F2 !important;
+                color: #DC2626 !important;
+            }
+
+                .logout-text:hover i {
+                    color: #DC2626 !important;
+                }
+
+        main {
+            flex: 1 0 auto;
+        }
     </style>
 
     @if (IsSectionDefined("Styles"))
@@ -166,11 +305,7 @@
 </head>
 <body>
 
-    @using Microsoft.AspNetCore.Identity
-    @using Pets_friends.Models
-    @inject UserManager<UserAccount> UserManager
     @{
-        // THE FIX: Set default routing for standard clients to Home/Main
         string dashController = "Home";
         string dashAction = "Main";
         string firstName = "Member";
@@ -180,13 +315,38 @@
         {
             var currentUser = await UserManager.GetUserAsync(User);
             var fullName = currentUser?.FullName ?? "Member";
-            firstName = fullName.Split(' ')[0];
-            avatarUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(firstName)}&background=FAF6F1&color=5C3D1E&bold=true";
 
-            // If they are a staff member, override the default routing
-            if (User.IsInRole("Merchant")) { dashController = "Merchant"; dashAction = "Dashboard"; }
-            else if (User.IsInRole("Vet")) { dashController = "Vet"; dashAction = "Dashboard"; }
-            else if (User.IsInRole("Shelter")) { dashController = "Shelter"; dashAction = "Dashboard"; }
+            firstName = fullName.Split(' ')[0];
+
+            // 1. Setup the default fallback avatar
+            avatarUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(firstName)}&background=EBE0D5&color=5C3D1E&bold=true";
+
+            // 2. Safely check the database for an actual uploaded profile picture
+            if (currentUser != null)
+            {
+                var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == currentUser.Id);
+                if (clientProfile != null && !string.IsNullOrWhiteSpace(clientProfile.ImageUrl))
+                {
+                    // Override with the real image from the server
+                    avatarUrl = clientProfile.ImageUrl;
+                }
+            }
+
+            if (User.IsInRole("Merchant"))
+            {
+                dashController = "Merchant";
+                dashAction = "Dashboard";
+            }
+            else if (User.IsInRole("Vet"))
+            {
+                dashController = "Vet";
+                dashAction = "Dashboard";
+            }
+            else if (User.IsInRole("Shelter"))
+            {
+                dashController = "Shelter";
+                dashAction = "Dashboard";
+            }
         }
     }
 
@@ -194,62 +354,115 @@
         <div class="container d-flex align-items-center justify-content-between">
 
             <a asp-controller="Store" asp-action="Home" class="store-brand">
-                <i class="bi bi-shop"></i> PetFriends Market
+                <i class="bi bi-shop"></i>
+                PetFriends Market
             </a>
 
-            <form class="search-container d-none d-lg-block" asp-controller="Store" asp-action="Home" method="get">
+            <form class="search-container d-none d-lg-block"
+                  asp-controller="Store"
+                  asp-action="Home"
+                  method="get">
+
                 <i class="bi bi-search search-icon"></i>
-                <input type="text" id="globalSearchInput" autocomplete="off" class="search-input" placeholder="Search for food, toys, meds, and more...">
+
+                <input type="text"
+                       id="globalSearchInput"
+                       autocomplete="off"
+                       class="search-input"
+                       placeholder="Search for food, toys, meds, and more...">
             </form>
 
             <div class="nav-actions">
 
-                <a asp-controller="Store" asp-action="Cart" class="nav-action-btn" title="View Shopping Cart">
+                <a asp-controller="Store"
+                   asp-action="Cart"
+                   class="nav-action-btn"
+                   title="View Shopping Cart">
+
                     <span class="position-relative d-inline-flex align-items-center">
                         <i class="bi bi-cart3 fs-5"></i>
                         <span class="cart-badge" id="cartCountBadge">0</span>
                     </span>
+
                     <span class="d-none d-sm-inline ms-2">Cart</span>
                 </a>
 
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <div class="dropdown">
-                        <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,15">
-                            <img src="@avatarUrl" class="nav-avatar" alt="User">
-                            <span class="d-none d-sm-inline nav-user-name">@firstName</span>
+
+                        <button class="user-profile-btn dropdown-toggle"
+                                type="button"
+                                id="userDropdown"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                data-bs-offset="0,15">
+
+                            <img src="@avatarUrl"
+                                 class="nav-avatar"
+                                 alt="User">
+
+                            <span class="d-none d-sm-inline nav-user-name">
+                                @firstName
+                            </span>
+
                             <i class="bi bi-chevron-down dropdown-chevron"></i>
                         </button>
 
-                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom" aria-labelledby="userDropdown">
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom"
+                            aria-labelledby="userDropdown">
+
                             <li>
-                                <a class="dropdown-item dropdown-item-custom" asp-controller="@dashController" asp-action="@dashAction">
-                                    <i class="bi bi-person-badge"></i> Home
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item dropdown-item-custom" asp-controller="Order" asp-action="MyOrders">
-                                    <i class="bi bi-box-seam"></i> My Orders
+                                <a class="dropdown-item-custom"
+                                   asp-controller="@dashController"
+                                   asp-action="@dashAction">
+
+                                    <i class="bi bi-person-badge"></i>
+                                    Home
                                 </a>
                             </li>
 
-                            <li><hr class="dropdown-divider dropdown-divider-custom"></li>
+                            <li>
+                                <a class="dropdown-item-custom"
+                                   asp-controller="Order"
+                                   asp-action="MyOrders">
+
+                                    <i class="bi bi-box-seam"></i>
+                                    My Orders
+                                </a>
+                            </li>
 
                             <li>
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 p-0 w-100">
+                                <hr class="dropdown-divider dropdown-divider-custom">
+                            </li>
+
+                            <li>
+                                <form asp-controller="Account"
+                                      asp-action="Logout"
+                                      method="post"
+                                      class="m-0 p-0 w-100">
+
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="dropdown-item dropdown-item-custom logout-text w-100">
-                                        <i class="bi bi-box-arrow-right"></i> Sign Out
+
+                                    <button type="submit"
+                                            class="dropdown-item-custom logout-text w-100">
+
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        Sign Out
                                     </button>
                                 </form>
                             </li>
+
                         </ul>
                     </div>
                 }
                 else
                 {
-                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" class="nav-action-btn">
-                        <i class="bi bi-box-arrow-in-right fs-5"></i> <span class="d-none d-sm-inline ms-2">Login</span>
+                    <a asp-controller="Account"
+                       asp-action="Login"
+                       asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                       class="btn-nav">
+                        Sign In
                     </a>
                 }
 
@@ -264,12 +477,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
+
             fetch('/Store/GetCartCount')
                 .then(response => response.json())
                 .then(data => {
+
                     const badge = document.getElementById('cartCountBadge');
-                    if (badge) badge.innerText = data;
+
+                    if (badge)
+                        badge.innerText = data;
                 })
                 .catch(error => console.log('Error fetching cart count:', error));
         });
@@ -279,5 +496,6 @@
     {
         @RenderSection("Scripts", required: false)
     }
+
 </body>
 </html>
