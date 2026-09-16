@@ -288,3 +288,46 @@ a {
         padding: 8px 0;
     }
 }
+/* ========== PASSWORD TOGGLE OVERRIDES ========== */
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+/* We must specifically override the global 'button' CSS here */
+button.password-toggle {
+    position: absolute;
+    right: 5px;
+    width: auto !important; /* Stops it from stretching to 100% */
+    margin-top: 0 !important; /* Stops it from getting pushed down */
+    background: transparent !important; /* Removes the brown background */
+    color: #8C7560 !important; /* Overrides the global white text */
+    padding: 10px !important;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    button.password-toggle:hover {
+        background: transparent !important;
+        color: #5C3D1E !important;
+        transform: none !important; /* Stops the button from jumping up on hover */
+    }
+
+    button.password-toggle:focus {
+        outline: none;
+    }
+
+.password-input {
+    padding-right: 45px !important; /* Keeps text from typing underneath the eye icon */
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}

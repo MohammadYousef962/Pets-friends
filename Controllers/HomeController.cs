@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using Pets_friends.Data;
 using Pets_friends.Data.ViewModels;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Pets_friends.Controllers
 {
-    [AllowAnonymous] // Allows guests to view the home pages
+    [AllowAnonymous]
     public class HomeController : Controller
     {
         private readonly AppDbContext _context;
@@ -25,6 +26,19 @@ namespace Pets_friends.Controllers
         }
 
         // --------------------------------------------------------
+        // GATEKEEPER: Blocks Admins, Vets, etc. from accessing anything here
+        // --------------------------------------------------------
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            if (User.Identity != null && User.Identity.IsAuthenticated && !User.IsInRole("Client"))
+            {
+                context.Result = new ForbidResult();
+            }
+
+            base.OnActionExecuting(context);
+        }
+
+        // --------------------------------------------------------
         // HOME / MAIN PAGE
         // --------------------------------------------------------
         [HttpGet]
@@ -32,10 +46,9 @@ namespace Pets_friends.Controllers
         {
             var viewModel = new HomeVM();
 
-            // 1. Fetch Adoptable Pets (Ensuring they belong to a shelter!)
+            // 1. Fetch Adoptable Pets
             viewModel.AdoptablePets = await _context.Pets
                 .Include(p => p.ShelterProfile)
-                .ThenInclude(s => s.UserAccount)
                 .Where(p => p.IsPubliclyListed && !p.IsAdopted && p.ShelterProfileId != null)
                 .Select(p => new HomePetDto
                 {
@@ -44,7 +57,10 @@ namespace Pets_friends.Controllers
                     Breed = p.Breed ?? "Mixed Breed",
                     Age = p.Age,
                     ImageUrl = p.ImageUrl ?? "https://placehold.co/400x400/FAF6F1/5C3D1E?text=Pet",
-                    ShelterName = p.ShelterProfile.UserAccount != null ? p.ShelterProfile.UserAccount.FullName : "Verified Shelter",
+
+                    // FIXED: Pulling actual ShelterName instead of User FullName
+                    ShelterName = !string.IsNullOrWhiteSpace(p.ShelterProfile.ShelterName) ? p.ShelterProfile.ShelterName : "Verified Shelter",
+
                     Gender = p.Gender ?? "Unknown",
                     IsNeutered = p.IsNeutered,
                     MedicalHistory = p.MedicalHistory ?? "Verified healthy and up to date on all shots.",
@@ -73,7 +89,6 @@ namespace Pets_friends.Controllers
             viewModel.FeaturedProducts = await _context.Products
                 .Include(p => p.Reviews)
                 .Include(p => p.MerchantProfile)
-                .ThenInclude(m => m.UserAccount)
                 .OrderByDescending(p => p.Reviews.Any() ? p.Reviews.Average(r => r.Rating) : 0)
                 .Take(3)
                 .Select(p => new HomeProductDto
@@ -128,17 +143,15 @@ namespace Pets_friends.Controllers
         }
 
         // --------------------------------------------------------
-        // AVAILABLE PETS DIRECTORY
+        // AVAILABLE PETS DIRECTORY 
         // --------------------------------------------------------
         [HttpGet]
         public async Task<IActionResult> AvailablePets(int page = 1)
         {
             int pageSize = 16;
 
-            // Ensuring they belong to a shelter!
             var query = _context.Pets
                 .Include(p => p.ShelterProfile)
-                .ThenInclude(s => s.UserAccount)
                 .Where(p => p.IsPubliclyListed && !p.IsAdopted && p.ShelterProfileId != null);
 
             int totalPets = await query.CountAsync();
@@ -156,7 +169,10 @@ namespace Pets_friends.Controllers
                     Breed = p.Breed,
                     Age = p.Age,
                     ImageUrl = p.ImageUrl ?? "https://placehold.co/400x400/FAF6F1/5C3D1E?text=Pet",
-                    ShelterName = p.ShelterProfile.UserAccount != null ? p.ShelterProfile.UserAccount.FullName : "Shelter",
+
+                    // FIXED: Pulling actual ShelterName instead of User FullName
+                    ShelterName = !string.IsNullOrWhiteSpace(p.ShelterProfile.ShelterName) ? p.ShelterProfile.ShelterName : "Shelter",
+
                     Gender = p.Gender,
                     IsNeutered = p.IsNeutered,
                     MedicalHistory = p.MedicalHistory ?? "No records.",
@@ -176,10 +192,10 @@ namespace Pets_friends.Controllers
         }
 
         // --------------------------------------------------------
-        // SUBMIT ADOPTION REQUEST (Requires Login!)
+        // SUBMIT ADOPTION REQUEST 
         // --------------------------------------------------------
         [HttpPost]
-        [Authorize] // Forces the user to log in before executing this action
+        [Authorize(Roles = "Client")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitAdoption(int PetId, bool AgreedToPolicy)
         {
@@ -203,7 +219,6 @@ namespace Pets_friends.Controllers
                 return RedirectToAction("AvailablePets");
             }
 
-            // Syncs perfectly with the Shelter's Dashboard Queue!
             var app = new AdoptionApplication
             {
                 PetId = PetId,
@@ -221,7 +236,7 @@ namespace Pets_friends.Controllers
         }
 
         // --------------------------------------------------------
-        // VET CLINICS DIRECTORY
+        // VET CLINICS DIRECTORY 
         // --------------------------------------------------------
         [HttpGet]
         public async Task<IActionResult> Clinics(string query, string category, int page = 1)
@@ -280,19 +295,22 @@ namespace Pets_friends.Controllers
             return View(viewModel);
         }
 
+        // --------------------------------------------------------
+        // SHELTERS DIRECTORY 
+        // --------------------------------------------------------
         [HttpGet]
         public async Task<IActionResult> Shelters(string query = "", int page = 1)
         {
             int pageSize = 6;
-            var sheltersQuery = _context.ShelterProfiles
-                .Include(s => s.UserAccount)
-                .AsQueryable();
+            var sheltersQuery = _context.ShelterProfiles.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(query))
             {
                 query = query.ToLower();
+
+                // FIXED: The search filter now correctly searches the ShelterName instead of the User Account FullName
                 sheltersQuery = sheltersQuery.Where(s =>
-                    (s.UserAccount != null && s.UserAccount.FullName.ToLower().Contains(query)) ||
+                    (s.ShelterName != null && s.ShelterName.ToLower().Contains(query)) ||
                     (s.Address != null && s.Address.ToLower().Contains(query)) ||
                     (s.Description != null && s.Description.ToLower().Contains(query))
                 );
@@ -307,7 +325,10 @@ namespace Pets_friends.Controllers
                 .Select(s => new ShelterDisplayVM
                 {
                     Id = s.Id,
-                    Name = s.UserAccount != null ? s.UserAccount.FullName : "Shelter",
+
+                    // FIXED: Finally mapping the ShelterName to the Name property used in the HTML View!
+                    Name = !string.IsNullOrWhiteSpace(s.ShelterName) ? s.ShelterName : "Shelter",
+
                     Location = !string.IsNullOrWhiteSpace(s.Address) ? s.Address : "Location not provided",
                     Description = !string.IsNullOrWhiteSpace(s.Description) ? s.Description : "A loving animal rescue and shelter.",
                     ImageUrl = !string.IsNullOrWhiteSpace(s.ImageUrl) ? s.ImageUrl : "https://placehold.co/150x150/C8A882/white?text=Shelter"

@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <parameters>
-  <parameter name="IIS Web Application Name" description="" value="soupiexd-001-site1" tags="IisApp">
+  <parameter name="IIS Web Application Name" description="" value="site86797" tags="IisApp">
     <parameterEntry kind="ProviderPath" scope="IisApp" match="^C:\\Users\\wazed\\source\\repos\\Pet\ friends\\Pets\ friends\\obj\\Release\\net8\.0\\PubTmp\\Out\\$" />
+  </parameter>
+  <parameter name="Pets_friends.Data.AppDbContext" description="" value="Server=db64871.databaseasp.net;Database=db64871;User Id=db64871;Password=rG-8?n7X5#Cs;Encrypt=False;MultipleActiveResultSets=True;" tags="dbfullsql">
+    <parameterEntry kind="ProviderPath" scope="dbfullsql" match="^C:\\Users\\wazed\\source\\repos\\Pet\ friends\\Pets\ friends\\obj\\Release\\net8\.0\\PubTmp\\EFSQLScripts\\Pets_friends\.Data\.AppDbContext\.sql$" />
   </parameter>
 </parameters>

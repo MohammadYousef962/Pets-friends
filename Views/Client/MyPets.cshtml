@@ -6,6 +6,9 @@
 }
 
 @section Styles {
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
+
     <style>
         :root {
             --text-dark-blue: #002B49;
@@ -38,6 +41,7 @@
             font-size: 2.5rem;
             color: #2D1B0E;
             margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .grid-container {
@@ -63,7 +67,7 @@
 
             .my-pet-card:hover {
                 transform: translateY(-8px);
-                box-shadow: 0 15px 35px rgba(92, 61, 30, 0.1);
+                box-shadow: 0 20px 40px rgba(92, 61, 30, 0.12);
                 border-color: var(--brand-accent);
             }
 
@@ -74,11 +78,11 @@
             border-radius: 18px;
             margin-bottom: 16px;
             background: #F3F4F6;
-            transition: transform 0.5s;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .my-pet-card:hover .my-pet-img {
-            transform: scale(1.05);
+            transform: scale(1.08);
         }
 
         .my-pet-name {
@@ -94,7 +98,7 @@
         .my-pet-meta {
             font-size: 1rem;
             color: var(--text-muted);
-            font-weight: 500;
+            font-weight: 600;
             padding: 0 8px 8px;
         }
 
@@ -108,7 +112,7 @@
             justify-content: center;
             opacity: 0;
             transition: opacity 0.3s ease;
-            border-radius: 28px;
+            border-radius: 18px;
             backdrop-filter: blur(2px);
         }
 
@@ -117,7 +121,7 @@
         }
 
         .btn-overlay-view {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.25);
             color: #fff;
             font-weight: 700;
             padding: 12px 28px;
@@ -125,14 +129,21 @@
             border: 1px solid rgba(255,255,255,0.8);
             font-size: 1rem;
             font-family: 'Nunito', sans-serif;
+            backdrop-filter: blur(4px);
+            transition: 0.2s;
         }
+
+            .btn-overlay-view:hover {
+                background: #fff;
+                color: var(--brand-primary);
+            }
 
         /* MODAL UI */
         .modal-content {
-            border-radius: 24px;
+            border-radius: 28px;
             border: none;
             overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
 
         .modal-header {
@@ -150,8 +161,8 @@
         .medical-lock-banner {
             background: #FFFBEB;
             color: #D97706;
-            padding: 12px 20px;
-            font-size: 0.9rem;
+            padding: 14px 30px;
+            font-size: 0.95rem;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -160,23 +171,23 @@
         }
 
         .locked-field {
-            background: #F3F4F6;
+            background: #F9FAFB;
             border: 1px solid #E5E7EB;
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 12px 16px;
             color: #4B5563;
-            font-weight: 500;
+            font-weight: 600;
             cursor: not-allowed;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         .locked-label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
             font-weight: 800;
             color: #9CA3AF;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -185,25 +196,25 @@
         .editable-input {
             background: #FFFFFF;
             border: 2px solid var(--border-light);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 12px 16px;
             color: #1F2937;
             font-weight: 600;
             width: 100%;
-            transition: 0.2s;
-            margin-bottom: 5px;
+            transition: all 0.2s ease;
+            margin-bottom: 8px;
         }
 
             .editable-input:focus {
                 border-color: var(--brand-accent);
                 outline: none;
-                box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.1);
+                box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.15);
             }
 
         .editable-label {
             font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
             font-weight: 800;
             color: var(--brand-accent);
             margin-bottom: 6px;
@@ -212,12 +223,12 @@
 
         .pfp-upload-wrap {
             position: relative;
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
-            margin: 0 auto 20px;
+            margin: 0 auto 24px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
             overflow: hidden;
             border: 4px solid #fff;
         }
@@ -238,7 +249,7 @@
             color: white;
             font-size: 1.5rem;
             opacity: 0;
-            transition: 0.2s;
+            transition: 0.3s ease;
         }
 
         .pfp-upload-wrap:hover .pfp-overlay {
@@ -248,26 +259,28 @@
         .btn-save-modal {
             background: var(--brand-primary);
             color: white;
-            border-radius: 12px;
+            border-radius: 14px;
             font-weight: 700;
-            padding: 12px 30px;
+            padding: 12px 32px;
             border: none;
-            transition: 0.2s;
+            transition: all 0.2s;
         }
 
             .btn-save-modal:hover {
-                background: var(--brand-accent);
+                background: #4A3118;
                 transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(92, 61, 30, 0.2);
             }
     </style>
 }
 
 <div class="container px-3 pb-5">
 
+    <!-- ALERTS -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success rounded-4 mt-4 mb-0 d-flex align-items-center border-0 shadow-sm mx-auto" style="background: #ECFDF5; color: #065F46; padding: 16px 20px; max-width: 1000px;">
-            <i class="bi bi-check-circle-fill me-3 fs-5" style="color: #10B981;"></i>
+            <i class="bi bi-check-circle-fill me-3 fs-4" style="color: #10B981;"></i>
             <div class="fw-bold">@TempData["SuccessMessage"]</div>
         </div>
     }
@@ -275,7 +288,7 @@
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger rounded-4 mt-4 mb-0 d-flex align-items-center border-0 shadow-sm mx-auto" style="background: #FEF2F2; color: #991B1B; padding: 16px 20px; max-width: 1000px;">
-            <i class="bi bi-exclamation-triangle-fill me-3 fs-5" style="color: #DC2626;"></i>
+            <i class="bi bi-exclamation-triangle-fill me-3 fs-4" style="color: #DC2626;"></i>
             <div class="fw-bold">@TempData["ErrorMessage"]</div>
         </div>
     }
@@ -308,16 +321,17 @@
                         <input type="hidden" name="id" value="@pet.Id" />
                     </form>
 
+                    <!-- EDIT MODAL -->
                     <div class="modal fade" id="editModal-@pet.Id" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-lg modal-dialog-centered">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title">@pet.Name's Official Profile</h5>
+                                    <h5 class="modal-title fs-4">@pet.Name's Official Profile</h5>
                                     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="medical-lock-banner">
                                     <i class="bi bi-shield-lock-fill fs-5"></i>
-                                    Official medical records (Breed, Age, History) are strictly locked to prevent unauthorized changes.
+                                    Official medical records (Breed, Age, History) are securely locked by your vet.
                                 </div>
 
                                 <form asp-action="EditPet" method="post" enctype="multipart/form-data">
@@ -325,11 +339,12 @@
                                     <input type="hidden" name="PetId" value="@pet.Id" />
                                     <input type="hidden" name="ExistingImageUrl" value="@pet.ImageUrl" />
 
-                                    <div class="modal-body p-4">
+                                    <div class="modal-body p-4 p-md-5">
                                         <div class="row g-4">
 
+                                            <!-- Left Side: Editable -->
                                             <div class="col-md-6 border-end pe-md-4">
-                                                <h6 class="fw-bold mb-4" style="color: var(--brand-primary); font-family: 'Nunito', sans-serif;">Editable Profile</h6>
+                                                <h6 class="fw-bolder mb-4 text-uppercase" style="color: var(--brand-primary); font-family: 'Nunito', sans-serif; letter-spacing: 1px;">Editable Profile</h6>
 
                                                 <div class="pfp-upload-wrap" onclick="document.getElementById('file-@pet.Id').click()">
                                                     <img src="@pet.ImageUrl" id="preview-@pet.Id" alt="@pet.Name" onerror="this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400'">
@@ -338,7 +353,6 @@
                                                 </div>
 
                                                 <label class="editable-label">Pet Name <span class="text-danger">*</span></label>
-
                                                 @if (pet.CanChangeName)
                                                 {
                                                     <input type="text" name="Name" class="editable-input" value="@pet.Name" required maxlength="50">
@@ -360,8 +374,9 @@
                                                 <textarea name="Description" class="editable-input" rows="4" placeholder="Describe their personality...">@pet.Description</textarea>
                                             </div>
 
+                                            <!-- Right Side: Locked -->
                                             <div class="col-md-6 ps-md-4">
-                                                <h6 class="fw-bold mb-4" style="color: var(--text-muted); font-family: 'Nunito', sans-serif;">Verified Medical ID</h6>
+                                                <h6 class="fw-bolder mb-4 text-uppercase" style="color: var(--text-muted); font-family: 'Nunito', sans-serif; letter-spacing: 1px;">Verified Medical ID</h6>
 
                                                 <div class="locked-label">Breed / Species <i class="bi bi-lock-fill"></i></div>
                                                 <div class="locked-field">@pet.Breed</div>
@@ -385,25 +400,25 @@
                                                 </div>
 
                                                 <div class="locked-label">Medical History <i class="bi bi-lock-fill"></i></div>
-                                                <div class="locked-field mb-0" style="min-height: 150px; font-size: 0.9rem; line-height: 1.6;">
+                                                <div class="locked-field mb-0" style="min-height: 120px; font-size: 0.95rem; line-height: 1.6;">
                                                     @(string.IsNullOrWhiteSpace(pet.MedicalHistory) ? "No history recorded by vet." : pet.MedicalHistory)
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="modal-footer" style="border-top: 1px solid var(--border-light); padding: 20px 30px; background: #FAFAFA; display:flex; justify-content:space-between; align-items:center;">
-                                        <!-- Left Side: Delete Pet -->
+                                    <div class="modal-footer" style="border-top: 1px solid var(--border-light); padding: 24px 30px; background: #F9FAFB; display:flex; justify-content:space-between; align-items:center;">
+
+                                        <!-- Delete Button with SweetAlert -->
                                         <div>
-                                            <button type="button" class="btn btn-outline-danger fw-bold px-4" style="border-radius: 12px;" onclick="if(confirm('Are you sure you want to permanently remove @pet.Name from your profile? This action cannot be undone.')) document.getElementById('deletePetForm-@pet.Id').submit();">
-                                                <i class="bi bi-trash3-fill me-1"></i> Remove Pet
+                                            <button type="button" class="btn btn-outline-danger fw-bold px-4" style="border-radius: 12px; transition: 0.2s;" onclick="triggerDelete('@pet.Id', '@pet.Name')">
+                                                <i class="bi bi-trash3-fill me-1"></i> Remove
                                             </button>
                                         </div>
 
-                                        <!-- Right Side: Save & Cancel -->
                                         <div class="d-flex gap-2">
-                                            <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal" style="border-radius: 12px;">Cancel</button>
-                                            <button type="submit" class="btn-save-modal m-0">Save Profile Changes</button>
+                                            <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal" style="border-radius: 12px; color: #4B5563; border: 1px solid #E5E7EB;">Cancel</button>
+                                            <button type="submit" class="btn-save-modal m-0">Save Changes</button>
                                         </div>
                                     </div>
                                 </form>
@@ -415,12 +430,12 @@
         }
         else
         {
-            <div class="text-center py-5 rounded-4" style="background: #FFFFFF; border: 2px dashed #EBE0D5;">
-                <i class="bi bi-heptagon fs-1 text-muted d-block mb-3"></i>
+            <div class="text-center py-5 rounded-4 shadow-sm" style="background: #FFFFFF; border: 2px dashed #D1D5DB; margin-top: 2rem;">
+                <i class="bi bi-hearts fs-1 d-block mb-3" style="color: #D1D5DB;"></i>
                 <h4 class="fw-bold" style="color: #2D1B0E; font-family: 'Nunito', sans-serif;">No pets found</h4>
-                <p class="text-muted mb-4">You haven't officially registered any pets yet.</p>
-                <a asp-controller="Home" asp-action="Clinics" class="btn btn-dark rounded-pill fw-bold px-4 py-2" style="background-color: var(--brand-primary); border: none;">
-                    Find a Vet to Register
+                <p class="text-muted mb-4 fs-5">You haven't officially registered any pets yet.</p>
+                <a asp-controller="Home" asp-action="Clinics" class="btn btn-dark rounded-pill fw-bold px-5 py-3 fs-5" style="background-color: var(--brand-primary); border: none; transition: 0.2s;">
+                    <i class="bi bi-search me-2"></i> Find a Vet to Register
                 </a>
             </div>
         }
@@ -428,6 +443,8 @@
 </div>
 
 @section Scripts {
+    <!-- Include SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
     <script>
         function previewImage(input, targetId) {
             if (input.files && input.files[0]) {
@@ -435,6 +452,32 @@
                 reader.onload = e => document.getElementById(targetId).src = e.target.result;
                 reader.readAsDataURL(input.files[0]);
             }
+        }
+
+        // Stunning custom confirmation modal
+        function triggerDelete(petId, petName) {
+            Swal.fire({
+                title: `Remove ${petName}?`,
+                text: "This action cannot be undone. All related profile data will be permanently removed.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#DC2626',
+                cancelButtonColor: '#F3F4F6',
+                confirmButtonText: '<i class="bi bi-trash3-fill me-1"></i> Yes, remove pet',
+                cancelButtonText: '<span style="color: #4B5563;">Cancel</span>',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'rounded-4',
+                    title: 'fw-bold',
+                    confirmButton: 'btn btn-danger px-4 py-2 rounded-3 fw-bold ms-2',
+                    cancelButton: 'btn btn-light px-4 py-2 rounded-3 fw-bold border'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deletePetForm-' + petId).submit();
+                }
+            })
         }
     </script>
 }

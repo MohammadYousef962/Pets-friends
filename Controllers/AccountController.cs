@@ -6,6 +6,8 @@ using Pets_friends.Models;
 using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.Threading.Tasks;
 
 namespace Pets_friends.Controllers
 {
@@ -15,7 +17,6 @@ namespace Pets_friends.Controllers
         private readonly SignInManager<UserAccount> _signInManager;
         private readonly IConfiguration _configuration;
 
-        // Inject IConfiguration into the constructor
         public AccountController(
             UserManager<UserAccount> userManager,
             SignInManager<UserAccount> signInManager,
@@ -29,17 +30,15 @@ namespace Pets_friends.Controllers
         #region --- REGISTRATION & AUTHENTICATION ---
 
         [HttpGet]
-        public async Task<IActionResult> Register(string returnUrl = null)
+        public async Task<IActionResult> Register()
         {
-            ViewData["ReturnUrl"] = returnUrl;
-
-            // Bounce authenticated users away from the registration form
+            // Bounce authenticated users directly to their correct dashboard
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 var user = await _userManager.GetUserAsync(User);
                 if (user != null)
                 {
-                    return await RedirectToLocalOrDashboard(returnUrl, user);
+                    return await RedirectToRoleDashboard(user);
                 }
             }
 
@@ -47,10 +46,8 @@ namespace Pets_friends.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterVM model, string returnUrl = null)
+        public async Task<IActionResult> Register(RegisterVM model)
         {
-            ViewData["ReturnUrl"] = returnUrl;
-
             if (!ModelState.IsValid) return View(model);
 
             var existingUser = await _userManager.FindByEmailAsync(model.EmailAddress);
@@ -71,7 +68,6 @@ namespace Pets_friends.Controllers
 
             if (result.Succeeded)
             {
-                // THE FIX: Changed "User" to "Client" so it assigns the correct role!
                 var roleResult = await _userManager.AddToRoleAsync(user, "Client");
 
                 if (!roleResult.Succeeded)
@@ -83,11 +79,10 @@ namespace Pets_friends.Controllers
                     return View(model);
                 }
 
-                // Automatically log the user in upon registration
                 await _signInManager.SignInAsync(user, isPersistent: false);
 
-                // Redirect them back to where they came from (or Home if none)
-                return await RedirectToLocalOrDashboard(returnUrl, user);
+                // Send newly registered clients strictly to the Home Page
+                return await RedirectToRoleDashboard(user);
             }
 
             foreach (var error in result.Errors)
@@ -99,42 +94,34 @@ namespace Pets_friends.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Login(string returnUrl = null)
+        public async Task<IActionResult> Login()
         {
-            ViewData["ReturnUrl"] = returnUrl;
-
-            // 1. Check if the user's browser already has a valid login cookie
+            // Bounce already logged-in users directly to their correct dashboard
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                // 2. If they are logged in, grab their info and roles
                 var user = await _userManager.GetUserAsync(User);
                 if (user != null)
                 {
-                    // 3. Immediately redirect them to where they came from or their dashboard!
-                    return await RedirectToLocalOrDashboard(returnUrl, user);
+                    return await RedirectToRoleDashboard(user);
                 }
             }
 
-            // 4. If they are NOT logged in, show the standard login page
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginVM model, string returnUrl = null)
+        public async Task<IActionResult> Login(LoginVM model)
         {
-            ViewData["ReturnUrl"] = returnUrl;
-
             if (!ModelState.IsValid) return View(model);
 
-            // Set to 'true' for a persistent cookie.
             var result = await _signInManager.PasswordSignInAsync(model.EmailAddress, model.Password, isPersistent: true, lockoutOnFailure: false);
 
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByEmailAsync(model.EmailAddress);
 
-                // Route user to where they were trying to go, or to their default dashboard
-                return await RedirectToLocalOrDashboard(returnUrl, user);
+                // Strictly route them based on their role
+                return await RedirectToRoleDashboard(user);
             }
 
             ModelState.AddModelError("", "Invalid email or password.");
@@ -144,8 +131,11 @@ namespace Pets_friends.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
+            // Wipe the login session
             await _signInManager.SignOutAsync();
-            return RedirectToAction("Login");
+
+            // Send everyone safely back to the Login page after signing out
+            return RedirectToAction("Login", "Account");
         }
 
         #endregion
@@ -186,7 +176,6 @@ namespace Pets_friends.Controllers
                 }
             }
 
-            // We couldn't find the user
             ModelState.AddModelError("", "We couldn't find an account with that email address.");
             return View(model);
         }
@@ -286,7 +275,7 @@ namespace Pets_friends.Controllers
             if (result.Succeeded)
             {
                 TempData["SuccessMessage"] = "Profile updated successfully!";
-                return RedirectToAction("Main", "Home");
+                return await RedirectToRoleDashboard(user);
             }
 
             foreach (var error in result.Errors)
@@ -299,12 +288,19 @@ namespace Pets_friends.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> AccessDenied(string returnUrl = null)
+        public async Task<IActionResult> AccessDenied()
         {
-            // Safely assigns the referring page if supplied
-            ViewData["ReturnUrl"] = returnUrl;
+            // Figure out the page they were ON before clicking the forbidden link
+            string previousUrl = Request.Headers["Referer"].ToString();
 
-            // Updated default to point to your specific Home/Main route
+            // Make sure the "Go Back" button doesn't trap them in a loop
+            if (string.IsNullOrEmpty(previousUrl) || previousUrl.Contains("AccessDenied") || previousUrl.Contains("Login"))
+            {
+                previousUrl = "~/Home/Main";
+            }
+            ViewData["PreviousUrl"] = previousUrl;
+
+            // Figure out their correct dashboard to provide a "Go to Dashboard" button
             string dashboardUrl = "~/Home/Main";
 
             if (User.Identity != null && User.Identity.IsAuthenticated)
@@ -328,36 +324,29 @@ namespace Pets_friends.Controllers
 
         #region --- PRIVATE HELPER METHODS ---
 
-        // Helper method to handle routing logic efficiently
-        private async Task<IActionResult> RedirectToLocalOrDashboard(string returnUrl, UserAccount user)
+        // NEW HELPER: Strictly redirects users based ONLY on their roles.
+        private async Task<IActionResult> RedirectToRoleDashboard(UserAccount user)
         {
-            // If there's a valid local return URL, send them back to the page they were on
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-            {
-                return Redirect(returnUrl);
-            }
-
-            // Otherwise, send them to their role's default dashboard
             var roles = await _userManager.GetRolesAsync(user);
 
+            // Admins, Vets, Merchants, Shelters go to their respective locked dashboards
             if (roles.Contains("Admin")) return RedirectToAction("Dashboard", "Admin");
             if (roles.Contains("Vet")) return RedirectToAction("Dashboard", "Vet");
             if (roles.Contains("Merchant")) return RedirectToAction("Dashboard", "Merchant");
             if (roles.Contains("Shelter")) return RedirectToAction("Dashboard", "Shelter");
 
+            // Regular Clients go straight to the Home Page
             return RedirectToAction("Main", "Home");
         }
 
         private async Task SendPasswordResetEmailAsync(string email, string passwordResetLink)
         {
-            // Read settings securely from appsettings.json
             string smtpServer = _configuration["EmailSettings:SmtpServer"];
             int smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"]);
             string senderEmail = _configuration["EmailSettings:SenderEmail"];
             string senderName = _configuration["EmailSettings:SenderName"];
             string appPassword = _configuration["EmailSettings:AppPassword"];
 
-            // Dynamic year for the footer
             string currentYear = DateTime.Now.Year.ToString();
 
             var smtpClient = new SmtpClient(smtpServer)

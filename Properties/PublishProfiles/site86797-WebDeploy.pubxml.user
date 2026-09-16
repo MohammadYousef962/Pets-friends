@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file is used by the publish/package process of your Web project. You can customize the behavior of this process
+by editing this MSBuild file. In order to learn more about this please visit https://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project>
+  <PropertyGroup>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+    <EncryptedPassword>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAALGdMO4RwLE2qck23puMuUwAAAAACAAAAAAAQZgAAAAEAACAAAACag5pwK2ZujpLhukeRGoFuZBIqrDJiWEFXEkae3IAotwAAAAAOgAAAAAIAACAAAAAo+M/AUEpj9gDb7j1HrhD9gV7UydPB2EfUeeqaVyp8gSAAAACghLEEahej7d6h0Ra0MmEW9q+nJ5L/Durlk3pa2FU/k0AAAABQ/uJu3WCcCT1TZyZliN6odSk0AyFNf66EwdSoDACDJazg4kbfGPoEDBQXBqoubSJLB24GPVjO87NaaTZbzVRu</EncryptedPassword>
+    <History>True|2026-09-15T19:45:53.1272415Z||;True|2026-09-15T16:58:36.4386448+03:00||;True|2026-08-22T15:41:44.3718690+03:00||;True|2026-08-22T15:40:55.6560026+03:00||;True|2026-08-22T15:39:20.2687942+03:00||;True|2026-08-22T15:37:49.0830212+03:00||;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+  <ItemGroup>
+    <EFMigrations Include="Pets_friends.Data.AppDbContext">
+      <Value>Server=db64871.databaseasp.net%3bDatabase=db64871%3bUser Id=db64871%3bPassword=rG-8%3fn7X5#Cs%3bEncrypt=False%3bMultipleActiveResultSets=True%3b</Value>
+    </EFMigrations>
+  </ItemGroup>
+</Project>

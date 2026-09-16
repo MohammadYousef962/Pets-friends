@@ -32,6 +32,7 @@ namespace Pets_friends.Data
         public DbSet<AdoptionApplication> AdoptionApplications { get; set; }
         public DbSet<BoardingRecord> BoardingRecords { get; set; }
         public DbSet<AdoptionRequest> AdoptionRequests { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); // CRITICAL: Always first
@@ -47,32 +48,30 @@ namespace Pets_friends.Data
             builder.Entity<CartItem>().HasOne(c => c.Product).WithMany().HasForeignKey(c => c.ProductId).OnDelete(DeleteBehavior.NoAction);
             builder.Entity<OrderItem>().HasOne(o => o.Product).WithMany().HasForeignKey(o => o.ProductId).OnDelete(DeleteBehavior.NoAction);
 
-            // Fixes the Error 1785 crash for Product Reviews 
             builder.Entity<ProductReview>()
                 .HasOne(pr => pr.ClientProfile)
                 .WithMany()
                 .HasForeignKey(pr => pr.ClientProfileId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // ── THE ULTIMATE APPOINTMENT FIX ──
             builder.Entity<Appointment>()
                 .HasOne(a => a.ClientProfile)
                 .WithMany()
                 .HasForeignKey(a => a.ClientProfileId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Fixes the Error 1785 crash for Orders
             builder.Entity<Order>()
                 .HasOne(o => o.MerchantProfile)
                 .WithMany()
                 .HasForeignKey(o => o.MerchantProfileId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // ── THIS IS THE FIX: Automatically deletes Appointments when a Pet is deleted ──
             builder.Entity<Appointment>()
                 .HasOne(a => a.Pet)
                 .WithMany()
                 .HasForeignKey(a => a.PetId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Appointment>()
                 .HasOne(a => a.Service)
@@ -86,18 +85,18 @@ namespace Pets_friends.Data
                 .HasForeignKey(a => a.VetProfileId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // ---> NEW: Fixes the Error 1785 crash for Adoption Applications <---
-            builder.Entity<AdoptionApplication>()
-                .HasOne(a => a.Pet)
-                .WithMany()
-                .HasForeignKey(a => a.PetId)
-                .OnDelete(DeleteBehavior.NoAction);
-
             builder.Entity<AdoptionApplication>()
                 .HasOne(a => a.ClientProfile)
                 .WithMany()
                 .HasForeignKey(a => a.ClientProfileId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // ── ALSO: Automatically deletes Adoption Applications when a Pet is deleted ──
+            builder.Entity<AdoptionApplication>()
+                .HasOne(a => a.Pet)
+                .WithMany()
+                .HasForeignKey(a => a.PetId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // --- 3. Global Decimal Precision for Money ---
             foreach (var property in builder.Model.GetEntityTypes()

@@ -2,8 +2,9 @@
 
 @{
     ViewData["Title"] = "Register";
-    Layout = "~/Views/Shared/_AuthLayout.cshtml"; // Force the full-screen layout
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
 }
+
 
 <div class="main-wrapper">
     <div class="main-container">
@@ -21,8 +22,7 @@
 
                 <div class="toggle">
                     <a class="active">Sign Up</a>
-                    <!-- Added asp-route-returnUrl here to carry the URL back to Login if they switch -->
-                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]">Log In</a>
+                    <a asp-controller="Account" asp-action="Login">Log In</a>
                 </div>
 
                 <h2>Create an account</h2>
@@ -34,8 +34,7 @@
                     </div>
                 }
 
-                <!-- Added asp-route-returnUrl here to pass the URL to the POST method -->
-                <form asp-action="Register" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+                <form asp-action="Register" method="post">
                     <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
 
                     <div class="input-group">
@@ -49,12 +48,22 @@
                     </div>
 
                     <div class="input-group">
-                        <input asp-for="Password" type="password" placeholder="Password" />
+                        <div class="password-wrapper">
+                            <input asp-for="Password" type="password" id="registerPassword" class="password-input" placeholder="Password" />
+                            <button type="button" class="password-toggle" onclick="togglePassword('registerPassword', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                         <span asp-validation-for="Password" class="field-validation-error"></span>
                     </div>
 
                     <div class="input-group">
-                        <input asp-for="ConfirmPassword" type="password" placeholder="Confirm Password" />
+                        <div class="password-wrapper">
+                            <input asp-for="ConfirmPassword" type="password" id="registerConfirmPassword" class="password-input" placeholder="Confirm Password" />
+                            <button type="button" class="password-toggle" onclick="togglePassword('registerConfirmPassword', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                         <span asp-validation-for="ConfirmPassword" class="field-validation-error"></span>
                     </div>
 
@@ -69,4 +78,20 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+    </script>
 }

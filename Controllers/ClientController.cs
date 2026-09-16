@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Pets_friends.Controllers
 {
@@ -49,7 +50,7 @@ namespace Pets_friends.Controllers
 
             var vm = new ClientDashboardVM
             {
-                Id = user.Id, // We use the REAL Account ID for the Vet Search
+                Id = user.Id,
                 FullName = user.FullName ?? "Member",
                 Email = user.Email ?? "",
                 PhoneNumber = user.PhoneNumber ?? "",
@@ -93,8 +94,6 @@ namespace Pets_friends.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Login", "Account");
 
-            // --- STRICT RULE: EMAIL UNIQUENESS CHECK ---
-            // If they changed their email, make sure no one else is already using it!
             if (user.Email.ToLower() != vm.Email.ToLower())
             {
                 var existingEmailUser = await _userManager.FindByEmailAsync(vm.Email);
@@ -105,7 +104,6 @@ namespace Pets_friends.Controllers
                 }
             }
 
-            // Update core user details
             user.FullName = vm.FullName;
             user.Email = vm.Email;
             user.UserName = vm.Email;
@@ -115,7 +113,6 @@ namespace Pets_friends.Controllers
 
             var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == user.Id);
 
-            // --- IMAGE UPLOAD LOGIC ---
             if (vm.ImageFile != null && clientProfile != null)
             {
                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "profiles");
@@ -138,19 +135,14 @@ namespace Pets_friends.Controllers
             if (result.Succeeded)
             {
                 await _context.SaveChangesAsync();
-
                 TempData["SuccessMessage"] = "Profile updated successfully!";
                 return RedirectToAction(nameof(Dashboard));
             }
 
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError("", error.Description);
-            }
-
+            foreach (var error in result.Errors) ModelState.AddModelError("", error.Description);
             return View(vm);
-
         }
+
         [HttpGet]
         public async Task<IActionResult> MyPets()
         {
@@ -173,7 +165,7 @@ namespace Pets_friends.Controllers
                     IsNeutered = p.IsNeutered,
                     MedicalHistory = p.MedicalHistory,
                     Description = p.Description,
-                    LastNameChangeDate = p.LastNameChangeDate // Pulls the date from DB
+                    LastNameChangeDate = p.LastNameChangeDate
                 })
                 .ToListAsync();
 
@@ -192,7 +184,6 @@ namespace Pets_friends.Controllers
 
             if (pet == null) return NotFound();
 
-            // STRICT RULE: 3-Month Name Change Check
             if (!string.IsNullOrWhiteSpace(vm.Name) && pet.Name != vm.Name)
             {
                 if (pet.LastNameChangeDate.HasValue && (DateTime.Now - pet.LastNameChangeDate.Value).TotalDays < 90)
@@ -202,12 +193,11 @@ namespace Pets_friends.Controllers
                 }
 
                 pet.Name = vm.Name;
-                pet.LastNameChangeDate = DateTime.Now; // Starts the 90-day timer!
+                pet.LastNameChangeDate = DateTime.Now;
             }
 
             pet.Description = vm.Description;
 
-            // Handle Profile Image Upload
             if (vm.ImageFile != null)
             {
                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "pets");
@@ -232,89 +222,113 @@ namespace Pets_friends.Controllers
         }
 
         [HttpPost]
-        [Authorize] // Make sure only logged-in clients can delete
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePet(int id)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            // 1. Find the client profile
             var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == user.Id);
             if (clientProfile == null) return NotFound();
 
-            // 2. Find the pet, ensuring it actually belongs to this client!
             var pet = await _context.Pets.FirstOrDefaultAsync(p => p.Id == id && p.ClientProfileId == clientProfile.Id);
             if (pet == null) return NotFound();
 
-            // 3. Remove the pet from the database
             _context.Pets.Remove(pet);
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"{pet.Name} has been successfully removed from your profile.";
-
-            // Redirect back to wherever your MyPets page lives (e.g., "MyPets" or "Dashboard")
             return RedirectToAction("MyPets");
         }
 
-        // --------------------------------------------------------
-        // APPOINTMENTS (REAL DATABASE DATA)
-        // --------------------------------------------------------
+        // ========================================================
+        // APPOINTMENTS & DASHBOARD REQUESTS (UPDATED)
+        // ========================================================
         [HttpGet]
         public async Task<IActionResult> Appointments()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Login", "Account");
 
-            // 1. Get the Client Profile
             var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == user.Id);
             if (clientProfile == null) return RedirectToAction("Dashboard");
 
-            // 2. Fetch REAL appointments from the database for this client
+            // 1. VET APPOINTMENTS
             var allApts = await _context.Appointments
                 .Include(a => a.Pet)
                 .Include(a => a.VetProfile)
-                .Where(a => a.ClientProfileId == clientProfile.Id) // Much safer: checking the Appointment's Client ID directly
+                .Where(a => a.ClientProfileId == clientProfile.Id)
                 .Select(a => new AppointmentDisplayVM
                 {
                     Id = a.Id,
-                    // Safely handle nullable Pet
                     PetName = a.Pet != null ? a.Pet.Name : "My Pet",
                     PetImageUrl = (a.Pet != null && a.Pet.ImageUrl != null) ? a.Pet.ImageUrl : "https://placehold.co/400x400/FAF6F1/5C3D1E?text=Pet",
-
-                    // THE FIX: Using Notes (or a default string) instead of Reason
                     Reason = string.IsNullOrWhiteSpace(a.Notes) ? (a.IsUrgent ? "Urgent Visit" : "Scheduled Visit") : a.Notes,
-
                     ClinicName = a.VetProfile.ClinicName,
-
-                    // THE FIX: Using ClinicAddress instead of Location
                     ClinicAddress = a.VetProfile.ClinicAddress,
-
                     AppointmentDate = a.AppointmentDate,
                     Status = a.Status
                 })
                 .ToListAsync();
 
-            // 3. Split them into Upcoming (excluding Cancelled) and Past
+            // 2. CLIENT'S PETS (Used to map Boarding Sessions by pet name)
+            var myPets = await _context.Pets.Where(p => p.ClientProfileId == clientProfile.Id).ToListAsync();
+            var myPetNames = myPets.Select(p => p.Name).ToList();
+
+            // 3. BOARDING SESSIONS
+            var rawBoardingRecords = await _context.BoardingRecords.Where(b => b.OwnerName == user.FullName || myPetNames.Contains(b.PetName)).ToListAsync();
+            var shelters = await _context.ShelterProfiles.ToListAsync();
+
+            var boardingSessions = rawBoardingRecords.Select(b => new ClientBoardingDto
+            {
+                Id = b.Id,
+                PetName = b.PetName,
+                PetImageUrl = myPets.FirstOrDefault(p => p.Name == b.PetName)?.ImageUrl ?? "https://placehold.co/400x400/FAF6F1/5C3D1E?text=Pet",
+                ShelterName = shelters.FirstOrDefault(s => s.Id == b.ShelterProfileId)?.ShelterName ?? "Unknown Shelter",
+                ScheduledDate = b.ScheduledDate,
+                PickUpDate = b.PickUpDate,
+                Status = b.Status
+            }).ToList();
+
+            // 4. ADOPTION & SURRENDER APPLICATIONS
+            // FIX: Pull data from the DB first using ToListAsync(), then project it with Select()
+            var rawAdoptions = await _context.AdoptionApplications
+                .Include(a => a.Pet)
+                .Where(a => a.ClientProfileId == clientProfile.Id)
+                .ToListAsync();
+
+            var adoptions = rawAdoptions.Select(a => new ClientAdoptionDto
+            {
+                Id = a.Id,
+                PetName = a.Pet.Name,
+                PetImageUrl = a.Pet.ImageUrl ?? "https://placehold.co/400x400/FAF6F1/5C3D1E?text=Pet",
+                Type = a.Type,
+                ShelterName = shelters.FirstOrDefault(s => s.Id == a.Pet.ShelterProfileId)?.ShelterName ?? "Shelter",
+                ApplicationDate = a.ApplicationDate,
+                Status = a.Status
+            }).ToList();
+
             var vm = new ClientAppointmentsVM
             {
+                // Hide cancelled/completed from Upcoming
                 UpcomingAppointments = allApts
-                    .Where(a => a.AppointmentDate >= DateTime.Now && a.Status != "Cancelled")
-                    .OrderBy(a => a.AppointmentDate)
-                    .ToList(),
+                        .Where(a => a.AppointmentDate >= DateTime.Now && a.Status != "Cancelled" && a.Status != "Completed")
+                        .OrderBy(a => a.AppointmentDate)
+                        .ToList(),
 
+                // Push all cancelled/completed to Past History, even if the date is in the future
                 PastAppointments = allApts
-                    .Where(a => a.AppointmentDate < DateTime.Now || a.Status == "Completed")
-                    .OrderByDescending(a => a.AppointmentDate)
-                    .ToList()
+                        .Where(a => a.AppointmentDate < DateTime.Now || a.Status == "Completed" || a.Status == "Cancelled")
+                        .OrderByDescending(a => a.AppointmentDate)
+                        .ToList(),
+
+                BoardingSessions = boardingSessions.OrderByDescending(b => b.ScheduledDate).ToList(),
+                AdoptionApplications = adoptions.OrderByDescending(a => a.ApplicationDate).ToList()
             };
 
             return View(vm);
         }
 
-        // --------------------------------------------------------
-        // CANCEL APPOINTMENT (REAL DATABASE UPDATE)
-        // --------------------------------------------------------
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CancelAppointment(int appointmentId)
@@ -323,24 +337,52 @@ namespace Pets_friends.Controllers
             if (user == null) return Unauthorized();
 
             var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == user.Id);
-            if (clientProfile == null) return Unauthorized();
-
-            // 1. Find the appointment and ensure it actually belongs to this client!
-            var appointment = await _context.Appointments
-                .FirstOrDefaultAsync(a => a.Id == appointmentId && a.ClientProfileId == clientProfile.Id);
+            var appointment = await _context.Appointments.FirstOrDefaultAsync(a => a.Id == appointmentId && a.ClientProfileId == clientProfile.Id);
 
             if (appointment != null)
             {
-                // 2. Update the status in the database
                 appointment.Status = "Cancelled";
-                _context.Update(appointment);
                 await _context.SaveChangesAsync();
-
-                // Return OK so the Javascript knows it's safe to animate the card away
                 return Ok();
             }
+            return BadRequest("Access denied.");
+        }
 
-            return BadRequest("Appointment not found or access denied.");
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelBoarding(int sessionId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            // Only allow removing pending ones before drop-off
+            var session = await _context.BoardingRecords.FindAsync(sessionId);
+            if (session != null && session.Status == "Pending")
+            {
+                _context.BoardingRecords.Remove(session);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            return BadRequest("Cannot cancel active boarding.");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelAdoption(int applicationId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == user.Id);
+            var application = await _context.AdoptionApplications.FirstOrDefaultAsync(a => a.Id == applicationId && a.ClientProfileId == clientProfile.Id);
+
+            if (application != null && application.Status == "Pending")
+            {
+                _context.AdoptionApplications.Remove(application);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            return BadRequest("Cannot cancel processed applications.");
         }
     }
 }

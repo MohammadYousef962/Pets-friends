@@ -1,10 +1,29 @@
 ﻿@model Pets_friends.Data.ViewModels.ClientAppointmentsVM
 @using Microsoft.AspNetCore.Identity
 @using Pets_friends.Models
+@using Pets_friends.Data
+@using Microsoft.EntityFrameworkCore
 @inject UserManager<UserAccount> UserManager
+@inject AppDbContext _context
 
 @{
     Layout = null;
+
+    var currentPath = Context.Request.Path.ToString().ToLower();
+    var currentUser = await UserManager.GetUserAsync(User);
+
+    string userName = currentUser?.FullName ?? "User";
+    var encodedName = userName.Replace(" ", "+");
+    var profileImageUrl = $"https://ui-avatars.com/api/?name={encodedName}&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true";
+
+    if (currentUser != null)
+    {
+        var clientProfile = await _context.ClientProfiles.FirstOrDefaultAsync(c => c.UserAccountId == currentUser.Id);
+        if (clientProfile != null && !string.IsNullOrWhiteSpace(clientProfile.ImageUrl))
+        {
+            profileImageUrl = clientProfile.ImageUrl;
+        }
+    }
 }
 
 <!DOCTYPE html>
@@ -12,7 +31,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Appointments | PetFriends</title>
+    <title>My Activities | PetFriends</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -20,13 +39,14 @@
 
     <style>
         :root {
-            --text-dark-blue: #002B49;
-            --text-dark: #1F2937;
-            --text-muted: #6B7280;
+            --text-dark: #2D1B0E;
+            --text-muted: #8C7560;
             --brand-primary: #5C3D1E;
             --brand-accent: #C8A882;
-            --bg-body: #F3F4F6;
+            --bg-light: #FAF6F1;
+            --bg-white: #FFFFFF;
             --border-light: #EBE0D5;
+            --vet-color: #059669;
         }
 
         body {
@@ -34,6 +54,8 @@
             background-attachment: fixed !important;
             font-family: 'DM Sans', sans-serif;
             color: var(--text-dark);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -80,6 +102,23 @@
                 color: var(--brand-primary);
             }
 
+        .btn-nav {
+            background: var(--text-dark);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+            .btn-nav:hover {
+                background: var(--brand-accent);
+                color: white;
+                transform: translateY(-2px);
+            }
+
         .user-profile-btn {
             background: #FFFFFF;
             border: 1px solid var(--border-light);
@@ -91,7 +130,6 @@
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 2px 8px rgba(92, 61, 30, 0.05);
-            outline: none;
         }
 
             .user-profile-btn:hover, .dropdown-toggle.show {
@@ -121,17 +159,6 @@
             font-size: 0.95rem;
         }
 
-        .dropdown-chevron {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            transition: transform 0.2s ease;
-        }
-
-        .dropdown-toggle.show .dropdown-chevron {
-            transform: rotate(180deg);
-            color: var(--brand-primary);
-        }
-
         .custom-user-dropdown {
             border-radius: 20px;
             border: 1px solid var(--border-light);
@@ -139,57 +166,35 @@
             padding: 12px;
             margin-top: 15px !important;
             min-width: 220px;
-            animation: dropFade 0.2s ease-out forwards;
-            transform-origin: top right;
-        }
-        @@keyframes dropFade {
-            from
-
-        {
-            opacity: 0;
-            transform: translateY(-10px);
+            background: var(--bg-white);
         }
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        }
-
-        .custom-user-dropdown .dropdown-item {
-            border-radius: 12px;
-            padding: 10px 16px;
-            font-weight: 600;
-            color: var(--text-dark);
-            font-size: 0.95rem;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-            .custom-user-dropdown .dropdown-item i {
-                color: var(--brand-accent);
-                font-size: 1.1rem;
-                width: 24px;
+            .custom-user-dropdown .dropdown-item {
+                border-radius: 12px;
+                padding: 10px 16px;
+                font-weight: 600;
+                color: var(--text-dark);
+                font-size: 0.95rem;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
             }
 
-            .custom-user-dropdown .dropdown-item:hover {
-                background: #FDFaf5;
-                color: var(--brand-primary);
-                transform: translateX(4px);
-            }
-
-                .custom-user-dropdown .dropdown-item:hover i {
-                    color: var(--brand-primary);
+                .custom-user-dropdown .dropdown-item i {
+                    color: var(--brand-accent);
+                    font-size: 1.1rem;
+                    width: 24px;
                 }
 
-        .custom-user-dropdown .dropdown-divider {
-            border-color: #EBE0D5;
-            margin: 8px 10px;
-            opacity: 1;
-        }
+                .custom-user-dropdown .dropdown-item:hover {
+                    background: #FDFaf5;
+                    color: var(--brand-primary);
+                    transform: translateX(4px);
+                }
+
+                    .custom-user-dropdown .dropdown-item:hover i {
+                        color: var(--brand-primary);
+                    }
 
         .logout-btn-item {
             border: none;
@@ -207,14 +212,78 @@
                     color: #DC2626 !important;
                 }
 
-        /* --- PAGE CONTENT --- */
+        /* --- FILTERS --- */
+        .filters-container {
+            background: var(--bg-white);
+            padding: 15px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(92, 61, 30, 0.03);
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-weight: 700;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+            .filter-btn:hover {
+                background: #FAF6F1;
+                color: var(--brand-primary);
+            }
+
+            .filter-btn.active {
+                background: var(--brand-primary);
+                color: white;
+            }
+
+        .filter-select {
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            padding: 8px 16px;
+            font-weight: 700;
+            color: var(--brand-primary);
+            background-color: #FAF6F1;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+            .filter-select:focus {
+                border-color: var(--brand-accent);
+                box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.2);
+                outline: none;
+            }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- APPOINTMENT CARDS --- */
         main {
             flex: 1 0 auto;
         }
 
         .page-header {
             max-width: 900px;
-            margin: 40px auto 30px;
+            margin: 40px auto 25px;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
@@ -224,7 +293,7 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: 800;
             font-size: 2.4rem;
-            color: #2D1B0E;
+            color: var(--text-dark);
             margin: 0;
             letter-spacing: -0.5px;
         }
@@ -245,14 +314,18 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            transition: opacity 0.3s;
         }
 
-        /* --- APPOINTMENT CARDS --- */
+        .section-container {
+            transition: all 0.3s ease;
+        }
+
         .apt-card {
-            background: #FFFFFF;
+            background: var(--bg-white);
             border-radius: 24px;
             padding: 20px;
-            border: 1px solid rgba(255,255,255,0.8);
+            border: 1px solid var(--border-light);
             box-shadow: 0 10px 30px rgba(92, 61, 30, 0.05);
             margin-bottom: 20px;
             display: flex;
@@ -351,7 +424,7 @@
             gap: 6px;
         }
 
-        .status-Confirmed {
+        .status-Confirmed, .status-Approved, .status-Boarding {
             background: #ECFDF5;
             color: #059669;
             border: 1px solid #A7F3D0;
@@ -367,6 +440,18 @@
             background: #F3F4F6;
             color: #6B7280;
             border: 1px solid #E5E7EB;
+        }
+
+        .status-Declined, .status-Cancelled {
+            background: #FEF2F2;
+            color: #DC2626;
+            border: 1px solid #FECACA;
+        }
+
+        .status-DropOff, .status-PickUp {
+            background: #EEF2FF;
+            color: #4F46E5;
+            border: 1px solid #C7D2FE;
         }
 
         .btn-cancel-apt {
@@ -386,116 +471,76 @@
             }
 
         @@media (max-width: 768px) {
-            .apt-card
+            .filters-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
 
-        {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: 15px;
-        }
+            .filter-select {
+                width: 100%;
+            }
 
-        .apt-detail {
-            justify-content: center;
-        }
+            .apt-card {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 15px;
+            }
 
-        .action-block {
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            border-top: 1px solid var(--border-light);
-            padding-top: 15px;
-        }
+            .apt-detail {
+                justify-content: center;
+            }
 
+            .action-block {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                border-top: 1px solid var(--border-light);
+                padding-top: 15px;
+            }
         }
 
         /* --- FOOTER --- */
-        .premium-footer {
-            background-color: #251408;
-            font-size: 0.9rem;
-            padding: 28px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            width: 100%;
-            flex-shrink: 0;
-        }
-
-        .footer-wrap {
-            max-width: 1100px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .footer-copyright {
-            color: #A1A1AA;
-            font-weight: 400;
-            letter-spacing: 0.2px;
-            transition: color 0.2s ease;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 25px;
-        }
-
-            .footer-links a {
-                color: #A1A1AA;
-                text-decoration: none;
-                font-weight: 500;
-                transition: color 0.2s ease;
-            }
-
-                .footer-links a:hover {
-                    color: #FFFFFF !important;
-                }
-        @@media (max-width: 767px) {
-            .footer-wrap
-
-        {
-            flex-direction: column;
+        .footer-cta {
+            background: var(--text-dark);
+            color: white;
+            padding: 100px 0 0;
             text-align: center;
-            justify-content: center;
+            margin-top: auto;
         }
 
-        }
+            .footer-cta h2 {
+                font-size: 3rem;
+                font-weight: 800;
+                margin-bottom: 15px;
+            }
     </style>
 </head>
 <body>
-
-    @{
-        var currentPath = Context.Request.Path.ToString().ToLower();
-        var currentUser = await UserManager.GetUserAsync(User);
-        string userName = currentUser?.FullName ?? "User";
-        var encodedName = userName.Replace(" ", "+");
-        var profileImageUrlNav = $"https://ui-avatars.com/api/?name={encodedName}&background=EBE0D5&color=5C3D1E&font-family=Nunito&bold=true";
-    }
 
     <nav class="main-nav">
         <div class="container d-flex justify-content-between align-items-center">
             <a href="/" class="nav-brand">PetFriends</a>
             <div class="nav-links d-none d-md-flex">
-                <a href="/">Home</a>
-                <a href="/Store/Home">Marketplace</a>
-                <a href="/Home/Clinics">Vet Clinics</a>
-                <a href="/Home/Shelters">Shelters</a>
+                <a href="/" class="@(currentPath == "/" || currentPath == "/home/main" ? "active" : "")">Home</a>
+                <a href="/Store/Home" class="@(currentPath.StartsWith("/store") ? "active" : "")">Marketplace</a>
+                <a href="/Home/Clinics" class="@(currentPath.StartsWith("/home/clinics") ? "active" : "")">Vet Clinics</a>
+                <a href="/Home/Shelters" class="@(currentPath.StartsWith("/home/shelters") ? "active" : "")">Shelters</a>
             </div>
             <div>
                 @if (User.Identity != null && User.Identity.IsAuthenticated)
                 {
                     <div class="dropdown">
                         <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,15">
-                            <img src="@profileImageUrlNav" alt="Avatar" class="nav-avatar">
+                            <img src="@profileImageUrl" alt="Avatar" class="nav-avatar">
                             <span class="nav-user-name">@userName</span>
                             <i class="bi bi-chevron-down dropdown-chevron"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end custom-user-dropdown" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item" href="/Client/Dashboard"><i class="bi bi-person-badge"></i> Profile</a></li>
                             <li><a class="dropdown-item" href="/Client/MyPets"><i class="bi bi-heptagon-fill"></i> My Pets</a></li>
-                            <li><a class="dropdown-item" href="/Client/Appointments"><i class="bi bi-calendar-event"></i> Appointments</a></li>
+                            <li><a class="dropdown-item" href="/Client/Appointments"><i class="bi bi-calendar-event"></i> My Activities</a></li>
                             <li><a class="dropdown-item" href="/Order/MyOrders"><i class="bi bi-box-seam"></i> My Orders</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
@@ -515,108 +560,213 @@
 
     <main role="main">
         <div class="container px-3">
-            @Html.AntiForgeryToken() <div class="page-header">
+            @Html.AntiForgeryToken()
+            <div class="page-header">
                 <div>
-                    <h1 class="page-title">Appointments</h1>
-                    <p style="color: #8C7560; margin: 5px 0 0; font-size: 1.05rem;">Keep track of your pets' scheduled medical visits.</p>
+                    <h1 class="page-title">My Activities</h1>
+                    <p style="color: var(--text-dark); opacity: 0.8; margin: 5px 0 0; font-size: 1.05rem;">Keep track of your scheduled visits, boarding, and requests.</p>
                 </div>
             </div>
 
             <div class="list-container">
 
-                <div class="section-header"><i class="bi bi-clock-history"></i> Upcoming Visits</div>
+                <!-- FILTERS -->
+                <div class="filters-container">
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-filter-cat="all">All Activities</button>
+                        <button class="filter-btn" data-filter-cat="vet">Vet Visits</button>
+                        <button class="filter-btn" data-filter-cat="boarding">Boarding</button>
+                        <button class="filter-btn" data-filter-cat="adoption">Adoptions</button>
+                    </div>
+                    <div class="filter-group">
+                        <select id="statusFilter" class="form-select filter-select shadow-none">
+                            <option value="all">Any Status</option>
+                            <option value="active">Active / Pending</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled / Declined</option>
+                        </select>
+                    </div>
+                </div>
 
-                @if (Model.UpcomingAppointments != null && Model.UpcomingAppointments.Any())
-                {
-                    @foreach (var apt in Model.UpcomingAppointments)
+                <!-- GLOBAL EMPTY STATE -->
+                <div id="global-empty" class="hidden text-center py-5" style="background: rgba(255,255,255,0.5); border-radius: 20px; border: 1px dashed var(--border-light);">
+                    <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
+                    <h4 class="fw-bold" style="color: var(--text-dark);">No matches found</h4>
+                    <p class="text-muted mb-0">Try adjusting your filters to see more results.</p>
+                </div>
+
+                <!-- 1. VET APPOINTMENTS -->
+                <div class="section-container">
+                    <div class="section-header"><i class="bi bi-clock-history"></i> Upcoming Vet Visits</div>
+                    @if (Model.UpcomingAppointments != null && Model.UpcomingAppointments.Any())
                     {
-                        <div class="apt-card" id="apt-@apt.Id">
-                            <img src="@apt.PetImageUrl" class="apt-pet-image" alt="@apt.PetName">
-
-                            <div class="info-block">
-                                <div class="apt-pet-name">@apt.PetName</div>
-                                <div class="apt-reason">@apt.Reason</div>
-                                <div class="apt-detail"><i class="bi bi-hospital"></i> @apt.ClinicName</div>
-                                <div class="apt-detail"><i class="bi bi-geo-alt"></i> @apt.ClinicAddress</div>
-                                <div class="apt-datetime">
-                                    <i class="bi bi-calendar-event-fill" style="color: var(--brand-accent);"></i> @apt.AppointmentDate.ToString("MMM dd, yyyy • hh:mm tt")
+                        @foreach (var apt in Model.UpcomingAppointments)
+                        {
+                            <div class="apt-card" id="card-vet-@apt.Id" data-category="vet" data-status="@apt.Status">
+                                <img src="@apt.PetImageUrl" class="apt-pet-image" alt="@apt.PetName">
+                                <div class="info-block">
+                                    <div class="apt-pet-name">@apt.PetName</div>
+                                    <div class="apt-reason">@apt.Reason</div>
+                                    <div class="apt-detail"><i class="bi bi-hospital"></i> @apt.ClinicName</div>
+                                    <div class="apt-detail"><i class="bi bi-geo-alt"></i> @apt.ClinicAddress</div>
+                                    <div class="apt-datetime">
+                                        <i class="bi bi-calendar-event-fill" style="color: var(--brand-accent);"></i> @apt.AppointmentDate.ToString("MMM dd, yyyy • hh:mm tt")
+                                    </div>
+                                </div>
+                                <div class="action-block">
+                                    <span class="status-badge status-@apt.Status.Replace(" ", "")">
+                                        <i class="bi @(apt.Status == "Confirmed" ? "bi-check-circle-fill" : "bi-hourglass-split")"></i> @apt.Status
+                                    </span>
+                                    <button class="btn-cancel-apt" data-bs-toggle="modal" data-bs-target="#cancelModal" onclick="setCancelTarget('@apt.Id', 'vet')">Cancel Visit</button>
                                 </div>
                             </div>
-
-                            <div class="action-block">
-                                <span class="status-badge status-@apt.Status.Replace(" ", "")">
-                                    <i class="bi @(apt.Status == "Confirmed" ? "bi-check-circle-fill" : "bi-hourglass-split")"></i> @apt.Status
-                                </span>
-                                <button class="btn-cancel-apt" data-bs-toggle="modal" data-bs-target="#cancelAptModal" onclick="setCancelTarget('@apt.Id')">Cancel Visit</button>
-                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state text-center py-4 mb-4" style="background: rgba(255,255,255,0.5); border-radius: 18px; border: 1px dashed var(--border-light);">
+                            <p class="text-muted mb-0 fw-bold">No upcoming vet visits.</p>
                         </div>
                     }
-                }
-                else
-                {
-                    <div class="text-center py-4" style="background: rgba(255,255,255,0.5); border-radius: 18px; border: 1px dashed var(--border-light);">
-                        <p class="text-muted mb-0 fw-bold">No upcoming appointments.</p>
-                    </div>
-                }
+                </div>
 
-                <div class="section-header mt-5"><i class="bi bi-journal-check"></i> Past History</div>
-
-                @if (Model.PastAppointments != null && Model.PastAppointments.Any())
-                {
-                    @foreach (var apt in Model.PastAppointments)
+                <!-- 2. BOARDING & BABYSITTING -->
+                <div class="section-container mt-4">
+                    <div class="section-header"><i class="bi bi-house-heart-fill"></i> Boarding & Babysitting</div>
+                    @if (Model.BoardingSessions != null && Model.BoardingSessions.Any())
                     {
-                        <div class="apt-card" style="opacity: 0.85;">
-                            <img src="@apt.PetImageUrl" class="apt-pet-image" alt="@apt.PetName" style="filter: grayscale(20%);">
-
-                            <div class="info-block">
-                                <div class="apt-pet-name" style="color: #4B5563;">@apt.PetName</div>
-                                <div class="apt-reason" style="color: #6B7280;">@apt.Reason</div>
-                                <div class="apt-detail"><i class="bi bi-hospital" style="color: #9CA3AF;"></i> @apt.ClinicName</div>
-                                <div class="apt-detail"><i class="bi bi-geo-alt" style="color: #9CA3AF;"></i> @apt.ClinicAddress</div>
-                                <div class="apt-datetime" style="background: #F3F4F6; border-color: transparent; color: #6B7280;">
-                                    <i class="bi bi-calendar-event-fill" style="color: #9CA3AF;"></i> @apt.AppointmentDate.ToString("MMM dd, yyyy • hh:mm tt")
+                        @foreach (var session in Model.BoardingSessions)
+                        {
+                            <div class="apt-card" id="card-boarding-@session.Id" data-category="boarding" data-status="@session.Status">
+                                <img src="@session.PetImageUrl" class="apt-pet-image" alt="@session.PetName">
+                                <div class="info-block">
+                                    <div class="apt-pet-name">@session.PetName</div>
+                                    <div class="apt-reason">Pet Boarding</div>
+                                    <div class="apt-detail"><i class="bi bi-building"></i> @session.ShelterName</div>
+                                    <div class="apt-datetime" style="background: #FFFBEB; color: #D97706; border-color: #FDE68A;">
+                                        <i class="bi bi-box-arrow-in-right"></i> Drop-off: @session.ScheduledDate.ToString("MMM dd • hh:mm tt")
+                                    </div>
+                                    @if (session.PickUpDate.HasValue)
+                                    {
+                                        <div class="apt-datetime" style="background: #ECFDF5; color: #059669; border-color: #A7F3D0; margin-top: 6px;">
+                                            <i class="bi bi-box-arrow-left"></i> Pick-up: @session.PickUpDate.Value.ToString("MMM dd • hh:mm tt")
+                                        </div>
+                                    }
+                                </div>
+                                <div class="action-block">
+                                    <span class="status-badge status-@session.Status.Replace(" ", "")">
+                                        <i class="bi @(session.Status == "Pending" ? "bi-hourglass-split" : "bi-check-circle-fill")"></i> @session.Status
+                                    </span>
+                                    @if (session.Status == "Pending")
+                                    {
+                                        <button class="btn-cancel-apt" data-bs-toggle="modal" data-bs-target="#cancelModal" onclick="setCancelTarget('@session.Id', 'boarding')">Cancel Request</button>
+                                    }
                                 </div>
                             </div>
-
-                            <div class="action-block justify-content-center">
-                                <span class="status-badge status-Completed"><i class="bi bi-check2-all"></i> @apt.Status</span>
-                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state text-center py-4 mb-4" style="background: rgba(255,255,255,0.5); border-radius: 18px; border: 1px dashed var(--border-light);">
+                            <p class="text-muted mb-0 fw-bold">No active boarding sessions.</p>
                         </div>
                     }
-                }
-                else
-                {
-                    <div class="text-center py-4" style="background: rgba(255,255,255,0.5); border-radius: 18px; border: 1px dashed var(--border-light);">
-                        <p class="text-muted mb-0 fw-bold">No past appointments.</p>
-                    </div>
-                }
+                </div>
+
+                <!-- 3. ADOPTION & INTAKE APPLICATIONS -->
+                <div class="section-container mt-4">
+                    <div class="section-header"><i class="bi bi-clipboard2-heart-fill"></i> Shelter Applications</div>
+                    @if (Model.AdoptionApplications != null && Model.AdoptionApplications.Any())
+                    {
+                        @foreach (var app in Model.AdoptionApplications)
+                        {
+                            <div class="apt-card" id="card-adoption-@app.Id" data-category="adoption" data-status="@app.Status">
+                                <img src="@app.PetImageUrl" class="apt-pet-image" alt="@app.PetName">
+                                <div class="info-block">
+                                    <div class="apt-pet-name">@app.PetName</div>
+                                    <div class="apt-reason">@(app.Type == "Adoption" ? "Adoption Application" : "Intake / Surrender Request")</div>
+                                    <div class="apt-detail"><i class="bi bi-building"></i> @app.ShelterName</div>
+                                    <div class="apt-datetime">
+                                        <i class="bi bi-calendar-check"></i> Applied on @app.ApplicationDate.ToString("MMM dd, yyyy")
+                                    </div>
+                                </div>
+                                <div class="action-block">
+                                    <span class="status-badge status-@app.Status.Replace(" ", "")">
+                                        <i class="bi @(app.Status == "Approved" || app.Status == "Completed" ? "bi-check-circle-fill" : (app.Status == "Declined" ? "bi-x-circle-fill" : "bi-hourglass-split"))"></i> @app.Status
+                                    </span>
+                                    @if (app.Status == "Pending")
+                                    {
+                                        <button class="btn-cancel-apt" data-bs-toggle="modal" data-bs-target="#cancelModal" onclick="setCancelTarget('@app.Id', 'adoption')">Withdraw App</button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state text-center py-4 mb-4" style="background: rgba(255,255,255,0.5); border-radius: 18px; border: 1px dashed var(--border-light);">
+                            <p class="text-muted mb-0 fw-bold">No active shelter applications.</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- 4. PAST HISTORY -->
+                <div class="section-container mt-4">
+                    <div class="section-header"><i class="bi bi-journal-check"></i> Past History / Logs</div>
+                    @if (Model.PastAppointments != null && Model.PastAppointments.Any())
+                    {
+                        @foreach (var apt in Model.PastAppointments)
+                        {
+                            <div class="apt-card" style="opacity: 0.85;" data-category="vet" data-status="@apt.Status">
+                                <img src="@apt.PetImageUrl" class="apt-pet-image" alt="@apt.PetName" style="filter: grayscale(20%);">
+                                <div class="info-block">
+                                    <div class="apt-pet-name" style="color: #4B5563;">@apt.PetName</div>
+                                    <div class="apt-reason" style="color: #6B7280;">@apt.Reason</div>
+                                    <div class="apt-detail"><i class="bi bi-hospital" style="color: #9CA3AF;"></i> @apt.ClinicName</div>
+                                    <div class="apt-detail"><i class="bi bi-geo-alt" style="color: #9CA3AF;"></i> @apt.ClinicAddress</div>
+                                    <div class="apt-datetime" style="background: #F3F4F6; border-color: transparent; color: #6B7280;">
+                                        <i class="bi bi-calendar-event-fill" style="color: #9CA3AF;"></i> @apt.AppointmentDate.ToString("MMM dd, yyyy • hh:mm tt")
+                                    </div>
+                                </div>
+                                <div class="action-block justify-content-center">
+                                    <span class="status-badge status-@apt.Status.Replace(" ", "")"><i class="bi @(apt.Status == "Completed" ? "bi-check2-all" : "bi-x-circle-fill")"></i> @apt.Status</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state text-center py-4 mb-4" style="background: rgba(255,255,255,0.5); border-radius: 18px; border: 1px dashed var(--border-light);">
+                            <p class="text-muted mb-0 fw-bold">No past history recorded.</p>
+                        </div>
+                    }
+                </div>
 
             </div>
         </div>
     </main>
 
-    <footer class="premium-footer">
+    <footer class="footer-cta">
         <div class="container">
-            <div class="footer-wrap">
-                <div class="footer-copyright">&copy; 2026 petfriends.support@gmail.com. All Rights Reserved.</div>
-                <div class="footer-links">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                </div>
+            <h2>Join the Network</h2>
+            <p>Apply to become a verified partner and connect with thousands of local pet owners.</p>
+            <div class="py-5">
+                <p class="mb-0 small opacity-50">© 2026 PetFriends Ecosystem. All Rights Reserved.</p>
             </div>
         </div>
     </footer>
 
-    <div class="modal fade" id="cancelAptModal" tabindex="-1" aria-hidden="true">
+    <!-- UNIVERSAL CANCEL MODAL -->
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 24px; border: none; overflow: hidden; box-shadow: 0 20px 50px rgba(92, 61, 30, 0.15);">
                 <div class="modal-header" style="background: #FEF2F2; border-bottom: none; padding: 25px 30px;">
-                    <h5 class="modal-title fw-bold text-danger" style="font-family: 'Plus Jakarta Sans', sans-serif;"><i class="bi bi-exclamation-triangle-fill me-2"></i> Cancel Appointment?</h5>
+                    <h5 class="modal-title fw-bold text-danger" style="font-family: 'Plus Jakarta Sans', sans-serif;"><i class="bi bi-exclamation-triangle-fill me-2"></i> Cancel Request?</h5>
                     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 text-center">
-                    <p class="fs-6 mb-0 text-dark fw-medium">Are you sure you want to cancel this visit?</p>
-                    <p class="text-muted small mt-2">The clinic will be notified immediately. This action cannot be undone.</p>
+                    <p class="fs-6 mb-0 text-dark fw-medium" id="cancelModalText">Are you sure you want to cancel this request?</p>
+                    <p class="text-muted small mt-2">This action cannot be undone and the facility will be notified.</p>
                 </div>
                 <div class="modal-footer p-4 pt-0 border-0 d-flex gap-3 bg-white">
                     <button type="button" class="btn btn-light flex-fill fw-bold py-3" style="border-radius: 12px; background: #F3F4F6;" data-bs-dismiss="modal">Keep It</button>
@@ -626,10 +776,11 @@
         </div>
     </div>
 
+    <!-- TOAST NOTIFICATION -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1060;">
         <div id="cancelToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: #059669; border-radius: 12px;">
             <div class="d-flex">
-                <div class="toast-body fw-bold"><i class="bi bi-check-circle-fill me-2"></i> Appointment cancelled successfully.</div>
+                <div class="toast-body fw-bold"><i class="bi bi-check-circle-fill me-2"></i> Action completed successfully.</div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
@@ -637,44 +788,144 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let aptIdToCancel = null;
+        // --- CANCEL LOGIC ---
+        let cancelTargetId = null;
+        let cancelType = 'vet';
 
-        function setCancelTarget(id) {
-            aptIdToCancel = id;
+        function setCancelTarget(id, type) {
+            cancelTargetId = id;
+            cancelType = type;
+
+            const textEl = document.getElementById('cancelModalText');
+            if(type === 'vet') textEl.innerText = "Are you sure you want to cancel this vet appointment?";
+            else if(type === 'boarding') textEl.innerText = "Are you sure you want to withdraw your boarding request?";
+            else if(type === 'adoption') textEl.innerText = "Are you sure you want to withdraw your application?";
         }
 
         async function executeCancel() {
-            if (!aptIdToCancel) return;
+            if (!cancelTargetId) return;
 
-            var myModalEl = document.getElementById('cancelAptModal');
+            var myModalEl = document.getElementById('cancelModal');
             var modal = bootstrap.Modal.getInstance(myModalEl);
             modal.hide();
 
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
+            let targetUrl = '';
+            let bodyParams = new URLSearchParams();
+
+            if(cancelType === 'vet') {
+                targetUrl = '/Client/CancelAppointment';
+                bodyParams.append('appointmentId', cancelTargetId);
+            } else if(cancelType === 'boarding') {
+                targetUrl = '/Client/CancelBoarding';
+                bodyParams.append('sessionId', cancelTargetId);
+            } else if(cancelType === 'adoption') {
+                targetUrl = '/Client/CancelAdoption';
+                bodyParams.append('applicationId', cancelTargetId);
+            }
+
             try {
-                const response = await fetch('/Client/CancelAppointment', {
+                const response = await fetch(targetUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'RequestVerificationToken': token
                     },
-                    body: new URLSearchParams({ appointmentId: aptIdToCancel })
+                    body: bodyParams
                 });
 
                 if (response.ok) {
-                    const card = document.getElementById('apt-' + aptIdToCancel);
+                    const cardId = `card-${cancelType}-${cancelTargetId}`;
+                    const card = document.getElementById(cardId);
                     if (card) {
                         card.classList.add('removing');
-                        setTimeout(() => { card.remove(); }, 300);
+                        setTimeout(() => {
+                            card.remove();
+                            applyFilters(); // Re-evaluate filters in case the section is now empty
+                        }, 300);
                     }
                     const toast = new bootstrap.Toast(document.getElementById('cancelToast'), { delay: 3000 });
                     toast.show();
                 } else {
-                    alert('Error: Could not cancel appointment.');
+                    alert('Error: Could not cancel the request.');
                 }
             } catch (error) {
                 console.error("Cancellation failed", error);
+            }
+        }
+
+        // --- FILTER ENGINE ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const catBtns = document.querySelectorAll('.filter-btn');
+            const statusSelect = document.getElementById('statusFilter');
+
+            catBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    catBtns.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    applyFilters();
+                });
+            });
+
+            statusSelect.addEventListener('change', applyFilters);
+        });
+
+        function getNormalizedStatus(raw) {
+            raw = raw.toLowerCase();
+            if (raw.includes('cancel') || raw.includes('decline')) return 'cancelled';
+            if (raw.includes('complete')) return 'completed';
+            return 'active'; // Groups Pending, Confirmed, Approved, Boarding, DropOff, PickUp
+        }
+
+        function applyFilters() {
+            const currentCat = document.querySelector('.filter-btn.active').getAttribute('data-filter-cat');
+            const currentStatus = document.getElementById('statusFilter').value;
+            const cards = document.querySelectorAll('.apt-card');
+            let totalVisible = 0;
+
+            cards.forEach(card => {
+                const cardCat = card.getAttribute('data-category');
+                const rawStatus = card.getAttribute('data-status');
+                const cardStatusGroup = getNormalizedStatus(rawStatus);
+
+                const catMatch = (currentCat === 'all' || cardCat === currentCat);
+                const statusMatch = (currentStatus === 'all' || cardStatusGroup === currentStatus);
+
+                if (catMatch && statusMatch) {
+                    card.classList.remove('hidden');
+                    totalVisible++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            // Evaluate if we should hide the entire section (if no cards match)
+            document.querySelectorAll('.section-container').forEach(section => {
+                const visibleCards = section.querySelectorAll('.apt-card:not(.hidden)');
+                const emptyState = section.querySelector('.empty-state');
+
+                if (visibleCards.length === 0) {
+                    // Hide the section entirely if we are using custom filters
+                    if (currentCat !== 'all' || currentStatus !== 'all') {
+                        section.classList.add('hidden');
+                    } else {
+                        // If "All" is selected but the section natively has 0 cards, show the empty state message
+                        section.classList.remove('hidden');
+                        if (emptyState) emptyState.classList.remove('hidden');
+                    }
+                } else {
+                    section.classList.remove('hidden');
+                    if (emptyState) emptyState.classList.add('hidden');
+                }
+            });
+
+            // Show "No Matches Found" global state if absolute 0 cards match the filters
+            const globalEmpty = document.getElementById('global-empty');
+            if (totalVisible === 0 && (currentCat !== 'all' || currentStatus !== 'all')) {
+                globalEmpty.classList.remove('hidden');
+            } else {
+                globalEmpty.classList.add('hidden');
             }
         }
     </script>

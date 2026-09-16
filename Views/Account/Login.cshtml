@@ -2,9 +2,8 @@
 
 @{
     ViewData["Title"] = "Login";
-    Layout = "~/Views/Shared/_AuthLayout.cshtml"; // Force the full-screen layout
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
 }
-
 <div class="main-wrapper">
     <div class="main-container">
 
@@ -20,15 +19,13 @@
                 </div>
 
                 <div class="toggle">
-                    <!-- Added asp-route-returnUrl here so they don't lose their place if they switch to Register -->
-                    <a asp-controller="Account" asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]">Sign Up</a>
+                    <a asp-controller="Account" asp-action="Register">Sign Up</a>
                     <a class="active">Log In</a>
                 </div>
 
                 <h2>Welcome Back</h2>
 
-                <!-- Added asp-route-returnUrl here to pass the URL to the POST method -->
-                <form asp-action="Login" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+                <form asp-action="Login" method="post">
                     <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
 
                     <div class="input-group">
@@ -37,7 +34,12 @@
                     </div>
 
                     <div class="input-group">
-                        <input asp-for="Password" type="password" placeholder="Password" />
+                        <div class="password-wrapper">
+                            <input asp-for="Password" type="password" id="loginPassword" class="password-input" placeholder="Password" />
+                            <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                         <span asp-validation-for="Password" class="field-validation-error"></span>
                     </div>
 
@@ -56,4 +58,20 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+    </script>
 }
